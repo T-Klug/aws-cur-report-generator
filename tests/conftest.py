@@ -10,132 +10,302 @@ import pytest
 
 @pytest.fixture
 def sample_cur_data():
-    """Generate 6 months of monthly CUR data with dramatically distinct patterns per account."""
+    """Generate 6 months of realistic CUR data with multiple accounts and comprehensive service coverage."""
     import random
 
     random.seed(42)  # For reproducibility
 
-    # 6 months of daily data (Jan - Jun 2024)
-    dates = pd.date_range(start="2024-01-01", end="2024-06-30", freq="D")
-    regions = ["us-east-1", "us-west-2", "eu-west-1", "ap-southeast-1", "ap-northeast-1"]
+    # 6 months of monthly data (Jan - Jun 2024)
+    dates = pd.date_range(start="2024-01-01", end="2024-06-01", freq="MS")
+    regions = [
+        "us-east-1",
+        "us-west-2",
+        "eu-west-1",
+        "eu-central-1",
+        "ap-southeast-1",
+        "ap-northeast-1",
+        "ca-central-1",
+    ]
+
+    # Define 5 accounts with distinct characteristics
+    accounts = {
+        "111111111111": {
+            "name": "Production",
+            "size": "enterprise",
+            "pattern": "stable-high",
+            "primary_region": "us-east-1",
+        },
+        "222222222222": {
+            "name": "Staging",
+            "size": "medium",
+            "pattern": "business-hours",
+            "primary_region": "us-west-2",
+        },
+        "333333333333": {
+            "name": "Development",
+            "size": "small",
+            "pattern": "spiky-testing",
+            "primary_region": "eu-west-1",
+        },
+        "444444444444": {
+            "name": "Sandbox",
+            "size": "tiny",
+            "pattern": "minimal",
+            "primary_region": "us-east-1",
+        },
+        "555555555555": {
+            "name": "Security",
+            "size": "medium",
+            "pattern": "steady",
+            "primary_region": "us-east-1",
+        },
+    }
 
     data = []
 
     for i, date in enumerate(dates):
-        day_num = i
-        month_num = date.month - 1  # 0-5 for Jan-Jun
-        is_weekend = date.weekday() >= 5
-        day_of_week = date.weekday()
+        month_num = i  # 0-5 for Jan-Jun
 
         # ========================================
-        # PRODUCTION ACCOUNT (123456789012)
-        # Large enterprise workload with high, steady costs
+        # PRODUCTION ACCOUNT (111111111111)
+        # Enterprise workload with high, steady costs
         # ========================================
+        prod_growth = 1 + (month_num * 0.15)  # 15% growth per month
 
-        # EC2: Massive, steadily growing (cloud migration in progress)
-        ec2_prod_base = 8000 + (month_num * 1500)  # Big growth each month
-        ec2_prod = ec2_prod_base * (0.90 if is_weekend else 1.0)
-        ec2_prod *= random.uniform(0.95, 1.05)
-
-        # RDS: Very high, stable production databases
-        rds_prod_base = 6500 + (month_num * 200)  # Gradual growth
-        rds_prod = rds_prod_base * random.uniform(0.98, 1.02)  # Very stable
-
-        # S3: Large data lake, growing steadily
-        s3_prod_base = 2800 + (day_num * 8)  # Continuous data accumulation
-        s3_prod = s3_prod_base * random.uniform(0.99, 1.01)
-
-        # Lambda: Heavy serverless usage, consistent
-        lambda_prod_base = 1200
-        lambda_prod = lambda_prod_base * random.uniform(0.8, 1.3)
-
-        # CloudFront: High traffic production website
-        cf_prod_base = 3500
-        # Business hours pattern (higher during weekdays)
-        cf_prod = cf_prod_base * (1.3 if day_of_week < 5 else 0.6)
-        cf_prod *= random.uniform(0.9, 1.1)
-
-        # DynamoDB: Large-scale production NoSQL
-        dynamo_prod_base = 2200 + (month_num * 300)  # Scaling up
-        dynamo_prod = dynamo_prod_base * random.uniform(0.95, 1.05)
+        services_prod = {
+            "AmazonEC2": {
+                "base": 350000 * prod_growth,
+                "pattern": lambda: random.uniform(0.97, 1.03),
+            },
+            "AmazonRDS": {
+                "base": 255000 * prod_growth,
+                "pattern": lambda: random.uniform(0.98, 1.02),  # Very stable
+            },
+            "AmazonS3": {
+                "base": 125000 + (month_num * 8000),  # Continuous growth
+                "pattern": lambda: random.uniform(0.99, 1.01),
+            },
+            "AmazonEKS": {
+                "base": 204000 * prod_growth,
+                "pattern": lambda: random.uniform(0.96, 1.04),
+            },
+            "AWSLambda": {
+                "base": 84000,
+                "pattern": lambda: random.uniform(0.90, 1.10),
+            },
+            "AmazonCloudFront": {
+                "base": 165000,
+                "pattern": lambda: random.uniform(0.92, 1.08),
+            },
+            "AmazonDynamoDB": {
+                "base": 96000 * prod_growth,
+                "pattern": lambda: random.uniform(0.95, 1.05),
+            },
+            "AmazonElastiCache": {
+                "base": 72000 * prod_growth,
+                "pattern": lambda: random.uniform(0.97, 1.03),
+            },
+            "AmazonRedshift": {
+                "base": 216000 * prod_growth,
+                "pattern": lambda: random.uniform(0.98, 1.02),
+            },
+            "AmazonRoute53": {
+                "base": 25500,
+                "pattern": lambda: random.uniform(0.95, 1.05),
+            },
+            "AmazonCloudWatch": {
+                "base": 54000,
+                "pattern": lambda: random.uniform(0.92, 1.08),
+            },
+            "AmazonECS": {
+                "base": 135000 * prod_growth,
+                "pattern": lambda: random.uniform(0.94, 1.06),
+            },
+        }
 
         # ========================================
-        # DEVELOPMENT ACCOUNT (210987654321)
-        # Smaller, highly variable with test spikes
+        # STAGING ACCOUNT (222222222222)
+        # Medium-sized with moderate growth
         # ========================================
+        staging_growth = 1 + (month_num * 0.08)
 
-        # EC2: Low baseline, huge spikes during load testing
-        ec2_dev_base = 800
-        # Load testing days (every ~14 days)
-        if day_num % 14 in [0, 1, 2]:  # 3-day load test
-            ec2_dev = ec2_dev_base * random.uniform(5.0, 8.0)  # Massive spike
-        else:
-            ec2_dev = ec2_dev_base * random.uniform(0.3, 0.7)  # Very low baseline
+        services_staging = {
+            "AmazonEC2": {
+                "base": 135000 * staging_growth,
+                "pattern": lambda: random.uniform(0.85, 1.15),
+            },
+            "AmazonRDS": {
+                "base": 96000 * staging_growth,
+                "pattern": lambda: random.uniform(0.90, 1.10),
+            },
+            "AmazonS3": {
+                "base": 54000 + (month_num * 3000),
+                "pattern": lambda: random.uniform(0.95, 1.05),
+            },
+            "AmazonEKS": {
+                "base": 84000 * staging_growth,
+                "pattern": lambda: random.uniform(0.88, 1.12),
+            },
+            "AWSLambda": {
+                "base": 27000,
+                "pattern": lambda: random.uniform(0.80, 1.20),
+            },
+            "AmazonCloudFront": {
+                "base": 36000,
+                "pattern": lambda: random.uniform(0.85, 1.15),
+            },
+            "AmazonDynamoDB": {
+                "base": 42000 * staging_growth,
+                "pattern": lambda: random.uniform(0.92, 1.08),
+            },
+            "AmazonElastiCache": {
+                "base": 24000 * staging_growth,
+                "pattern": lambda: random.uniform(0.95, 1.05),
+            },
+        }
 
-        # RDS: Medium, spiky (database testing)
-        rds_dev_base = 1200
-        # Testing spikes on specific days
-        if day_num % 10 == 5:  # Every 10 days
-            rds_dev = rds_dev_base * random.uniform(2.5, 3.5)
-        else:
-            rds_dev = rds_dev_base * random.uniform(0.5, 1.0)
+        # ========================================
+        # DEVELOPMENT ACCOUNT (333333333333)
+        # Small, variable usage with occasional load testing
+        # ========================================
+        is_load_test_month = month_num % 2 == 0  # Load tests in Jan, Mar, May
 
-        # S3: Small, very stable
-        s3_dev_base = 350 + (day_num * 1)  # Slow growth
-        s3_dev = s3_dev_base * random.uniform(0.95, 1.05)
+        services_dev = {
+            "AmazonEC2": {
+                "base": 45000,
+                "pattern": lambda: random.uniform(1.5, 2.5)
+                if is_load_test_month
+                else random.uniform(0.6, 1.2),
+            },
+            "AmazonRDS": {
+                "base": 54000,
+                "pattern": lambda: random.uniform(0.7, 1.3),
+            },
+            "AmazonS3": {
+                "base": 18000 + (month_num * 1500),
+                "pattern": lambda: random.uniform(0.90, 1.10),
+            },
+            "AmazonEKS": {
+                "base": 36000,
+                "pattern": lambda: random.uniform(1.8, 2.8)
+                if is_load_test_month
+                else random.uniform(0.5, 1.0),
+            },
+            "AWSLambda": {
+                "base": 9000,
+                "pattern": lambda: random.uniform(2.0, 4.0)
+                if is_load_test_month
+                else random.uniform(0.5, 1.5),
+            },
+            "AmazonCloudFront": {
+                "base": 15000,
+                "pattern": lambda: random.uniform(0.6, 1.4),
+            },
+            "AmazonDynamoDB": {
+                "base": max(27000 - (month_num * 3000), 5000),  # Migrating away
+                "pattern": lambda: random.uniform(0.8, 1.2),
+            },
+        }
 
-        # Lambda: EXTREMELY spiky (integration testing)
-        lambda_dev_base = 150
-        # Random massive spikes
-        if day_num % 7 == 3 or day_num % 11 == 7:
-            lambda_dev = lambda_dev_base * random.uniform(8.0, 15.0)  # Huge spikes
-        elif is_weekend:
-            lambda_dev = lambda_dev_base * random.uniform(0.1, 0.3)  # Nearly zero
-        else:
-            lambda_dev = lambda_dev_base * random.uniform(0.5, 2.0)
+        # ========================================
+        # SANDBOX ACCOUNT (444444444444)
+        # Very small, experimental workloads
+        # ========================================
+        services_sandbox = {
+            "AmazonEC2": {
+                "base": 12000,
+                "pattern": lambda: random.uniform(0.3, 2.0),  # Highly variable
+            },
+            "AmazonRDS": {
+                "base": 10500,
+                "pattern": lambda: random.uniform(0.5, 1.5),
+            },
+            "AmazonS3": {
+                "base": 5400 + (month_num * 300),
+                "pattern": lambda: random.uniform(0.9, 1.1),
+            },
+            "AWSLambda": {
+                "base": 3600,
+                "pattern": lambda: random.uniform(0.2, 2.5),
+            },
+            "AmazonDynamoDB": {
+                "base": 6000,
+                "pattern": lambda: random.uniform(0.5, 2.0),
+            },
+        }
 
-        # CloudFront: Low traffic, testing only
-        cf_dev_base = 400
-        cf_dev = cf_dev_base * random.uniform(0.3, 1.5)
-        cf_dev *= 0.2 if is_weekend else 1.0  # Off on weekends
+        # ========================================
+        # SECURITY ACCOUNT (555555555555)
+        # Security & compliance tooling, steady usage
+        # ========================================
+        services_security = {
+            "AmazonEC2": {
+                "base": 84000,
+                "pattern": lambda: random.uniform(0.98, 1.02),  # Very steady
+            },
+            "AmazonS3": {
+                "base": 105000 + (month_num * 5000),  # Log storage, continuous growth
+                "pattern": lambda: random.uniform(0.99, 1.01),
+            },
+            "AmazonCloudWatch": {
+                "base": 66000,
+                "pattern": lambda: random.uniform(0.96, 1.04),
+            },
+            "AWSLambda": {
+                "base": 45000,
+                "pattern": lambda: random.uniform(0.92, 1.08),
+            },
+            "AmazonGuardDuty": {
+                "base": 54000,
+                "pattern": lambda: random.uniform(0.97, 1.03),
+            },
+            "AWSSecurityHub": {
+                "base": 27000,
+                "pattern": lambda: random.uniform(0.98, 1.02),
+            },
+            "AWSCloudTrail": {
+                "base": 19500,
+                "pattern": lambda: random.uniform(0.96, 1.04),
+            },
+        }
 
-        # DynamoDB: Small, declining (moving to RDS)
-        dynamo_dev_base = 600 - (month_num * 80)  # Decreasing over time
-        dynamo_dev = max(100, dynamo_dev_base * random.uniform(0.8, 1.2))
-
-        # Add all records
-        services = [
-            # Production account
-            ("123456789012", "AmazonEC2", ec2_prod, "us-east-1"),
-            ("123456789012", "AmazonRDS", rds_prod, "us-east-1"),
-            ("123456789012", "AmazonS3", s3_prod, random.choice(regions)),
-            ("123456789012", "AWSLambda", lambda_prod, random.choice(regions)),
-            ("123456789012", "AmazonCloudFront", cf_prod, "us-east-1"),
-            ("123456789012", "AmazonDynamoDB", dynamo_prod, "us-east-1"),
-            # Dev account
-            ("210987654321", "AmazonEC2", ec2_dev, "us-west-2"),
-            ("210987654321", "AmazonRDS", rds_dev, "us-west-2"),
-            ("210987654321", "AmazonS3", s3_dev, random.choice(regions)),
-            ("210987654321", "AWSLambda", lambda_dev, random.choice(regions)),
-            ("210987654321", "AmazonCloudFront", cf_dev, "us-west-2"),
-            ("210987654321", "AmazonDynamoDB", dynamo_dev, "us-west-2"),
+        # Combine all account services
+        all_account_services = [
+            ("111111111111", services_prod, "us-east-1"),
+            ("222222222222", services_staging, "us-west-2"),
+            ("333333333333", services_dev, "eu-west-1"),
+            ("444444444444", services_sandbox, "us-east-1"),
+            ("555555555555", services_security, "us-east-1"),
         ]
 
-        for account, service, cost, region in services:
-            data.append(
-                {
-                    "line_item_usage_start_date": date,
-                    "line_item_usage_account_id": account,
-                    "line_item_product_code": service,
-                    "line_item_unblended_cost": round(max(10.0, cost), 2),
-                    "line_item_usage_type": f"{service}:Usage",
-                    "line_item_operation": (
-                        "RunInstances" if service == "AmazonEC2" else "StandardStorage"
-                    ),
-                    "product_region": region,
-                    "line_item_resource_id": f'{service[6:9].lower()}-{hash(f"{date}{service}{account}") % 1000000:06d}',
-                }
-            )
+        # Generate records for all accounts and services
+        for account_id, services, primary_region in all_account_services:
+            for service_name, service_config in services.items():
+                base_cost = service_config["base"]
+                cost = base_cost * service_config["pattern"]()
+
+                # Randomly distribute some services across regions
+                if service_name in ["AmazonS3", "AWSLambda", "AmazonCloudFront"]:
+                    region = random.choice(regions)
+                else:
+                    region = primary_region
+
+                data.append(
+                    {
+                        "line_item_usage_start_date": date,
+                        "line_item_usage_account_id": account_id,
+                        "line_item_product_code": service_name,
+                        "line_item_unblended_cost": round(max(10.0, cost), 2),
+                        "line_item_usage_type": f"{region}:{service_name}:Usage",
+                        "line_item_operation": (
+                            "RunInstances"
+                            if service_name in ["AmazonEC2", "AmazonEKS", "AmazonECS"]
+                            else "StandardStorage"
+                        ),
+                        "product_region": region,
+                        "line_item_resource_id": f'{service_name[6:9].lower()}-{hash(f"{date}{service_name}{account_id}") % 1000000:06d}',
+                    }
+                )
 
     return pd.DataFrame(data)
 

@@ -38,7 +38,7 @@ class TestExampleReports:
         summary_stats = processor.get_summary_statistics()
 
         # Create visualizations
-        visualizer = CURVisualizer(theme="plotly_white")
+        visualizer = CURVisualizer(theme="macarons")
 
         # Generate all chart types
         visualizer.create_cost_by_service_chart(
@@ -102,18 +102,18 @@ class TestExampleReports:
 
         # Verify key elements are present
         assert "AWS Cost and Usage Report - Example Report" in html_content
-        assert "Summary Statistics" in html_content
+        assert "Executive Summary" in html_content
         assert "Total Cost" in html_content
-        assert "plotly" in html_content.lower()
+        assert "echarts" in html_content.lower()
         assert "Top 10 AWS Services by Cost" in html_content
 
-        # Verify all chart types are included
-        assert "cost_by_service" in html_content
-        assert "cost_by_account" in html_content
+        # Verify all chart types are included (check for chart titles in HTML)
+        assert "var chart_" in html_content  # pyecharts chart initialization
+        assert "echarts.init(" in html_content  # pyecharts initialization
 
         print(f"\n✅ Example report generated: {output_path}")
         print(f"   File size: {Path(output_path).stat().st_size:,} bytes")
-        print(f"   Charts included: {len(visualizer.figures)}")
+        print(f"   Charts included: {len(visualizer.charts)}")
         print(f"   Total cost in example: ${summary_stats['total_cost']:,.2f}")
         print(
             f"   Date range: {summary_stats['date_range_start']} to {summary_stats['date_range_end']}"

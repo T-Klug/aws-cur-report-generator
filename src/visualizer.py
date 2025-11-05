@@ -1,4 +1,4 @@
-"""Visualizer - Creates interactive visualizations and reports from CUR data."""
+"""Visualizer - Creates interactive visualizations and reports from CUR data using Apache ECharts."""
 
 import logging
 import os
@@ -6,28 +6,39 @@ from datetime import datetime
 from typing import Optional
 
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+from pyecharts import options as opts
+from pyecharts.charts import Bar, HeatMap, Line, Page, Pie, Scatter
+from pyecharts.commons.utils import JsCode
+from pyecharts.globals import ThemeType
 
 logger = logging.getLogger(__name__)
 
 
 class CURVisualizer:
-    """Generate interactive visualizations for AWS Cost and Usage data."""
+    """Generate interactive visualizations for AWS Cost and Usage data using Apache ECharts."""
 
-    def __init__(self, theme: str = "plotly_white"):
+    def __init__(self, theme: str = "macarons"):
         """
         Initialize the visualizer.
 
         Args:
-            theme: Plotly theme to use
+            theme: pyecharts theme to use (macarons, shine, roma, vintage, etc.)
         """
-        self.theme = theme
-        self.figures: list[tuple[str, go.Figure]] = []
+        # Map theme names to ThemeType
+        theme_map = {
+            "macarons": ThemeType.MACARONS,
+            "shine": ThemeType.SHINE,
+            "roma": ThemeType.ROMA,
+            "vintage": ThemeType.VINTAGE,
+            "dark": ThemeType.DARK,
+            "light": ThemeType.LIGHT,
+        }
+        self.theme = theme_map.get(theme.lower(), ThemeType.MACARONS)
+        self.charts = []
 
     def create_cost_by_service_chart(
         self, df: pd.DataFrame, top_n: int = 10, title: str = "Cost by Service"
-    ) -> go.Figure:
+    ) -> Bar:
         """
         Create a bar chart of costs by service.
 
@@ -37,42 +48,69 @@ class CURVisualizer:
             title: Chart title
 
         Returns:
-            Plotly figure
+            pyecharts Bar chart
         """
         logger.info(f"Creating cost by service chart (top {top_n})...")
 
         # Take top N
         plot_df = df.head(top_n).copy()
 
-        # Create figure
-        fig = go.Figure()
-
-        fig.add_trace(
-            go.Bar(
-                x=plot_df["service"],
-                y=plot_df["total_cost"],
-                text=[f"${x:,.2f}" for x in plot_df["total_cost"]],
-                textposition="auto",
-                marker_color="#3498db",
-                hovertemplate="<b>%{x}</b><br>Cost: $%{y:,.2f}<extra></extra>",
+        bar = (
+            Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+            .add_xaxis(plot_df["service"].tolist())
+            .add_yaxis(
+                "Total Cost (USD)",
+                [round(x, 2) for x in plot_df["total_cost"].tolist()],
+                label_opts=opts.LabelOpts(
+                    is_show=True,
+                    position="top",
+                    formatter=JsCode("function(params) { return '$' + params.value.toLocaleString(); }"),
+                ),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    color="#5470c6",
+                    border_radius=8,
+                ),
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title=title,
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                    pos_top="1%",
+                ),
+                xaxis_opts=opts.AxisOpts(
+                    name="Service",
+                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    name="Total Cost (USD)",
+                    axislabel_opts=opts.LabelOpts(
+                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                    ),
+                ),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis",
+                    axis_pointer_type="shadow",
+                    formatter=JsCode(
+                        "function(params) { return params[0].name + '<br/>Cost: $' + params[0].value.toLocaleString(); }"
+                    ),
+                ),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    ),
+                ),
             )
         )
 
-        fig.update_layout(
-            title=title,
-            xaxis_title="Service",
-            yaxis_title="Total Cost (USD)",
-            template=self.theme,
-            height=500,
-            showlegend=False,
-        )
-
-        self.figures.append(("cost_by_service", fig))
-        return fig
+        self.charts.append(("cost_by_service", bar))
+        return bar
 
     def create_cost_by_account_chart(
         self, df: pd.DataFrame, top_n: int = 10, title: str = "Cost by Account"
-    ) -> go.Figure:
+    ) -> Bar:
         """
         Create a bar chart of costs by account.
 
@@ -82,41 +120,69 @@ class CURVisualizer:
             title: Chart title
 
         Returns:
-            Plotly figure
+            pyecharts Bar chart
         """
         logger.info(f"Creating cost by account chart (top {top_n})...")
 
         # Take top N
         plot_df = df.head(top_n).copy()
 
-        fig = go.Figure()
-
-        fig.add_trace(
-            go.Bar(
-                x=plot_df["account_id"],
-                y=plot_df["total_cost"],
-                text=[f"${x:,.2f}" for x in plot_df["total_cost"]],
-                textposition="auto",
-                marker_color="#2ecc71",
-                hovertemplate="<b>Account: %{x}</b><br>Cost: $%{y:,.2f}<extra></extra>",
+        bar = (
+            Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+            .add_xaxis(plot_df["account_id"].astype(str).tolist())
+            .add_yaxis(
+                "Total Cost (USD)",
+                [round(x, 2) for x in plot_df["total_cost"].tolist()],
+                label_opts=opts.LabelOpts(
+                    is_show=True,
+                    position="top",
+                    formatter=JsCode("function(params) { return '$' + params.value.toLocaleString(); }"),
+                ),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    color="#91cc75",
+                    border_radius=8,
+                ),
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title=title,
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                    pos_top="1%",
+                ),
+                xaxis_opts=opts.AxisOpts(
+                    name="Account ID",
+                    axislabel_opts=opts.LabelOpts(rotate=0),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    name="Total Cost (USD)",
+                    axislabel_opts=opts.LabelOpts(
+                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                    ),
+                ),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis",
+                    axis_pointer_type="shadow",
+                    formatter=JsCode(
+                        "function(params) { return 'Account: ' + params[0].name + '<br/>Cost: $' + params[0].value.toLocaleString(); }"
+                    ),
+                ),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    ),
+                ),
             )
         )
 
-        fig.update_layout(
-            title=title,
-            xaxis_title="Account ID",
-            yaxis_title="Total Cost (USD)",
-            template=self.theme,
-            height=500,
-            showlegend=False,
-        )
-
-        self.figures.append(("cost_by_account", fig))
-        return fig
+        self.charts.append(("cost_by_account", bar))
+        return bar
 
     def create_service_trend_chart(
         self, df: pd.DataFrame, title: str = "Cost Trends by Service"
-    ) -> go.Figure:
+    ) -> Line:
         """
         Create a line chart showing cost trends for top services.
 
@@ -125,58 +191,99 @@ class CURVisualizer:
             title: Chart title
 
         Returns:
-            Plotly figure
+            pyecharts Line chart
         """
         logger.info("Creating service trend chart...")
 
-        fig = go.Figure()
-
-        # Get unique services
+        # Get unique dates and services
+        dates = sorted(df["date"].unique())
         services = df["service"].unique()
 
-        # Define colors - using more distinct colors
-        colors = px.colors.qualitative.Bold
+        # Convert dates to strings for x-axis
+        date_strs = [str(d) for d in dates]
+
+        line = Line(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
+        line.add_xaxis(date_strs)
+
+        # Color palette for better distinction
+        colors = ["#5470c6", "#91cc75", "#fac858", "#ee6666", "#73c0de", "#3ba272", "#fc8452", "#9a60b4"]
 
         for i, service in enumerate(services):
             service_data = df[df["service"] == service]
-            fig.add_trace(
-                go.Scatter(
-                    x=service_data["date"],
-                    y=service_data["total_cost"],
-                    mode="lines+markers",
-                    name=service,
-                    line=dict(color=colors[i % len(colors)], width=3),
-                    marker=dict(size=6),
-                    opacity=0.85,
-                    hovertemplate=f"<b>{service}</b><br>Date: %{{x}}<br>Cost: $%{{y:,.2f}}<extra></extra>",
-                )
+            # Create a dict for quick lookup
+            cost_by_date = dict(zip(service_data["date"].astype(str), service_data["total_cost"]))
+            # Ensure we have values for all dates
+            values = [round(cost_by_date.get(str(d), 0), 2) for d in dates]
+
+            line.add_yaxis(
+                series_name=service,
+                y_axis=values,
+                is_smooth=True,
+                symbol_size=8,
+                linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.8),
+                label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=colors[i % len(colors)]),
             )
 
-        fig.update_layout(
-            title=title,
-            xaxis_title="Date",
-            yaxis_title="Total Cost (USD)",
-            template=self.theme,
-            height=650,
-            hovermode="x unified",
-            legend=dict(
-                orientation="v",
-                yanchor="top",
-                y=1,
-                xanchor="left",
-                x=1.02,
-                bgcolor="rgba(255, 255, 255, 0.8)",
-                bordercolor="#ccc",
-                borderwidth=1,
+        line.set_global_opts(
+            title_opts=opts.TitleOpts(
+                title=title,
+                title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                pos_top="1%",
+            ),
+            xaxis_opts=opts.AxisOpts(
+                name="Date",
+                type_="category",
+                boundary_gap=False,
+                axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
+            ),
+            yaxis_opts=opts.AxisOpts(
+                name="Total Cost (USD)",
+                axislabel_opts=opts.LabelOpts(
+                    formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                ),
+            ),
+            tooltip_opts=opts.TooltipOpts(
+                trigger="axis",
+                axis_pointer_type="cross",
+                formatter=JsCode(
+                    """function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            result += item.marker + item.seriesName + ': $' + item.value.toLocaleString() + '<br/>';
+                        });
+                        return result;
+                    }"""
+                ),
+            ),
+            legend_opts=opts.LegendOpts(
+                type_="scroll",
+                orient="horizontal",
+                pos_top="10%",
+                selected_mode="multiple",
+            ),
+            datazoom_opts=[
+                opts.DataZoomOpts(type_="slider", range_start=0, range_end=100),
+                opts.DataZoomOpts(type_="inside"),
+            ],
+            toolbox_opts=opts.ToolboxOpts(
+                is_show=True,
+                feature=opts.ToolBoxFeatureOpts(
+                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", back_title="Reset Zoom"),
+                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", bar_title="Bar", stack_title="Stack"),
+                ),
             ),
         )
 
-        self.figures.append(("service_trend", fig))
-        return fig
+        self.charts.append(("service_trend", line))
+        return line
 
     def create_account_trend_chart(
         self, df: pd.DataFrame, title: str = "Cost Trends by Account"
-    ) -> go.Figure:
+    ) -> Line:
         """
         Create a line chart showing cost trends for top accounts.
 
@@ -185,58 +292,99 @@ class CURVisualizer:
             title: Chart title
 
         Returns:
-            Plotly figure
+            pyecharts Line chart
         """
         logger.info("Creating account trend chart...")
 
-        fig = go.Figure()
-
-        # Get unique accounts
+        # Get unique dates and accounts
+        dates = sorted(df["date"].unique())
         accounts = df["account_id"].unique()
 
-        # Define colors - using more distinct colors
-        colors = px.colors.qualitative.Bold
+        # Convert dates to strings for x-axis
+        date_strs = [str(d) for d in dates]
+
+        line = Line(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
+        line.add_xaxis(date_strs)
+
+        # Color palette
+        colors = ["#5470c6", "#91cc75", "#fac858", "#ee6666", "#73c0de", "#3ba272", "#fc8452", "#9a60b4"]
 
         for i, account in enumerate(accounts):
             account_data = df[df["account_id"] == account]
-            fig.add_trace(
-                go.Scatter(
-                    x=account_data["date"],
-                    y=account_data["total_cost"],
-                    mode="lines+markers",
-                    name=account,
-                    line=dict(color=colors[i % len(colors)], width=3),
-                    marker=dict(size=6),
-                    opacity=0.85,
-                    hovertemplate=f"<b>Account: {account}</b><br>Date: %{{x}}<br>Cost: $%{{y:,.2f}}<extra></extra>",
-                )
+            # Create a dict for quick lookup
+            cost_by_date = dict(zip(account_data["date"].astype(str), account_data["total_cost"]))
+            # Ensure we have values for all dates
+            values = [round(cost_by_date.get(str(d), 0), 2) for d in dates]
+
+            line.add_yaxis(
+                series_name=str(account),
+                y_axis=values,
+                is_smooth=True,
+                symbol_size=8,
+                linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.8),
+                label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=colors[i % len(colors)]),
             )
 
-        fig.update_layout(
-            title=title,
-            xaxis_title="Date",
-            yaxis_title="Total Cost (USD)",
-            template=self.theme,
-            height=650,
-            hovermode="x unified",
-            legend=dict(
-                orientation="v",
-                yanchor="top",
-                y=1,
-                xanchor="left",
-                x=1.02,
-                bgcolor="rgba(255, 255, 255, 0.8)",
-                bordercolor="#ccc",
-                borderwidth=1,
+        line.set_global_opts(
+            title_opts=opts.TitleOpts(
+                title=title,
+                title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                pos_top="1%",
+            ),
+            xaxis_opts=opts.AxisOpts(
+                name="Date",
+                type_="category",
+                boundary_gap=False,
+                axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
+            ),
+            yaxis_opts=opts.AxisOpts(
+                name="Total Cost (USD)",
+                axislabel_opts=opts.LabelOpts(
+                    formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                ),
+            ),
+            tooltip_opts=opts.TooltipOpts(
+                trigger="axis",
+                axis_pointer_type="cross",
+                formatter=JsCode(
+                    """function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            result += item.marker + 'Account ' + item.seriesName + ': $' + item.value.toLocaleString() + '<br/>';
+                        });
+                        return result;
+                    }"""
+                ),
+            ),
+            legend_opts=opts.LegendOpts(
+                type_="scroll",
+                orient="horizontal",
+                pos_top="10%",
+                selected_mode="multiple",
+            ),
+            datazoom_opts=[
+                opts.DataZoomOpts(type_="slider", range_start=0, range_end=100),
+                opts.DataZoomOpts(type_="inside"),
+            ],
+            toolbox_opts=opts.ToolboxOpts(
+                is_show=True,
+                feature=opts.ToolBoxFeatureOpts(
+                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", back_title="Reset Zoom"),
+                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", bar_title="Bar", stack_title="Stack"),
+                ),
             ),
         )
 
-        self.figures.append(("account_trend", fig))
-        return fig
+        self.charts.append(("account_trend", line))
+        return line
 
     def create_account_service_heatmap(
         self, df: pd.DataFrame, title: str = "Cost Heatmap: Account vs Service"
-    ) -> go.Figure:
+    ) -> HeatMap:
         """
         Create a heatmap showing costs by account and service.
 
@@ -245,7 +393,7 @@ class CURVisualizer:
             title: Chart title
 
         Returns:
-            Plotly figure
+            pyecharts HeatMap
         """
         logger.info("Creating account-service heatmap...")
 
@@ -253,36 +401,79 @@ class CURVisualizer:
         pivot_df = df.pivot(index="account_id", columns="service", values="total_cost")
         pivot_df = pivot_df.fillna(0)
 
-        # Convert to lists for better browser compatibility (avoid binary encoding issues)
-        z_values = pivot_df.values.tolist()
-        x_labels = pivot_df.columns.tolist()
-        y_labels = pivot_df.index.tolist()
+        # Prepare data for heatmap
+        accounts = pivot_df.index.astype(str).tolist()
+        services = pivot_df.columns.tolist()
+        data = []
+        max_value = 0
+        for i, account in enumerate(accounts):
+            for j, service in enumerate(services):
+                value = round(pivot_df.loc[pivot_df.index[i], service], 2)
+                data.append([j, i, value])
+                max_value = max(max_value, value)
 
-        fig = go.Figure(
-            data=go.Heatmap(
-                z=z_values,
-                x=x_labels,
-                y=y_labels,
-                colorscale="Blues",
-                hovertemplate="Account: %{y}<br>Service: %{x}<br>Cost: $%{z:,.2f}<extra></extra>",
-                colorbar=dict(title="Cost (USD)"),
+        heatmap = (
+            HeatMap(init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%"))
+            .add_xaxis(services)
+            .add_yaxis(
+                "Account",
+                accounts,
+                data,
+                label_opts=opts.LabelOpts(
+                    is_show=True,
+                    position="inside",
+                    formatter=JsCode("function(params) { return params.value[2] > 0 ? '$' + params.value[2].toLocaleString() : ''; }"),
+                    font_size=10,
+                ),
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title=title,
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                    pos_top="1%",
+                ),
+                xaxis_opts=opts.AxisOpts(
+                    name="Service",
+                    type_="category",
+                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    name="Account ID",
+                    type_="category",
+                ),
+                visualmap_opts=opts.VisualMapOpts(
+                    min_=0,
+                    max_=max_value,
+                    is_calculable=True,
+                    orient="horizontal",
+                    pos_left="center",
+                    pos_bottom="0%",
+                    range_color=["#eef5ff", "#5470c6"],
+                ),
+                tooltip_opts=opts.TooltipOpts(
+                    formatter=JsCode(
+                        """function(params) {
+                            return 'Account: ' + params.name + '<br/>Service: ' + params.value[0] + '<br/>Cost: $' + params.value[2].toLocaleString();
+                        }"""
+                    )
+                ),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    ),
+                ),
             )
         )
 
-        fig.update_layout(
-            title=title,
-            xaxis_title="Service",
-            yaxis_title="Account ID",
-            template=self.theme,
-            height=max(400, len(pivot_df.index) * 40),
-        )
-
-        self.figures.append(("account_service_heatmap", fig))
-        return fig
+        self.charts.append(("account_service_heatmap", heatmap))
+        return heatmap
 
     def create_cost_distribution_pie(
         self, df: pd.DataFrame, category: str, top_n: int = 10, title: Optional[str] = None
-    ) -> go.Figure:
+    ) -> Pie:
         """
         Create a pie chart showing cost distribution.
 
@@ -293,7 +484,7 @@ class CURVisualizer:
             title: Chart title
 
         Returns:
-            Plotly figure
+            pyecharts Pie chart
         """
         logger.info(f"Creating cost distribution pie chart for {category}...")
 
@@ -305,88 +496,163 @@ class CURVisualizer:
         if len(plot_df) > top_n:
             top_items = plot_df.head(top_n)
             other_cost = plot_df.iloc[top_n:]["total_cost"].sum()
-            first_col = str(plot_df.columns[0])  # Ensure it's a string for dict key
+            first_col = str(plot_df.columns[0])
             other_row = pd.DataFrame([{first_col: "Other", "total_cost": other_cost}])
             plot_df = pd.concat([top_items, other_row], ignore_index=True)
 
-        fig = go.Figure(
-            data=[
-                go.Pie(
-                    labels=plot_df.iloc[:, 0],
-                    values=plot_df["total_cost"],
-                    hovertemplate="<b>%{label}</b><br>Cost: $%{value:,.2f}<br>Percentage: %{percent}<extra></extra>",
-                    textinfo="label+percent",
-                    textposition="auto",
-                )
-            ]
+        # Prepare data
+        data = [
+            [str(row[0]), round(row[1], 2)]
+            for row in zip(plot_df.iloc[:, 0], plot_df["total_cost"])
+        ]
+
+        pie = (
+            Pie(init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%"))
+            .add(
+                series_name="Cost",
+                data_pair=data,
+                radius=["30%", "70%"],
+                label_opts=opts.LabelOpts(
+                    formatter="{b}: ${c} ({d}%)",
+                    font_size=12,
+                ),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    border_width=2,
+                    border_color="#fff",
+                ),
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title=title,
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                    pos_left="center",
+                ),
+                legend_opts=opts.LegendOpts(
+                    type_="scroll",
+                    orient="vertical",
+                    pos_right="5%",
+                    pos_top="15%",
+                ),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="item",
+                    formatter=JsCode(
+                        "function(params) { return params.name + '<br/>Cost: $' + params.value.toLocaleString() + '<br/>Percentage: ' + params.percent + '%'; }"
+                    ),
+                ),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    ),
+                ),
+            )
         )
 
-        fig.update_layout(title=title, template=self.theme, height=500)
-
-        self.figures.append((f"{category}_pie", fig))
-        return fig
+        self.charts.append((f"{category}_pie", pie))
+        return pie
 
     def create_monthly_summary_chart(
         self, df: pd.DataFrame, title: str = "Monthly Cost Summary"
-    ) -> go.Figure:
+    ) -> Bar:
         """
-        Create an enhanced bar chart showing monthly cost summary with trend line.
+        Create an enhanced bar chart showing monthly cost summary.
 
         Args:
             df: DataFrame with month and total_cost columns
             title: Chart title
 
         Returns:
-            Plotly figure
+            pyecharts Bar chart with line overlay
         """
         logger.info("Creating monthly summary chart...")
 
-        fig = go.Figure()
+        months = df["month"].tolist()
+        costs = [round(x, 2) for x in df["total_cost"].tolist()]
 
-        # Add bar chart for monthly costs
-        fig.add_trace(
-            go.Bar(
-                x=df["month"],
-                y=df["total_cost"],
-                text=[f"${x:,.0f}" for x in df["total_cost"]],
-                textposition="outside",
-                marker_color="#16a085",
-                name="Monthly Cost",
-                hovertemplate="<b>%{x}</b><br>Total Cost: $%{y:,.2f}<extra></extra>",
+        bar = (
+            Bar(init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%"))
+            .add_xaxis(months)
+            .add_yaxis(
+                "Monthly Cost",
+                costs,
+                label_opts=opts.LabelOpts(
+                    is_show=True,
+                    position="top",
+                    formatter=JsCode("function(params) { return '$' + params.value.toLocaleString(); }"),
+                ),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    color="#5470c6",
+                    border_radius=[8, 8, 0, 0],
+                ),
             )
         )
 
         # Add trend line if we have enough data points
         if len(df) >= 2:
-            fig.add_trace(
-                go.Scatter(
-                    x=df["month"],
-                    y=df["total_cost"],
-                    mode="lines+markers",
-                    line=dict(color="#e74c3c", width=3, dash="dash"),
-                    marker=dict(size=8, symbol="diamond"),
-                    name="Trend",
-                    hovertemplate="<b>%{x}</b><br>Cost: $%{y:,.2f}<extra></extra>",
+            line = (
+                Line()
+                .add_xaxis(months)
+                .add_yaxis(
+                    "Trend",
+                    costs,
+                    is_smooth=True,
+                    symbol_size=10,
+                    linestyle_opts=opts.LineStyleOpts(width=3, type_="dashed"),
+                    itemstyle_opts=opts.ItemStyleOpts(color="#ee6666"),
+                    label_opts=opts.LabelOpts(is_show=False),
                 )
             )
+            bar.overlap(line)
 
-        fig.update_layout(
-            title={"text": title, "font": {"size": 20, "color": "#2c3e50"}},
-            xaxis_title="Month",
-            yaxis_title="Total Cost (USD)",
-            template=self.theme,
-            height=600,
-            showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            bargap=0.3,
+        bar.set_global_opts(
+            title_opts=opts.TitleOpts(
+                title=title,
+                title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                pos_top="1%",
+                item_gap=15,
+            ),
+            xaxis_opts=opts.AxisOpts(
+                name="Month",
+                axislabel_opts=opts.LabelOpts(rotate=45),
+            ),
+            yaxis_opts=opts.AxisOpts(
+                name="Total Cost (USD)",
+                axislabel_opts=opts.LabelOpts(
+                    formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                ),
+            ),
+            tooltip_opts=opts.TooltipOpts(
+                trigger="axis",
+                axis_pointer_type="shadow",
+                formatter=JsCode(
+                    """function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            result += item.marker + item.seriesName + ': $' + item.value.toLocaleString() + '<br/>';
+                        });
+                        return result;
+                    }"""
+                ),
+            ),
+            legend_opts=opts.LegendOpts(pos_top="8%"),
+            toolbox_opts=opts.ToolboxOpts(
+                is_show=True,
+                feature=opts.ToolBoxFeatureOpts(
+                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                ),
+            ),
         )
 
-        self.figures.append(("monthly_summary", fig))
-        return fig
+        self.charts.append(("monthly_summary", bar))
+        return bar
 
     def create_anomaly_chart(
         self, df: pd.DataFrame, title: str = "Cost Anomalies Detection"
-    ) -> go.Figure:
+    ) -> Scatter:
         """
         Create a chart highlighting cost anomalies.
 
@@ -395,46 +661,89 @@ class CURVisualizer:
             title: Chart title
 
         Returns:
-            Plotly figure
+            pyecharts Scatter chart
         """
         logger.info("Creating cost anomaly chart...")
 
-        fig = go.Figure()
+        dates = df["date"].astype(str).tolist()
+        costs = df["total_cost"].tolist()
+        z_scores = df["z_score"].tolist()
 
-        # Highlight anomalies
-        fig.add_trace(
-            go.Scatter(
-                x=df["date"],
-                y=df["total_cost"],
-                mode="markers",
-                name="Anomalous Days",
-                marker=dict(
-                    size=12,
-                    color=df["z_score"],
-                    colorscale="RdYlGn",
-                    reversescale=True,
-                    showscale=True,
-                    colorbar=dict(title="Z-Score"),
-                    line=dict(width=2, color="darkred"),
+        # Color code by severity
+        data = []
+        for i in range(len(dates)):
+            z_score = z_scores[i]
+            if abs(z_score) < 2:
+                symbol_size = 8
+                color = "#91cc75"
+            elif abs(z_score) < 3:
+                symbol_size = 12
+                color = "#fac858"
+            else:
+                symbol_size = 16
+                color = "#ee6666"
+
+            data.append({
+                "value": [dates[i], round(costs[i], 2), round(z_score, 2)],
+                "itemStyle": {"color": color},
+                "symbolSize": symbol_size,
+            })
+
+        scatter = (
+            Scatter(init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%"))
+            .add_xaxis(dates)
+            .add_yaxis(
+                "Anomalous Days",
+                data,
+                label_opts=opts.LabelOpts(is_show=False),
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title=title,
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                    pos_top="1%",
+                    item_gap=15,
                 ),
-                hovertemplate="<b>%{x}</b><br>Cost: $%{y:,.2f}<br>Z-Score: %{marker.color:.2f}<extra></extra>",
+                xaxis_opts=opts.AxisOpts(
+                    name="Date",
+                    type_="category",
+                    axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    name="Total Cost (USD)",
+                    axislabel_opts=opts.LabelOpts(
+                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                    ),
+                ),
+                tooltip_opts=opts.TooltipOpts(
+                    formatter=JsCode(
+                        """function(params) {
+                            return 'Date: ' + params.value[0] + '<br/>Cost: $' + params.value[1].toLocaleString() + '<br/>Z-Score: ' + params.value[2];
+                        }"""
+                    )
+                ),
+                datazoom_opts=[
+                    opts.DataZoomOpts(type_="slider", range_start=0, range_end=100),
+                    opts.DataZoomOpts(type_="inside"),
+                ],
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", back_title="Reset Zoom"),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    ),
+                ),
             )
         )
 
-        fig.update_layout(
-            title=title,
-            xaxis_title="Date",
-            yaxis_title="Total Cost (USD)",
-            template=self.theme,
-            height=500,
-        )
-
-        self.figures.append(("anomalies", fig))
-        return fig
+        self.charts.append(("anomalies", scatter))
+        return scatter
 
     def create_region_chart(
         self, df: pd.DataFrame, top_n: int = 10, title: str = "Cost by Region"
-    ) -> go.Figure:
+    ) -> Bar:
         """
         Create a bar chart of costs by region.
 
@@ -444,36 +753,64 @@ class CURVisualizer:
             title: Chart title
 
         Returns:
-            Plotly figure
+            pyecharts Bar chart
         """
         logger.info(f"Creating cost by region chart (top {top_n})...")
 
         plot_df = df.head(top_n).copy()
 
-        fig = go.Figure()
-
-        fig.add_trace(
-            go.Bar(
-                x=plot_df["region"],
-                y=plot_df["total_cost"],
-                text=[f"${x:,.2f}" for x in plot_df["total_cost"]],
-                textposition="auto",
-                marker_color="#e67e22",
-                hovertemplate="<b>%{x}</b><br>Cost: $%{y:,.2f}<extra></extra>",
+        bar = (
+            Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+            .add_xaxis(plot_df["region"].tolist())
+            .add_yaxis(
+                "Total Cost (USD)",
+                [round(x, 2) for x in plot_df["total_cost"].tolist()],
+                label_opts=opts.LabelOpts(
+                    is_show=True,
+                    position="top",
+                    formatter=JsCode("function(params) { return '$' + params.value.toLocaleString(); }"),
+                ),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    color="#fac858",
+                    border_radius=8,
+                ),
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title=title,
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                    pos_top="1%",
+                ),
+                xaxis_opts=opts.AxisOpts(
+                    name="Region",
+                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    name="Total Cost (USD)",
+                    axislabel_opts=opts.LabelOpts(
+                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                    ),
+                ),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis",
+                    axis_pointer_type="shadow",
+                    formatter=JsCode(
+                        "function(params) { return params[0].name + '<br/>Cost: $' + params[0].value.toLocaleString(); }"
+                    ),
+                ),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    ),
+                ),
             )
         )
 
-        fig.update_layout(
-            title=title,
-            xaxis_title="Region",
-            yaxis_title="Total Cost (USD)",
-            template=self.theme,
-            height=500,
-            showlegend=False,
-        )
-
-        self.figures.append(("cost_by_region", fig))
-        return fig
+        self.charts.append(("cost_by_region", bar))
+        return bar
 
     def generate_html_report(
         self, output_path: str, summary_stats: dict, title: str = "AWS Cost and Usage Report"
@@ -491,137 +828,232 @@ class CURVisualizer:
         """
         logger.info(f"Generating HTML report: {output_path}")
 
-        # Create HTML content
-        html_parts = [
-            f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>{title}</title>
-                <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                <style>
-                    body {{
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        margin: 0;
-                        padding: 20px;
-                        background-color: #f5f5f5;
-                    }}
-                    .container {{
-                        max-width: 1400px;
-                        margin: 0 auto;
-                        background-color: white;
-                        padding: 30px;
-                        border-radius: 10px;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    }}
-                    h1 {{
-                        color: #2c3e50;
-                        border-bottom: 3px solid #3498db;
-                        padding-bottom: 10px;
-                    }}
-                    h2 {{
-                        color: #34495e;
-                        margin-top: 30px;
-                        border-left: 4px solid #3498db;
-                        padding-left: 10px;
-                    }}
-                    .summary {{
-                        display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                        gap: 20px;
-                        margin: 20px 0;
-                    }}
-                    .summary-card {{
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        color: white;
-                        padding: 20px;
-                        border-radius: 8px;
-                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                    }}
-                    .summary-card h3 {{
-                        margin: 0 0 10px 0;
-                        font-size: 14px;
-                        opacity: 0.9;
-                    }}
-                    .summary-card p {{
-                        margin: 0;
-                        font-size: 24px;
-                        font-weight: bold;
-                    }}
-                    .chart {{
-                        margin: 20px 0;
-                        background: white;
-                        padding: 10px;
-                        border-radius: 5px;
-                    }}
-                    .timestamp {{
-                        text-align: right;
-                        color: #7f8c8d;
-                        font-size: 12px;
-                        margin-top: 30px;
-                    }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
+        # Create Page object to combine all charts
+        page = Page(layout=Page.SimplePageLayout)
+
+        # Create summary HTML
+        summary_html = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>{title}</title>
+            <style>
+                * {{
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }}
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    padding: 40px 20px;
+                    overflow-x: hidden;
+                }}
+                .main-container {{
+                    max-width: 1600px;
+                    margin: 0 auto;
+                    background: #ffffff;
+                    border-radius: 20px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                    overflow: hidden;
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #5470c6 0%, #91cc75 100%);
+                    color: white;
+                    padding: 60px 40px;
+                    text-align: center;
+                    overflow-wrap: break-word;
+                }}
+                .header h1 {{
+                    font-size: 48px;
+                    font-weight: 700;
+                    margin-bottom: 15px;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+                    word-wrap: break-word;
+                }}
+                .header p {{
+                    font-size: 20px;
+                    opacity: 0.95;
+                    font-weight: 300;
+                    word-wrap: break-word;
+                }}
+                .content {{
+                    padding: 60px 40px;
+                }}
+                .summary-section {{
+                    margin-bottom: 60px;
+                }}
+                .summary-section h2 {{
+                    color: #2c3e50;
+                    font-size: 32px;
+                    font-weight: 600;
+                    margin-bottom: 30px;
+                    padding-bottom: 15px;
+                    border-bottom: 3px solid #5470c6;
+                }}
+                .summary-grid {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                    gap: 25px;
+                    margin-bottom: 40px;
+                }}
+                .summary-card {{
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 30px;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                    overflow: hidden;
+                    word-wrap: break-word;
+                }}
+                .summary-card:hover {{
+                    transform: translateY(-5px);
+                    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+                }}
+                .summary-card h3 {{
+                    font-size: 14px;
+                    font-weight: 500;
+                    margin-bottom: 15px;
+                    opacity: 0.9;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    word-wrap: break-word;
+                }}
+                .summary-card .value {{
+                    font-size: 36px;
+                    font-weight: 700;
+                    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                }}
+                .summary-card.small-text .value {{
+                    font-size: 18px;
+                    font-weight: 600;
+                    line-height: 1.4;
+                }}
+                .charts-section {{
+                    margin-top: 40px;
+                }}
+                .charts-section h2 {{
+                    color: #2c3e50;
+                    font-size: 32px;
+                    font-weight: 600;
+                    margin-bottom: 40px;
+                    padding-bottom: 15px;
+                    border-bottom: 3px solid #91cc75;
+                }}
+                .chart-container {{
+                    background: #ffffff;
+                    padding: 100px 30px 30px 100px;
+                    border-radius: 15px;
+                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+                    margin-bottom: 40px;
+                    border: 1px solid #e8e8e8;
+                    overflow-x: auto;
+                    overflow-y: hidden;
+                }}
+                .chart-container > div {{
+                    min-width: 600px;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding: 30px;
+                    background: #f8f9fa;
+                    color: #6c757d;
+                    font-size: 14px;
+                    border-top: 1px solid #dee2e6;
+                }}
+                .footer strong {{
+                    color: #495057;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="main-container">
+                <div class="header">
                     <h1>{title}</h1>
                     <p>Comprehensive analysis of AWS costs and usage patterns</p>
-
-                    <h2>Summary Statistics</h2>
-                    <div class="summary">
-                        <div class="summary-card">
-                            <h3>Total Cost</h3>
-                            <p>${summary_stats.get('total_cost', 0):,.2f}</p>
-                        </div>
-                        <div class="summary-card">
-                            <h3>Number of Accounts</h3>
-                            <p>{summary_stats.get('num_accounts', 0)}</p>
-                        </div>
-                        <div class="summary-card">
-                            <h3>Number of Services</h3>
-                            <p>{summary_stats.get('num_services', 0)}</p>
-                        </div>
-                        <div class="summary-card">
-                            <h3>Date Range</h3>
-                            <p style="font-size: 16px;">{summary_stats.get('date_range_start', 'N/A')} to {summary_stats.get('date_range_end', 'N/A')}</p>
-                        </div>
-                        <div class="summary-card">
-                            <h3>Total Records</h3>
-                            <p>{summary_stats.get('total_records', 0):,}</p>
+                </div>
+                <div class="content">
+                    <div class="summary-section">
+                        <h2>Executive Summary</h2>
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <h3>Total Cost</h3>
+                                <div class="value">${summary_stats.get('total_cost', 0):,.2f}</div>
+                            </div>
+                            <div class="summary-card">
+                                <h3>Number of Accounts</h3>
+                                <div class="value">{summary_stats.get('num_accounts', 0)}</div>
+                            </div>
+                            <div class="summary-card">
+                                <h3>Number of Services</h3>
+                                <div class="value">{summary_stats.get('num_services', 0)}</div>
+                            </div>
+                            <div class="summary-card small-text">
+                                <h3>Date Range</h3>
+                                <div class="value">{summary_stats.get('date_range_start', 'N/A')}<br>to<br>{summary_stats.get('date_range_end', 'N/A')}</div>
+                            </div>
+                            <div class="summary-card">
+                                <h3>Total Records</h3>
+                                <div class="value">{summary_stats.get('total_records', 0):,}</div>
+                            </div>
                         </div>
                     </div>
+                    <div class="charts-section">
+                        <h2>Detailed Analysis</h2>
+        """
 
-                    <h2>Detailed Analysis</h2>
-            """
-        ]
+        # Add all charts to the page
+        for name, chart in self.charts:
+            page.add(chart)
 
-        # Add all figures
-        for name, fig in self.figures:
-            html_parts.append(f'<div class="chart" id="{name}"></div>')
-            html_parts.append("<script>")
-            html_parts.append(f"var {name}_data = {fig.to_json()};")
-            html_parts.append(f'Plotly.newPlot("{name}", {name}_data.data, {name}_data.layout);')
-            html_parts.append("</script>")
+        # Save the page
+        page.render(output_path)
 
-        # Close HTML
-        html_parts.append(
-            f"""
-                    <div class="timestamp">
-                        Report generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        # Read the generated HTML and inject our custom header
+        with open(output_path, "r", encoding="utf-8") as f:
+            chart_html = f.read()
+
+        # Extract the chart content (everything after <body>)
+        body_start = chart_html.find("<body>")
+        if body_start != -1:
+            chart_content = chart_html[body_start + 6:]  # Skip <body>
+            # Replace Chinese locale with English
+            chart_content = chart_content.replace("locale: 'ZH'", "locale: 'EN'")
+            chart_content = chart_content.replace('locale: "ZH"', 'locale: "EN"')
+            # Wrap charts in containers
+            chart_content = chart_content.replace('<div id="', '<div class="chart-container"><div id="')
+            chart_content = chart_content.replace('</script>', '</script></div>')
+        else:
+            chart_content = chart_html
+            # Replace Chinese locale with English (in case body tag wasn't found)
+            chart_content = chart_content.replace("locale: 'ZH'", "locale: 'EN'")
+            chart_content = chart_content.replace('locale: "ZH"', 'locale: "EN"')
+
+        # Combine our custom HTML with the charts
+        footer_html = f"""
                     </div>
                 </div>
-            </body>
-            </html>
+                <div class="footer">
+                    <strong>Report generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</strong><br>
+                    Powered by Apache ECharts | AWS Cost and Usage Report Generator
+                </div>
+            </div>
         """
-        )
 
-        # Write to file
+        final_html = summary_html + chart_content + footer_html
+
+        # Write the final HTML
         os.makedirs(
             os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True
         )
         with open(output_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(html_parts))
+            f.write(final_html)
 
         logger.info(f"HTML report generated successfully: {output_path}")
         return output_path

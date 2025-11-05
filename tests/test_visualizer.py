@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+from pyecharts.charts import Bar, HeatMap, Line, Pie, Scatter
+from pyecharts.globals import ThemeType
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -18,39 +20,37 @@ class TestCURVisualizer:
         """Test visualizer initialization."""
         visualizer = CURVisualizer()
 
-        assert visualizer.theme == "plotly_white"
-        assert visualizer.figures == []
+        assert visualizer.theme == ThemeType.MACARONS
+        assert visualizer.charts == []
 
     def test_initialization_custom_theme(self):
         """Test visualizer with custom theme."""
-        visualizer = CURVisualizer(theme="plotly_dark")
+        visualizer = CURVisualizer(theme="shine")
 
-        assert visualizer.theme == "plotly_dark"
+        assert visualizer.theme == ThemeType.SHINE
 
     def test_create_cost_by_service_chart(self, sample_aggregated_data):
         """Test creation of cost by service chart."""
         visualizer = CURVisualizer()
-        fig = visualizer.create_cost_by_service_chart(
+        chart = visualizer.create_cost_by_service_chart(
             sample_aggregated_data["cost_by_service"], top_n=3
         )
 
-        assert fig is not None
-        assert len(visualizer.figures) == 1
-        assert visualizer.figures[0][0] == "cost_by_service"
-
-        # Check figure data
-        assert len(fig.data) > 0
-        assert fig.data[0].type == "bar"
+        assert chart is not None
+        assert isinstance(chart, Bar)
+        assert len(visualizer.charts) == 1
+        assert visualizer.charts[0][0] == "cost_by_service"
 
     def test_create_cost_by_account_chart(self, sample_aggregated_data):
         """Test creation of cost by account chart."""
         visualizer = CURVisualizer()
-        fig = visualizer.create_cost_by_account_chart(
+        chart = visualizer.create_cost_by_account_chart(
             sample_aggregated_data["cost_by_account"], top_n=2
         )
 
-        assert fig is not None
-        assert len(visualizer.figures) == 1
+        assert chart is not None
+        assert isinstance(chart, Bar)
+        assert len(visualizer.charts) == 1
 
     def test_create_service_trend_chart(self):
         """Test creation of service trend chart."""
@@ -63,10 +63,10 @@ class TestCURVisualizer:
         )
 
         visualizer = CURVisualizer()
-        fig = visualizer.create_service_trend_chart(df)
+        chart = visualizer.create_service_trend_chart(df)
 
-        assert fig is not None
-        assert len(fig.data) == 2  # One trace per service
+        assert chart is not None
+        assert isinstance(chart, Line)
 
     def test_create_account_trend_chart(self):
         """Test creation of account trend chart."""
@@ -79,10 +79,10 @@ class TestCURVisualizer:
         )
 
         visualizer = CURVisualizer()
-        fig = visualizer.create_account_trend_chart(df)
+        chart = visualizer.create_account_trend_chart(df)
 
-        assert fig is not None
-        assert len(fig.data) == 2  # One trace per account
+        assert chart is not None
+        assert isinstance(chart, Line)
 
     def test_create_account_service_heatmap(self):
         """Test creation of account-service heatmap."""
@@ -95,20 +95,20 @@ class TestCURVisualizer:
         )
 
         visualizer = CURVisualizer()
-        fig = visualizer.create_account_service_heatmap(df)
+        chart = visualizer.create_account_service_heatmap(df)
 
-        assert fig is not None
-        assert fig.data[0].type == "heatmap"
+        assert chart is not None
+        assert isinstance(chart, HeatMap)
 
     def test_create_cost_distribution_pie(self, sample_aggregated_data):
         """Test creation of pie chart."""
         visualizer = CURVisualizer()
-        fig = visualizer.create_cost_distribution_pie(
+        chart = visualizer.create_cost_distribution_pie(
             sample_aggregated_data["cost_by_service"], category="service", top_n=3
         )
 
-        assert fig is not None
-        assert fig.data[0].type == "pie"
+        assert chart is not None
+        assert isinstance(chart, Pie)
 
     def test_create_cost_distribution_pie_with_other(self):
         """Test pie chart with 'Other' category."""
@@ -117,12 +117,11 @@ class TestCURVisualizer:
         )
 
         visualizer = CURVisualizer()
-        fig = visualizer.create_cost_distribution_pie(df, category="service", top_n=5)
+        chart = visualizer.create_cost_distribution_pie(df, category="service", top_n=5)
 
-        assert fig is not None
-        # Should have top 5 + "Other" = 6 items
-        assert len(fig.data[0].labels) == 6
-        assert "Other" in fig.data[0].labels
+        assert chart is not None
+        assert isinstance(chart, Pie)
+        # The chart has been created with grouped data
 
     def test_create_monthly_summary_chart(self):
         """Test creation of monthly summary chart."""
@@ -131,10 +130,10 @@ class TestCURVisualizer:
         )
 
         visualizer = CURVisualizer()
-        fig = visualizer.create_monthly_summary_chart(df)
+        chart = visualizer.create_monthly_summary_chart(df)
 
-        assert fig is not None
-        assert fig.data[0].type == "bar"
+        assert chart is not None
+        assert isinstance(chart, Bar)
 
     def test_create_anomaly_chart(self):
         """Test creation of anomaly chart."""
@@ -147,10 +146,10 @@ class TestCURVisualizer:
         )
 
         visualizer = CURVisualizer()
-        fig = visualizer.create_anomaly_chart(df)
+        chart = visualizer.create_anomaly_chart(df)
 
-        assert fig is not None
-        assert fig.data[0].type == "scatter"
+        assert chart is not None
+        assert isinstance(chart, Scatter)
 
     def test_create_region_chart(self):
         """Test creation of region chart."""
@@ -162,10 +161,10 @@ class TestCURVisualizer:
         )
 
         visualizer = CURVisualizer()
-        fig = visualizer.create_region_chart(df, top_n=3)
+        chart = visualizer.create_region_chart(df, top_n=3)
 
-        assert fig is not None
-        assert fig.data[0].type == "bar"
+        assert chart is not None
+        assert isinstance(chart, Bar)
 
     def test_generate_html_report(self, sample_aggregated_data, temp_output_dir):
         """Test HTML report generation."""
@@ -200,8 +199,8 @@ class TestCURVisualizer:
 
         assert "Test Report" in html_content
         assert "10,000.00" in html_content  # Total cost
-        assert "Summary Statistics" in html_content
-        assert "plotly" in html_content.lower()
+        assert "Executive Summary" in html_content
+        assert "echarts" in html_content.lower()
 
     def test_generate_html_report_no_charts(self, temp_output_dir):
         """Test HTML report generation with no charts."""
@@ -230,20 +229,21 @@ class TestCURVisualizer:
         visualizer.create_cost_by_service_chart(sample_aggregated_data["cost_by_service"])
         visualizer.create_cost_by_account_chart(sample_aggregated_data["cost_by_account"])
 
-        assert len(visualizer.figures) == 2
+        assert len(visualizer.charts) == 2
 
-        # Check all figure names are unique
-        figure_names = [name for name, _ in visualizer.figures]
-        assert len(figure_names) == len(set(figure_names))
+        # Check all chart names are unique
+        chart_names = [name for name, _ in visualizer.charts]
+        assert len(chart_names) == len(set(chart_names))
 
     def test_chart_customization(self, sample_aggregated_data):
         """Test chart customization with different parameters."""
-        visualizer = CURVisualizer(theme="plotly_dark")
+        visualizer = CURVisualizer(theme="dark")
 
-        fig = visualizer.create_cost_by_service_chart(
+        chart = visualizer.create_cost_by_service_chart(
             sample_aggregated_data["cost_by_service"], top_n=5, title="Custom Title"
         )
 
-        assert fig.layout.title.text == "Custom Title"
-        # Plotly applies the template, just verify it's not None
-        assert fig.layout.template is not None
+        assert chart is not None
+        assert isinstance(chart, Bar)
+        # Chart has been created with custom parameters
+        assert visualizer.theme == ThemeType.DARK

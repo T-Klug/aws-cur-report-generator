@@ -121,20 +121,6 @@ class TestCURDataProcessor:
         assert 'total_cost' in breakdown.columns
         assert len(breakdown) > 0
 
-    def test_get_daily_cost_trend(self, sample_cur_data):
-        """Test daily cost trend calculation."""
-        processor = CURDataProcessor(sample_cur_data)
-        daily_trend = processor.get_daily_cost_trend()
-
-        assert isinstance(daily_trend, pd.DataFrame)
-        assert 'date' in daily_trend.columns
-        assert 'total_cost' in daily_trend.columns
-        assert '7_day_ma' in daily_trend.columns
-        assert '30_day_ma' in daily_trend.columns
-
-        # Check sorted by date
-        assert daily_trend['date'].is_monotonic_increasing
-
     def test_get_cost_trend_by_service(self, sample_cur_data):
         """Test cost trends over time for services."""
         processor = CURDataProcessor(sample_cur_data)
@@ -230,9 +216,6 @@ class TestCURDataProcessor:
 
         assert isinstance(summary, dict)
         assert 'total_cost' in summary
-        assert 'average_daily_cost' in summary
-        assert 'min_daily_cost' in summary
-        assert 'max_daily_cost' in summary
         assert 'num_accounts' in summary
         assert 'num_services' in summary
         assert 'date_range_start' in summary

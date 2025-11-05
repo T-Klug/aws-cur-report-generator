@@ -54,16 +54,6 @@ class TestCURVisualizer:
         assert fig is not None
         assert len(visualizer.figures) == 1
 
-    def test_create_daily_trend_chart(self, sample_aggregated_data):
-        """Test creation of daily trend chart."""
-        visualizer = CURVisualizer()
-        fig = visualizer.create_daily_trend_chart(
-            sample_aggregated_data['daily_trend']
-        )
-
-        assert fig is not None
-        assert len(fig.data) == 3  # Daily cost + 7-day MA + 30-day MA
-
     def test_create_service_trend_chart(self):
         """Test creation of service trend chart."""
         df = pd.DataFrame({
@@ -252,11 +242,8 @@ class TestCURVisualizer:
         visualizer.create_cost_by_account_chart(
             sample_aggregated_data['cost_by_account']
         )
-        visualizer.create_daily_trend_chart(
-            sample_aggregated_data['daily_trend']
-        )
 
-        assert len(visualizer.figures) == 3
+        assert len(visualizer.figures) == 2
 
         # Check all figure names are unique
         figure_names = [name for name, _ in visualizer.figures]

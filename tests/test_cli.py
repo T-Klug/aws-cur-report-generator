@@ -40,7 +40,6 @@ class TestCLI:
             mock_processor_instance.get_cost_by_service.return_value = sample_aggregated_data['cost_by_service']
             mock_processor_instance.get_cost_by_account.return_value = sample_aggregated_data['cost_by_account']
             mock_processor_instance.get_cost_by_account_and_service.return_value = pd.DataFrame()
-            mock_processor_instance.get_daily_cost_trend.return_value = sample_aggregated_data['daily_trend']
             mock_processor_instance.get_cost_trend_by_service.return_value = pd.DataFrame()
             mock_processor_instance.get_cost_trend_by_account.return_value = pd.DataFrame()
             mock_processor_instance.get_monthly_summary.return_value = pd.DataFrame({

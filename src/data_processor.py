@@ -253,29 +253,6 @@ class CURDataProcessor:
 
         return result
 
-    def get_daily_cost_trend(self) -> pd.DataFrame:
-        """
-        Get daily cost trends.
-
-        Returns:
-            DataFrame with daily costs
-        """
-        if not hasattr(self, 'prepared_df'):
-            self.prepare_data()
-
-        logger.info("Calculating daily cost trends...")
-        result = self.prepared_df.groupby('date').agg({
-            'cost': 'sum'
-        }).reset_index()
-        result.columns = ['date', 'total_cost']
-        result = result.sort_values(by='date')
-
-        # Calculate moving averages
-        result['7_day_ma'] = result['total_cost'].rolling(window=7, min_periods=1).mean()
-        result['30_day_ma'] = result['total_cost'].rolling(window=30, min_periods=1).mean()
-
-        return result
-
     def get_cost_trend_by_service(self, top_services: int = 5) -> pd.DataFrame:
         """
         Get cost trends over time for top services.
@@ -368,8 +345,12 @@ class CURDataProcessor:
 
         logger.info("Detecting cost anomalies...")
 
-        # Get daily costs
-        daily_costs = self.get_daily_cost_trend()
+        # Calculate daily costs
+        daily_costs = self.prepared_df.groupby('date').agg({
+            'cost': 'sum'
+        }).reset_index()
+        daily_costs.columns = ['date', 'total_cost']
+        daily_costs = daily_costs.sort_values(by='date')
 
         # Calculate statistics
         mean_cost = daily_costs['total_cost'].mean()
@@ -431,9 +412,6 @@ class CURDataProcessor:
 
         summary = {
             'total_cost': float(df['cost'].sum()),
-            'average_daily_cost': float(df.groupby('date')['cost'].sum().mean()),
-            'min_daily_cost': float(df.groupby('date')['cost'].sum().min()),
-            'max_daily_cost': float(df.groupby('date')['cost'].sum().max()),
             'num_accounts': int(account_col.nunique()),
             'num_services': int(service_col.nunique()),
             'date_range_start': str(df['usage_date'].min().date()),

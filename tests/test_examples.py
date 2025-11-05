@@ -30,7 +30,6 @@ class TestExampleReports:
         cost_by_account_service = processor.get_cost_by_account_and_service(
             top_accounts=2, top_services=4
         )
-        daily_trend = processor.get_daily_cost_trend()
         service_trend = processor.get_cost_trend_by_service(top_services=4)
         account_trend = processor.get_cost_trend_by_account(top_accounts=2)
         monthly_summary = processor.get_monthly_summary()
@@ -52,11 +51,6 @@ class TestExampleReports:
             cost_by_account,
             top_n=10,
             title="Cost by AWS Account"
-        )
-
-        visualizer.create_daily_trend_chart(
-            daily_trend,
-            title="6-Month Cost Trends (Jan-Jun 2024) with Moving Averages"
         )
 
         if not service_trend.empty:
@@ -135,12 +129,10 @@ class TestExampleReports:
         assert 'Total Cost' in html_content
         assert 'plotly' in html_content.lower()
         assert 'Top 10 AWS Services by Cost' in html_content
-        assert '6-Month Cost Trends' in html_content
 
         # Verify all chart types are included
         assert 'cost_by_service' in html_content
         assert 'cost_by_account' in html_content
-        assert 'daily_trend' in html_content
 
         print(f"\n✅ Example report generated: {output_path}")
         print(f"   File size: {Path(output_path).stat().st_size:,} bytes")
@@ -164,7 +156,6 @@ class TestExampleReports:
         csv_files = {
             'cost_by_service': processor.get_cost_by_service(top_n=10),
             'cost_by_account': processor.get_cost_by_account(top_n=10),
-            'daily_trend': processor.get_daily_cost_trend(),
             'monthly_summary': processor.get_monthly_summary(),
         }
 
@@ -187,7 +178,6 @@ class TestExampleReports:
             'example_report.html',
             'cost_by_service_example.csv',
             'cost_by_account_example.csv',
-            'daily_trend_example.csv',
             'monthly_summary_example.csv',
         ]
 

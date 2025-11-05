@@ -173,9 +173,9 @@ def sample_cur_data():
         services_dev = {
             "AmazonEC2": {
                 "base": 45000,
-                "pattern": lambda: random.uniform(1.5, 2.5)
-                if is_load_test_month
-                else random.uniform(0.6, 1.2),
+                "pattern": lambda: (
+                    random.uniform(1.5, 2.5) if is_load_test_month else random.uniform(0.6, 1.2)
+                ),
             },
             "AmazonRDS": {
                 "base": 54000,
@@ -187,15 +187,15 @@ def sample_cur_data():
             },
             "AmazonEKS": {
                 "base": 36000,
-                "pattern": lambda: random.uniform(1.8, 2.8)
-                if is_load_test_month
-                else random.uniform(0.5, 1.0),
+                "pattern": lambda: (
+                    random.uniform(1.8, 2.8) if is_load_test_month else random.uniform(0.5, 1.0)
+                ),
             },
             "AWSLambda": {
                 "base": 9000,
-                "pattern": lambda: random.uniform(2.0, 4.0)
-                if is_load_test_month
-                else random.uniform(0.5, 1.5),
+                "pattern": lambda: (
+                    random.uniform(2.0, 4.0) if is_load_test_month else random.uniform(0.5, 1.5)
+                ),
             },
             "AmazonCloudFront": {
                 "base": 15000,

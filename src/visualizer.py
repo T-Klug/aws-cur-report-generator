@@ -64,7 +64,9 @@ class CURVisualizer:
                 label_opts=opts.LabelOpts(
                     is_show=True,
                     position="top",
-                    formatter=JsCode("function(params) { return '$' + params.value.toLocaleString(); }"),
+                    formatter=JsCode(
+                        "function(params) { return '$' + params.value.toLocaleString(); }"
+                    ),
                 ),
                 itemstyle_opts=opts.ItemStyleOpts(
                     color="#5470c6",
@@ -136,7 +138,9 @@ class CURVisualizer:
                 label_opts=opts.LabelOpts(
                     is_show=True,
                     position="top",
-                    formatter=JsCode("function(params) { return '$' + params.value.toLocaleString(); }"),
+                    formatter=JsCode(
+                        "function(params) { return '$' + params.value.toLocaleString(); }"
+                    ),
                 ),
                 itemstyle_opts=opts.ItemStyleOpts(
                     color="#91cc75",
@@ -206,7 +210,16 @@ class CURVisualizer:
         line.add_xaxis(date_strs)
 
         # Color palette for better distinction
-        colors = ["#5470c6", "#91cc75", "#fac858", "#ee6666", "#73c0de", "#3ba272", "#fc8452", "#9a60b4"]
+        colors = [
+            "#5470c6",
+            "#91cc75",
+            "#fac858",
+            "#ee6666",
+            "#73c0de",
+            "#3ba272",
+            "#fc8452",
+            "#9a60b4",
+        ]
 
         for i, service in enumerate(services):
             service_data = df[df["service"] == service]
@@ -271,9 +284,13 @@ class CURVisualizer:
                 feature=opts.ToolBoxFeatureOpts(
                     save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
                     restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", back_title="Reset Zoom"),
+                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(
+                        zoom_title="Zoom", back_title="Reset Zoom"
+                    ),
                     data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", bar_title="Bar", stack_title="Stack"),
+                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(
+                        line_title="Line", bar_title="Bar", stack_title="Stack"
+                    ),
                 ),
             ),
         )
@@ -307,7 +324,16 @@ class CURVisualizer:
         line.add_xaxis(date_strs)
 
         # Color palette
-        colors = ["#5470c6", "#91cc75", "#fac858", "#ee6666", "#73c0de", "#3ba272", "#fc8452", "#9a60b4"]
+        colors = [
+            "#5470c6",
+            "#91cc75",
+            "#fac858",
+            "#ee6666",
+            "#73c0de",
+            "#3ba272",
+            "#fc8452",
+            "#9a60b4",
+        ]
 
         for i, account in enumerate(accounts):
             account_data = df[df["account_id"] == account]
@@ -372,9 +398,13 @@ class CURVisualizer:
                 feature=opts.ToolBoxFeatureOpts(
                     save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
                     restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", back_title="Reset Zoom"),
+                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(
+                        zoom_title="Zoom", back_title="Reset Zoom"
+                    ),
                     data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(line_title="Line", bar_title="Bar", stack_title="Stack"),
+                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(
+                        line_title="Line", bar_title="Bar", stack_title="Stack"
+                    ),
                 ),
             ),
         )
@@ -422,7 +452,9 @@ class CURVisualizer:
                 label_opts=opts.LabelOpts(
                     is_show=True,
                     position="inside",
-                    formatter=JsCode("function(params) { return params.value[2] > 0 ? '$' + params.value[2].toLocaleString() : ''; }"),
+                    formatter=JsCode(
+                        "function(params) { return params.value[2] > 0 ? '$' + params.value[2].toLocaleString() : ''; }"
+                    ),
                     font_size=10,
                 ),
             )
@@ -580,7 +612,9 @@ class CURVisualizer:
                 label_opts=opts.LabelOpts(
                     is_show=True,
                     position="top",
-                    formatter=JsCode("function(params) { return '$' + params.value.toLocaleString(); }"),
+                    formatter=JsCode(
+                        "function(params) { return '$' + params.value.toLocaleString(); }"
+                    ),
                 ),
                 itemstyle_opts=opts.ItemStyleOpts(
                     color="#5470c6",
@@ -683,11 +717,13 @@ class CURVisualizer:
                 symbol_size = 16
                 color = "#ee6666"
 
-            data.append({
-                "value": [dates[i], round(costs[i], 2), round(z_score, 2)],
-                "itemStyle": {"color": color},
-                "symbolSize": symbol_size,
-            })
+            data.append(
+                {
+                    "value": [dates[i], round(costs[i], 2), round(z_score, 2)],
+                    "itemStyle": {"color": color},
+                    "symbolSize": symbol_size,
+                }
+            )
 
         scatter = (
             Scatter(init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%"))
@@ -731,7 +767,9 @@ class CURVisualizer:
                     feature=opts.ToolBoxFeatureOpts(
                         save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
                         restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                        data_zoom=opts.ToolBoxFeatureDataZoomOpts(zoom_title="Zoom", back_title="Reset Zoom"),
+                        data_zoom=opts.ToolBoxFeatureDataZoomOpts(
+                            zoom_title="Zoom", back_title="Reset Zoom"
+                        ),
                         data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
                     ),
                 ),
@@ -768,7 +806,9 @@ class CURVisualizer:
                 label_opts=opts.LabelOpts(
                     is_show=True,
                     position="top",
-                    formatter=JsCode("function(params) { return '$' + params.value.toLocaleString(); }"),
+                    formatter=JsCode(
+                        "function(params) { return '$' + params.value.toLocaleString(); }"
+                    ),
                 ),
                 itemstyle_opts=opts.ItemStyleOpts(
                     color="#fac858",
@@ -1022,13 +1062,15 @@ class CURVisualizer:
         # Extract the chart content (everything after <body>)
         body_start = chart_html.find("<body>")
         if body_start != -1:
-            chart_content = chart_html[body_start + 6:]  # Skip <body>
+            chart_content = chart_html[body_start + 6 :]  # Skip <body>
             # Replace Chinese locale with English
             chart_content = chart_content.replace("locale: 'ZH'", "locale: 'EN'")
             chart_content = chart_content.replace('locale: "ZH"', 'locale: "EN"')
             # Wrap charts in containers
-            chart_content = chart_content.replace('<div id="', '<div class="chart-container"><div id="')
-            chart_content = chart_content.replace('</script>', '</script></div>')
+            chart_content = chart_content.replace(
+                '<div id="', '<div class="chart-container"><div id="'
+            )
+            chart_content = chart_content.replace("</script>", "</script></div>")
         else:
             chart_content = chart_html
             # Replace Chinese locale with English (in case body tag wasn't found)

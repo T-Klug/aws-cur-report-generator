@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from data_processor import CURDataProcessor
 from visualizer import CURVisualizer
@@ -30,7 +30,6 @@ class TestExampleReports:
         cost_by_account_service = processor.get_cost_by_account_and_service(
             top_accounts=2, top_services=4
         )
-        daily_trend = processor.get_daily_cost_trend()
         service_trend = processor.get_cost_trend_by_service(top_services=4)
         account_trend = processor.get_cost_trend_by_account(top_accounts=2)
         monthly_summary = processor.get_monthly_summary()
@@ -39,86 +38,58 @@ class TestExampleReports:
         summary_stats = processor.get_summary_statistics()
 
         # Create visualizations
-        visualizer = CURVisualizer(theme='plotly_white')
+        visualizer = CURVisualizer(theme="plotly_white")
 
         # Generate all chart types
         visualizer.create_cost_by_service_chart(
-            cost_by_service,
-            top_n=10,
-            title="Top 10 AWS Services by Cost"
+            cost_by_service, top_n=10, title="Top 10 AWS Services by Cost"
         )
 
         visualizer.create_cost_by_account_chart(
-            cost_by_account,
-            top_n=10,
-            title="Cost by AWS Account"
-        )
-
-        visualizer.create_daily_trend_chart(
-            daily_trend,
-            title="6-Month Cost Trends (Jan-Jun 2024) with Moving Averages"
+            cost_by_account, top_n=10, title="Cost by AWS Account"
         )
 
         if not service_trend.empty:
             visualizer.create_service_trend_chart(
-                service_trend,
-                title="Service Cost Trends (6 Months)"
+                service_trend, title="Service Cost Trends (6 Months)"
             )
 
         if not account_trend.empty:
             visualizer.create_account_trend_chart(
-                account_trend,
-                title="Account Cost Trends (6 Months)"
+                account_trend, title="Account Cost Trends (6 Months)"
             )
 
         if not cost_by_account_service.empty:
             visualizer.create_account_service_heatmap(
-                cost_by_account_service,
-                title="Cost Heatmap: Account vs Service"
+                cost_by_account_service, title="Cost Heatmap: Account vs Service"
             )
 
         visualizer.create_cost_distribution_pie(
-            cost_by_service,
-            category='service',
-            top_n=8,
-            title="Service Cost Distribution"
+            cost_by_service, category="service", top_n=8, title="Service Cost Distribution"
         )
 
         visualizer.create_cost_distribution_pie(
-            cost_by_account,
-            category='account',
-            top_n=8,
-            title="Account Cost Distribution"
+            cost_by_account, category="account", top_n=8, title="Account Cost Distribution"
         )
 
-        visualizer.create_monthly_summary_chart(
-            monthly_summary,
-            title="Monthly Cost Summary"
-        )
+        visualizer.create_monthly_summary_chart(monthly_summary, title="Monthly Cost Summary")
 
         if not anomalies.empty:
             visualizer.create_anomaly_chart(
-                anomalies,
-                title="Cost Anomalies Detection (Statistical Outliers)"
+                anomalies, title="Cost Anomalies Detection (Statistical Outliers)"
             )
 
         if not cost_by_region.empty:
-            visualizer.create_region_chart(
-                cost_by_region,
-                top_n=5,
-                title="Cost by AWS Region"
-            )
+            visualizer.create_region_chart(cost_by_region, top_n=5, title="Cost by AWS Region")
 
         # Generate HTML report
-        examples_dir = Path(__file__).parent.parent / 'examples'
+        examples_dir = Path(__file__).parent.parent / "examples"
         examples_dir.mkdir(exist_ok=True)
 
-        output_path = examples_dir / 'example_report.html'
+        output_path = examples_dir / "example_report.html"
 
         visualizer.generate_html_report(
-            str(output_path),
-            summary_stats,
-            title="AWS Cost and Usage Report - Example Report"
+            str(output_path), summary_stats, title="AWS Cost and Usage Report - Example Report"
         )
 
         # Verify the report was created
@@ -126,27 +97,27 @@ class TestExampleReports:
         assert Path(output_path).stat().st_size > 10000  # Should be substantial
 
         # Read and verify HTML content
-        with open(output_path, 'r', encoding='utf-8') as f:
+        with open(output_path, "r", encoding="utf-8") as f:
             html_content = f.read()
 
         # Verify key elements are present
-        assert 'AWS Cost and Usage Report - Example Report' in html_content
-        assert 'Summary Statistics' in html_content
-        assert 'Total Cost' in html_content
-        assert 'plotly' in html_content.lower()
-        assert 'Top 10 AWS Services by Cost' in html_content
-        assert '6-Month Cost Trends' in html_content
+        assert "AWS Cost and Usage Report - Example Report" in html_content
+        assert "Summary Statistics" in html_content
+        assert "Total Cost" in html_content
+        assert "plotly" in html_content.lower()
+        assert "Top 10 AWS Services by Cost" in html_content
 
         # Verify all chart types are included
-        assert 'cost_by_service' in html_content
-        assert 'cost_by_account' in html_content
-        assert 'daily_trend' in html_content
+        assert "cost_by_service" in html_content
+        assert "cost_by_account" in html_content
 
         print(f"\n✅ Example report generated: {output_path}")
         print(f"   File size: {Path(output_path).stat().st_size:,} bytes")
         print(f"   Charts included: {len(visualizer.figures)}")
         print(f"   Total cost in example: ${summary_stats['total_cost']:,.2f}")
-        print(f"   Date range: {summary_stats['date_range_start']} to {summary_stats['date_range_end']}")
+        print(
+            f"   Date range: {summary_stats['date_range_start']} to {summary_stats['date_range_end']}"
+        )
 
     def test_generate_example_csv_exports(self, sample_cur_data):
         """
@@ -157,19 +128,18 @@ class TestExampleReports:
         processor.prepare_data()
 
         # Create examples directory
-        examples_dir = Path(__file__).parent.parent / 'examples'
+        examples_dir = Path(__file__).parent.parent / "examples"
         examples_dir.mkdir(exist_ok=True)
 
         # Generate CSV files
         csv_files = {
-            'cost_by_service': processor.get_cost_by_service(top_n=10),
-            'cost_by_account': processor.get_cost_by_account(top_n=10),
-            'daily_trend': processor.get_daily_cost_trend(),
-            'monthly_summary': processor.get_monthly_summary(),
+            "cost_by_service": processor.get_cost_by_service(top_n=10),
+            "cost_by_account": processor.get_cost_by_account(top_n=10),
+            "monthly_summary": processor.get_monthly_summary(),
         }
 
         for name, df in csv_files.items():
-            csv_path = examples_dir / f'{name}_example.csv'
+            csv_path = examples_dir / f"{name}_example.csv"
             df.to_csv(csv_path, index=False)
 
             # Verify file was created
@@ -180,15 +150,14 @@ class TestExampleReports:
 
     def test_example_report_completeness(self):
         """Verify all example files exist in the examples directory."""
-        examples_dir = Path(__file__).parent.parent / 'examples'
+        examples_dir = Path(__file__).parent.parent / "examples"
 
         # After running the generation tests, these files should exist
         expected_files = [
-            'example_report.html',
-            'cost_by_service_example.csv',
-            'cost_by_account_example.csv',
-            'daily_trend_example.csv',
-            'monthly_summary_example.csv',
+            "example_report.html",
+            "cost_by_service_example.csv",
+            "cost_by_account_example.csv",
+            "monthly_summary_example.csv",
         ]
 
         for filename in expected_files:

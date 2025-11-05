@@ -87,7 +87,7 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
     This tool reads CUR data from S3 and generates detailed visual analytics including:
     - Cost trends over time
     - Cost breakdown by service and account
-    - Daily, weekly, and monthly aggregations
+    - Monthly aggregations and summaries
     - Cost anomaly detection
     - Interactive visualizations
 
@@ -177,7 +177,6 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         cost_by_account_service = processor.get_cost_by_account_and_service(
             top_accounts=top_n, top_services=top_n
         )
-        daily_trend = processor.get_daily_cost_trend()
         service_trend = processor.get_cost_trend_by_service(top_services=5)
         account_trend = processor.get_cost_trend_by_account(top_accounts=5)
         monthly_summary = processor.get_monthly_summary()
@@ -191,14 +190,11 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         print(f"{Fore.GREEN}[3/4] Creating visualizations...{Style.RESET_ALL}")
         visualizer = CURVisualizer()
 
-        with tqdm(total=11, desc="Generating charts", bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}') as pbar:
+        with tqdm(total=10, desc="Generating charts", bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}') as pbar:
             visualizer.create_cost_by_service_chart(cost_by_service, top_n=top_n)
             pbar.update(1)
 
             visualizer.create_cost_by_account_chart(cost_by_account, top_n=top_n)
-            pbar.update(1)
-
-            visualizer.create_daily_trend_chart(daily_trend)
             pbar.update(1)
 
             if not service_trend.empty:
@@ -258,7 +254,6 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
             csv_files = {
                 'cost_by_service': cost_by_service,
                 'cost_by_account': cost_by_account,
-                'daily_trend': daily_trend,
                 'monthly_summary': monthly_summary,
             }
 
@@ -274,11 +269,10 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         print(f"{Fore.CYAN}Report Summary:{Style.RESET_ALL}")
         print(f"{Fore.CYAN}{'='*60}{Style.RESET_ALL}")
         print(f"Total Cost: {Fore.YELLOW}${summary_stats['total_cost']:,.2f}{Style.RESET_ALL}")
-        print(f"Average Daily Cost: {Fore.YELLOW}${summary_stats['average_daily_cost']:,.2f}{Style.RESET_ALL}")
-        print(f"Peak Daily Cost: {Fore.YELLOW}${summary_stats['max_daily_cost']:,.2f}{Style.RESET_ALL}")
         print(f"Number of Accounts: {summary_stats['num_accounts']}")
         print(f"Number of Services: {summary_stats['num_services']}")
         print(f"Date Range: {summary_stats['date_range_start']} to {summary_stats['date_range_end']}")
+        print(f"Total Records: {summary_stats['total_records']:,}")
 
         if anomalies is not None and not anomalies.empty:
             print(f"\n{Fore.YELLOW}⚠ Found {len(anomalies)} days with anomalous costs{Style.RESET_ALL}")

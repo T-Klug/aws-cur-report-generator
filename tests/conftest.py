@@ -12,11 +12,12 @@ import pytest
 def sample_cur_data():
     """Generate 6 months of monthly CUR data with dramatically distinct patterns per account."""
     import random
+
     random.seed(42)  # For reproducibility
 
     # 6 months of daily data (Jan - Jun 2024)
-    dates = pd.date_range(start='2024-01-01', end='2024-06-30', freq='D')
-    regions = ['us-east-1', 'us-west-2', 'eu-west-1', 'ap-southeast-1', 'ap-northeast-1']
+    dates = pd.date_range(start="2024-01-01", end="2024-06-30", freq="D")
+    regions = ["us-east-1", "us-west-2", "eu-west-1", "ap-southeast-1", "ap-northeast-1"]
 
     data = []
 
@@ -105,32 +106,36 @@ def sample_cur_data():
         # Add all records
         services = [
             # Production account
-            ('123456789012', 'AmazonEC2', ec2_prod, 'us-east-1'),
-            ('123456789012', 'AmazonRDS', rds_prod, 'us-east-1'),
-            ('123456789012', 'AmazonS3', s3_prod, random.choice(regions)),
-            ('123456789012', 'AWSLambda', lambda_prod, random.choice(regions)),
-            ('123456789012', 'AmazonCloudFront', cf_prod, 'us-east-1'),
-            ('123456789012', 'AmazonDynamoDB', dynamo_prod, 'us-east-1'),
+            ("123456789012", "AmazonEC2", ec2_prod, "us-east-1"),
+            ("123456789012", "AmazonRDS", rds_prod, "us-east-1"),
+            ("123456789012", "AmazonS3", s3_prod, random.choice(regions)),
+            ("123456789012", "AWSLambda", lambda_prod, random.choice(regions)),
+            ("123456789012", "AmazonCloudFront", cf_prod, "us-east-1"),
+            ("123456789012", "AmazonDynamoDB", dynamo_prod, "us-east-1"),
             # Dev account
-            ('210987654321', 'AmazonEC2', ec2_dev, 'us-west-2'),
-            ('210987654321', 'AmazonRDS', rds_dev, 'us-west-2'),
-            ('210987654321', 'AmazonS3', s3_dev, random.choice(regions)),
-            ('210987654321', 'AWSLambda', lambda_dev, random.choice(regions)),
-            ('210987654321', 'AmazonCloudFront', cf_dev, 'us-west-2'),
-            ('210987654321', 'AmazonDynamoDB', dynamo_dev, 'us-west-2'),
+            ("210987654321", "AmazonEC2", ec2_dev, "us-west-2"),
+            ("210987654321", "AmazonRDS", rds_dev, "us-west-2"),
+            ("210987654321", "AmazonS3", s3_dev, random.choice(regions)),
+            ("210987654321", "AWSLambda", lambda_dev, random.choice(regions)),
+            ("210987654321", "AmazonCloudFront", cf_dev, "us-west-2"),
+            ("210987654321", "AmazonDynamoDB", dynamo_dev, "us-west-2"),
         ]
 
         for account, service, cost, region in services:
-            data.append({
-                'line_item_usage_start_date': date,
-                'line_item_usage_account_id': account,
-                'line_item_product_code': service,
-                'line_item_unblended_cost': round(max(10.0, cost), 2),
-                'line_item_usage_type': f'{service}:Usage',
-                'line_item_operation': 'RunInstances' if service == 'AmazonEC2' else 'StandardStorage',
-                'product_region': region,
-                'line_item_resource_id': f'{service[6:9].lower()}-{hash(f"{date}{service}{account}") % 1000000:06d}'
-            })
+            data.append(
+                {
+                    "line_item_usage_start_date": date,
+                    "line_item_usage_account_id": account,
+                    "line_item_product_code": service,
+                    "line_item_unblended_cost": round(max(10.0, cost), 2),
+                    "line_item_usage_type": f"{service}:Usage",
+                    "line_item_operation": (
+                        "RunInstances" if service == "AmazonEC2" else "StandardStorage"
+                    ),
+                    "product_region": region,
+                    "line_item_resource_id": f'{service[6:9].lower()}-{hash(f"{date}{service}{account}") % 1000000:06d}',
+                }
+            )
 
     return pd.DataFrame(data)
 
@@ -138,14 +143,14 @@ def sample_cur_data():
 @pytest.fixture
 def sample_cur_csv_content(sample_cur_data):
     """Generate CSV content from sample data."""
-    return sample_cur_data.to_csv(index=False).encode('utf-8')
+    return sample_cur_data.to_csv(index=False).encode("utf-8")
 
 
 @pytest.fixture
 def sample_cur_csv_gz_content(sample_cur_csv_content):
     """Generate gzipped CSV content."""
     buffer = io.BytesIO()
-    with gzip.GzipFile(fileobj=buffer, mode='wb') as gz:
+    with gzip.GzipFile(fileobj=buffer, mode="wb") as gz:
         gz.write(sample_cur_csv_content)
     return buffer.getvalue()
 
@@ -156,40 +161,40 @@ def mock_s3_objects():
     return [
         # January 2024 - available at end of January
         {
-            'Key': 'cur-reports/test-cur/20240101-20240201/test-cur-00001.csv.gz',
-            'LastModified': datetime(2024, 1, 31),
-            'Size': 2048
+            "Key": "cur-reports/test-cur/20240101-20240201/test-cur-00001.csv.gz",
+            "LastModified": datetime(2024, 1, 31),
+            "Size": 2048,
         },
         # February 2024 - available at end of February
         {
-            'Key': 'cur-reports/test-cur/20240201-20240301/test-cur-00001.csv.gz',
-            'LastModified': datetime(2024, 2, 29),
-            'Size': 2048
+            "Key": "cur-reports/test-cur/20240201-20240301/test-cur-00001.csv.gz",
+            "LastModified": datetime(2024, 2, 29),
+            "Size": 2048,
         },
         # March 2024 - available at end of March
         {
-            'Key': 'cur-reports/test-cur/20240301-20240401/test-cur-00001.csv.gz',
-            'LastModified': datetime(2024, 3, 31),
-            'Size': 2048
+            "Key": "cur-reports/test-cur/20240301-20240401/test-cur-00001.csv.gz",
+            "LastModified": datetime(2024, 3, 31),
+            "Size": 2048,
         },
         # April 2024 - available at end of April
         {
-            'Key': 'cur-reports/test-cur/20240401-20240501/test-cur-00001.csv.gz',
-            'LastModified': datetime(2024, 4, 30),
-            'Size': 2048
+            "Key": "cur-reports/test-cur/20240401-20240501/test-cur-00001.csv.gz",
+            "LastModified": datetime(2024, 4, 30),
+            "Size": 2048,
         },
         # May 2024 - available at end of May
         {
-            'Key': 'cur-reports/test-cur/20240501-20240601/test-cur-00001.csv.gz',
-            'LastModified': datetime(2024, 5, 31),
-            'Size': 2048
+            "Key": "cur-reports/test-cur/20240501-20240601/test-cur-00001.csv.gz",
+            "LastModified": datetime(2024, 5, 31),
+            "Size": 2048,
         },
         # June 2024 - available at end of June
         {
-            'Key': 'cur-reports/test-cur/20240601-20240701/test-cur-00001.csv.gz',
-            'LastModified': datetime(2024, 6, 30),
-            'Size': 2048
-        }
+            "Key": "cur-reports/test-cur/20240601-20240701/test-cur-00001.csv.gz",
+            "LastModified": datetime(2024, 6, 30),
+            "Size": 2048,
+        },
     ]
 
 
@@ -197,20 +202,15 @@ def mock_s3_objects():
 def sample_aggregated_data():
     """Generate sample aggregated data for testing processor outputs."""
     return {
-        'cost_by_service': pd.DataFrame({
-            'service': ['AmazonEC2', 'AmazonS3', 'AmazonRDS'],
-            'total_cost': [1500.00, 800.00, 600.00]
-        }),
-        'cost_by_account': pd.DataFrame({
-            'account_id': ['123456789012', '210987654321'],
-            'total_cost': [2000.00, 900.00]
-        }),
-        'daily_trend': pd.DataFrame({
-            'date': pd.date_range(start='2024-01-01', periods=10),
-            'total_cost': [100.0, 110.0, 105.0, 120.0, 115.0, 130.0, 125.0, 140.0, 135.0, 150.0],
-            '7_day_ma': [100.0, 105.0, 105.0, 108.75, 110.0, 113.33, 115.71, 120.71, 124.29, 130.0],
-            '30_day_ma': [100.0, 105.0, 105.0, 108.75, 110.0, 113.33, 115.71, 120.71, 124.29, 130.0]
-        })
+        "cost_by_service": pd.DataFrame(
+            {
+                "service": ["AmazonEC2", "AmazonS3", "AmazonRDS"],
+                "total_cost": [1500.00, 800.00, 600.00],
+            }
+        ),
+        "cost_by_account": pd.DataFrame(
+            {"account_id": ["123456789012", "210987654321"], "total_cost": [2000.00, 900.00]}
+        ),
     }
 
 
@@ -225,9 +225,9 @@ def temp_output_dir(tmp_path):
 @pytest.fixture
 def mock_env_vars(monkeypatch):
     """Set mock environment variables for testing."""
-    monkeypatch.setenv('CUR_BUCKET', 'test-bucket')
-    monkeypatch.setenv('CUR_PREFIX', 'cur-reports/test-cur')
-    monkeypatch.setenv('AWS_REGION', 'us-east-1')
-    monkeypatch.setenv('AWS_PROFILE', 'test-profile')
-    monkeypatch.setenv('OUTPUT_DIR', 'test-reports')
-    monkeypatch.setenv('TOP_N', '10')
+    monkeypatch.setenv("CUR_BUCKET", "test-bucket")
+    monkeypatch.setenv("CUR_PREFIX", "cur-reports/test-cur")
+    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    monkeypatch.setenv("AWS_PROFILE", "test-profile")
+    monkeypatch.setenv("OUTPUT_DIR", "test-reports")
+    monkeypatch.setenv("TOP_N", "10")

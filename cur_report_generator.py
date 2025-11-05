@@ -109,6 +109,10 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
     aws_profile = os.getenv('AWS_PROFILE')
     aws_region = os.getenv('AWS_REGION', 'us-east-1')
 
+    # Assert non-None after validation (validate_env_vars ensures these exist)
+    assert bucket is not None, "CUR_BUCKET must be set"
+    assert prefix is not None, "CUR_PREFIX must be set"
+
     # Use provided values or defaults from env
     output_dir = output_dir or os.getenv('OUTPUT_DIR', 'reports')
     top_n = top_n or int(os.getenv('TOP_N', '10'))

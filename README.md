@@ -58,24 +58,23 @@ Before using this tool, you need to set up Cost and Usage Reports in AWS:
 
 ## Installation
 
-1. **Clone the repository:**
+### Using uv (Recommended - Fast & Modern)
+
+1. **Install uv** (if not already installed):
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. **Clone and setup:**
    ```bash
    git clone https://github.com/yourusername/aws-cur-report-generator.git
    cd aws-cur-report-generator
+
+   # Install dependencies (uv handles everything automatically)
+   uv sync
    ```
 
-2. **Create a virtual environment (recommended):**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure environment variables:**
+3. **Configure environment variables:**
    ```bash
    cp .env.example .env
    ```
@@ -94,6 +93,32 @@ Before using this tool, you need to set up Cost and Usage Reports in AWS:
    OUTPUT_DIR=reports
    TOP_N=10
    ```
+
+### Using pip (Traditional Method)
+
+<details>
+<summary>Click to expand pip installation instructions</summary>
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/aws-cur-report-generator.git
+   cd aws-cur-report-generator
+   ```
+
+2. **Create a virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure as above**
+
+</details>
 
 ## Configuration
 
@@ -122,6 +147,10 @@ Before using this tool, you need to set up Cost and Usage Reports in AWS:
 Generate a report for the last 90 days (default):
 
 ```bash
+# Using uv (recommended)
+uv run python cur_report_generator.py
+
+# Or if using pip/venv
 python cur_report_generator.py
 ```
 
@@ -129,32 +158,32 @@ python cur_report_generator.py
 
 **Custom date range:**
 ```bash
-python cur_report_generator.py --start-date 2024-01-01 --end-date 2024-03-31
+uv run python cur_report_generator.py --start-date 2024-01-01 --end-date 2024-03-31
 ```
 
 **Generate CSV exports:**
 ```bash
-python cur_report_generator.py --generate-csv
+uv run python cur_report_generator.py --generate-csv
 ```
 
 **Custom output directory:**
 ```bash
-python cur_report_generator.py --output-dir ./my-reports
+uv run python cur_report_generator.py --output-dir ./my-reports
 ```
 
 **Show top 20 items in charts:**
 ```bash
-python cur_report_generator.py --top-n 20
+uv run python cur_report_generator.py --top-n 20
 ```
 
 **Test with limited data:**
 ```bash
-python cur_report_generator.py --sample-files 5
+uv run python cur_report_generator.py --sample-files 5
 ```
 
 **Enable debug logging:**
 ```bash
-python cur_report_generator.py --debug
+uv run python cur_report_generator.py --debug
 ```
 
 ### CLI Options
@@ -210,26 +239,29 @@ When enabled with `--generate-csv`, the tool exports:
 ## Example Workflow
 
 ```bash
-# 1. Set up your environment
+# 1. Install uv (if needed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Clone and setup
+git clone https://github.com/yourusername/aws-cur-report-generator.git
+cd aws-cur-report-generator
+uv sync
+
+# 3. Configure environment
 cp .env.example .env
 vim .env  # Edit with your AWS configuration
 
-# 2. Install dependencies
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+# 4. Generate a test report with sample data
+uv run python cur_report_generator.py --sample-files 3 --debug
 
-# 3. Generate a test report with sample data
-python cur_report_generator.py --sample-files 3 --debug
-
-# 4. Generate a full report for last quarter
-python cur_report_generator.py \
+# 5. Generate a full report for last quarter
+uv run python cur_report_generator.py \
   --start-date 2024-10-01 \
   --end-date 2024-12-31 \
   --top-n 15 \
   --generate-csv
 
-# 5. Open the HTML report in your browser
+# 6. Open the HTML report in your browser
 open reports/cur_report_*.html
 ```
 

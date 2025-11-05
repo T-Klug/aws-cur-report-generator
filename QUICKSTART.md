@@ -15,17 +15,26 @@ Before starting, ensure you have:
 ### 1. Install
 
 ```bash
+# Install uv (if not already installed) - blazingly fast! ⚡
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
 # Clone the repository
 git clone https://github.com/yourusername/aws-cur-report-generator.git
 cd aws-cur-report-generator
 
-# Create virtual environment
+# Install dependencies (uv handles everything automatically)
+uv sync
+```
+
+<details>
+<summary>Using pip instead? Click here for traditional installation</summary>
+
+```bash
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
 ```
+</details>
 
 ### 2. Configure
 
@@ -49,7 +58,7 @@ CUR_PREFIX=cur-reports/my-cur   # S3 prefix to CUR files
 
 ```bash
 # Test with limited data first
-python cur_report_generator.py --sample-files 3 --debug
+uv run python cur_report_generator.py --sample-files 3 --debug
 ```
 
 If successful, you'll see:
@@ -62,10 +71,10 @@ If successful, you'll see:
 
 ```bash
 # Generate full report for last 90 days
-python cur_report_generator.py
+uv run python cur_report_generator.py
 
 # Or specify custom date range
-python cur_report_generator.py --start-date 2024-01-01 --end-date 2024-12-31
+uv run python cur_report_generator.py --start-date 2024-01-01 --end-date 2024-12-31
 ```
 
 ### 5. View Report
@@ -134,22 +143,22 @@ Ensure your AWS user/role has this IAM policy:
 
 ### Last 30 Days
 ```bash
-python cur_report_generator.py --start-date $(date -d '30 days ago' +%Y-%m-%d)
+uv run python cur_report_generator.py --start-date $(date -d '30 days ago' +%Y-%m-%d)
 ```
 
 ### Specific Month
 ```bash
-python cur_report_generator.py --start-date 2024-10-01 --end-date 2024-10-31
+uv run python cur_report_generator.py --start-date 2024-10-01 --end-date 2024-10-31
 ```
 
 ### With CSV Export
 ```bash
-python cur_report_generator.py --generate-csv
+uv run python cur_report_generator.py --generate-csv
 ```
 
 ### Top 20 Services
 ```bash
-python cur_report_generator.py --top-n 20
+uv run python cur_report_generator.py --top-n 20
 ```
 
 ## Next Steps

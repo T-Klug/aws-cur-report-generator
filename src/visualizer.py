@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class CURVisualizer:
     """Generate interactive visualizations for AWS Cost and Usage data."""
 
-    def __init__(self, theme: str = 'plotly_white'):
+    def __init__(self, theme: str = "plotly_white"):
         """
         Initialize the visualizer.
 
@@ -25,8 +25,9 @@ class CURVisualizer:
         self.theme = theme
         self.figures: list[tuple[str, go.Figure]] = []
 
-    def create_cost_by_service_chart(self, df: pd.DataFrame, top_n: int = 10,
-                                     title: str = "Cost by Service") -> go.Figure:
+    def create_cost_by_service_chart(
+        self, df: pd.DataFrame, top_n: int = 10, title: str = "Cost by Service"
+    ) -> go.Figure:
         """
         Create a bar chart of costs by service.
 
@@ -46,14 +47,16 @@ class CURVisualizer:
         # Create figure
         fig = go.Figure()
 
-        fig.add_trace(go.Bar(
-            x=plot_df['service'],
-            y=plot_df['total_cost'],
-            text=[f'${x:,.2f}' for x in plot_df['total_cost']],
-            textposition='auto',
-            marker_color='#3498db',
-            hovertemplate='<b>%{x}</b><br>Cost: $%{y:,.2f}<extra></extra>'
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=plot_df["service"],
+                y=plot_df["total_cost"],
+                text=[f"${x:,.2f}" for x in plot_df["total_cost"]],
+                textposition="auto",
+                marker_color="#3498db",
+                hovertemplate="<b>%{x}</b><br>Cost: $%{y:,.2f}<extra></extra>",
+            )
+        )
 
         fig.update_layout(
             title=title,
@@ -61,14 +64,15 @@ class CURVisualizer:
             yaxis_title="Total Cost (USD)",
             template=self.theme,
             height=500,
-            showlegend=False
+            showlegend=False,
         )
 
-        self.figures.append(('cost_by_service', fig))
+        self.figures.append(("cost_by_service", fig))
         return fig
 
-    def create_cost_by_account_chart(self, df: pd.DataFrame, top_n: int = 10,
-                                     title: str = "Cost by Account") -> go.Figure:
+    def create_cost_by_account_chart(
+        self, df: pd.DataFrame, top_n: int = 10, title: str = "Cost by Account"
+    ) -> go.Figure:
         """
         Create a bar chart of costs by account.
 
@@ -87,14 +91,16 @@ class CURVisualizer:
 
         fig = go.Figure()
 
-        fig.add_trace(go.Bar(
-            x=plot_df['account_id'],
-            y=plot_df['total_cost'],
-            text=[f'${x:,.2f}' for x in plot_df['total_cost']],
-            textposition='auto',
-            marker_color='#2ecc71',
-            hovertemplate='<b>Account: %{x}</b><br>Cost: $%{y:,.2f}<extra></extra>'
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=plot_df["account_id"],
+                y=plot_df["total_cost"],
+                text=[f"${x:,.2f}" for x in plot_df["total_cost"]],
+                textposition="auto",
+                marker_color="#2ecc71",
+                hovertemplate="<b>Account: %{x}</b><br>Cost: $%{y:,.2f}<extra></extra>",
+            )
+        )
 
         fig.update_layout(
             title=title,
@@ -102,14 +108,15 @@ class CURVisualizer:
             yaxis_title="Total Cost (USD)",
             template=self.theme,
             height=500,
-            showlegend=False
+            showlegend=False,
         )
 
-        self.figures.append(('cost_by_account', fig))
+        self.figures.append(("cost_by_account", fig))
         return fig
 
-    def create_service_trend_chart(self, df: pd.DataFrame,
-                                   title: str = "Cost Trends by Service") -> go.Figure:
+    def create_service_trend_chart(
+        self, df: pd.DataFrame, title: str = "Cost Trends by Service"
+    ) -> go.Figure:
         """
         Create a line chart showing cost trends for top services.
 
@@ -125,23 +132,25 @@ class CURVisualizer:
         fig = go.Figure()
 
         # Get unique services
-        services = df['service'].unique()
+        services = df["service"].unique()
 
         # Define colors - using more distinct colors
         colors = px.colors.qualitative.Bold
 
         for i, service in enumerate(services):
-            service_data = df[df['service'] == service]
-            fig.add_trace(go.Scatter(
-                x=service_data['date'],
-                y=service_data['total_cost'],
-                mode='lines+markers',
-                name=service,
-                line=dict(color=colors[i % len(colors)], width=3),
-                marker=dict(size=6),
-                opacity=0.85,
-                hovertemplate=f'<b>{service}</b><br>Date: %{{x}}<br>Cost: $%{{y:,.2f}}<extra></extra>'
-            ))
+            service_data = df[df["service"] == service]
+            fig.add_trace(
+                go.Scatter(
+                    x=service_data["date"],
+                    y=service_data["total_cost"],
+                    mode="lines+markers",
+                    name=service,
+                    line=dict(color=colors[i % len(colors)], width=3),
+                    marker=dict(size=6),
+                    opacity=0.85,
+                    hovertemplate=f"<b>{service}</b><br>Date: %{{x}}<br>Cost: $%{{y:,.2f}}<extra></extra>",
+                )
+            )
 
         fig.update_layout(
             title=title,
@@ -149,24 +158,25 @@ class CURVisualizer:
             yaxis_title="Total Cost (USD)",
             template=self.theme,
             height=650,
-            hovermode='x unified',
+            hovermode="x unified",
             legend=dict(
                 orientation="v",
                 yanchor="top",
                 y=1,
                 xanchor="left",
                 x=1.02,
-                bgcolor='rgba(255, 255, 255, 0.8)',
-                bordercolor='#ccc',
-                borderwidth=1
-            )
+                bgcolor="rgba(255, 255, 255, 0.8)",
+                bordercolor="#ccc",
+                borderwidth=1,
+            ),
         )
 
-        self.figures.append(('service_trend', fig))
+        self.figures.append(("service_trend", fig))
         return fig
 
-    def create_account_trend_chart(self, df: pd.DataFrame,
-                                   title: str = "Cost Trends by Account") -> go.Figure:
+    def create_account_trend_chart(
+        self, df: pd.DataFrame, title: str = "Cost Trends by Account"
+    ) -> go.Figure:
         """
         Create a line chart showing cost trends for top accounts.
 
@@ -182,23 +192,25 @@ class CURVisualizer:
         fig = go.Figure()
 
         # Get unique accounts
-        accounts = df['account_id'].unique()
+        accounts = df["account_id"].unique()
 
         # Define colors - using more distinct colors
         colors = px.colors.qualitative.Bold
 
         for i, account in enumerate(accounts):
-            account_data = df[df['account_id'] == account]
-            fig.add_trace(go.Scatter(
-                x=account_data['date'],
-                y=account_data['total_cost'],
-                mode='lines+markers',
-                name=account,
-                line=dict(color=colors[i % len(colors)], width=3),
-                marker=dict(size=6),
-                opacity=0.85,
-                hovertemplate=f'<b>Account: {account}</b><br>Date: %{{x}}<br>Cost: $%{{y:,.2f}}<extra></extra>'
-            ))
+            account_data = df[df["account_id"] == account]
+            fig.add_trace(
+                go.Scatter(
+                    x=account_data["date"],
+                    y=account_data["total_cost"],
+                    mode="lines+markers",
+                    name=account,
+                    line=dict(color=colors[i % len(colors)], width=3),
+                    marker=dict(size=6),
+                    opacity=0.85,
+                    hovertemplate=f"<b>Account: {account}</b><br>Date: %{{x}}<br>Cost: $%{{y:,.2f}}<extra></extra>",
+                )
+            )
 
         fig.update_layout(
             title=title,
@@ -206,24 +218,25 @@ class CURVisualizer:
             yaxis_title="Total Cost (USD)",
             template=self.theme,
             height=650,
-            hovermode='x unified',
+            hovermode="x unified",
             legend=dict(
                 orientation="v",
                 yanchor="top",
                 y=1,
                 xanchor="left",
                 x=1.02,
-                bgcolor='rgba(255, 255, 255, 0.8)',
-                bordercolor='#ccc',
-                borderwidth=1
-            )
+                bgcolor="rgba(255, 255, 255, 0.8)",
+                bordercolor="#ccc",
+                borderwidth=1,
+            ),
         )
 
-        self.figures.append(('account_trend', fig))
+        self.figures.append(("account_trend", fig))
         return fig
 
-    def create_account_service_heatmap(self, df: pd.DataFrame,
-                                       title: str = "Cost Heatmap: Account vs Service") -> go.Figure:
+    def create_account_service_heatmap(
+        self, df: pd.DataFrame, title: str = "Cost Heatmap: Account vs Service"
+    ) -> go.Figure:
         """
         Create a heatmap showing costs by account and service.
 
@@ -237,7 +250,7 @@ class CURVisualizer:
         logger.info("Creating account-service heatmap...")
 
         # Pivot the data
-        pivot_df = df.pivot(index='account_id', columns='service', values='total_cost')
+        pivot_df = df.pivot(index="account_id", columns="service", values="total_cost")
         pivot_df = pivot_df.fillna(0)
 
         # Convert to lists for better browser compatibility (avoid binary encoding issues)
@@ -245,29 +258,31 @@ class CURVisualizer:
         x_labels = pivot_df.columns.tolist()
         y_labels = pivot_df.index.tolist()
 
-        fig = go.Figure(data=go.Heatmap(
-            z=z_values,
-            x=x_labels,
-            y=y_labels,
-            colorscale='Blues',
-            hovertemplate='Account: %{y}<br>Service: %{x}<br>Cost: $%{z:,.2f}<extra></extra>',
-            colorbar=dict(title="Cost (USD)")
-        ))
+        fig = go.Figure(
+            data=go.Heatmap(
+                z=z_values,
+                x=x_labels,
+                y=y_labels,
+                colorscale="Blues",
+                hovertemplate="Account: %{y}<br>Service: %{x}<br>Cost: $%{z:,.2f}<extra></extra>",
+                colorbar=dict(title="Cost (USD)"),
+            )
+        )
 
         fig.update_layout(
             title=title,
             xaxis_title="Service",
             yaxis_title="Account ID",
             template=self.theme,
-            height=max(400, len(pivot_df.index) * 40)
+            height=max(400, len(pivot_df.index) * 40),
         )
 
-        self.figures.append(('account_service_heatmap', fig))
+        self.figures.append(("account_service_heatmap", fig))
         return fig
 
-    def create_cost_distribution_pie(self, df: pd.DataFrame, category: str,
-                                     top_n: int = 10,
-                                     title: Optional[str] = None) -> go.Figure:
+    def create_cost_distribution_pie(
+        self, df: pd.DataFrame, category: str, top_n: int = 10, title: Optional[str] = None
+    ) -> go.Figure:
         """
         Create a pie chart showing cost distribution.
 
@@ -289,30 +304,31 @@ class CURVisualizer:
         plot_df = df.copy()
         if len(plot_df) > top_n:
             top_items = plot_df.head(top_n)
-            other_cost = plot_df.iloc[top_n:]['total_cost'].sum()
+            other_cost = plot_df.iloc[top_n:]["total_cost"].sum()
             first_col = str(plot_df.columns[0])  # Ensure it's a string for dict key
-            other_row = pd.DataFrame([{first_col: 'Other', 'total_cost': other_cost}])
+            other_row = pd.DataFrame([{first_col: "Other", "total_cost": other_cost}])
             plot_df = pd.concat([top_items, other_row], ignore_index=True)
 
-        fig = go.Figure(data=[go.Pie(
-            labels=plot_df.iloc[:, 0],
-            values=plot_df['total_cost'],
-            hovertemplate='<b>%{label}</b><br>Cost: $%{value:,.2f}<br>Percentage: %{percent}<extra></extra>',
-            textinfo='label+percent',
-            textposition='auto'
-        )])
-
-        fig.update_layout(
-            title=title,
-            template=self.theme,
-            height=500
+        fig = go.Figure(
+            data=[
+                go.Pie(
+                    labels=plot_df.iloc[:, 0],
+                    values=plot_df["total_cost"],
+                    hovertemplate="<b>%{label}</b><br>Cost: $%{value:,.2f}<br>Percentage: %{percent}<extra></extra>",
+                    textinfo="label+percent",
+                    textposition="auto",
+                )
+            ]
         )
 
-        self.figures.append((f'{category}_pie', fig))
+        fig.update_layout(title=title, template=self.theme, height=500)
+
+        self.figures.append((f"{category}_pie", fig))
         return fig
 
-    def create_monthly_summary_chart(self, df: pd.DataFrame,
-                                     title: str = "Monthly Cost Summary") -> go.Figure:
+    def create_monthly_summary_chart(
+        self, df: pd.DataFrame, title: str = "Monthly Cost Summary"
+    ) -> go.Figure:
         """
         Create an enhanced bar chart showing monthly cost summary with trend line.
 
@@ -328,53 +344,49 @@ class CURVisualizer:
         fig = go.Figure()
 
         # Add bar chart for monthly costs
-        fig.add_trace(go.Bar(
-            x=df['month'],
-            y=df['total_cost'],
-            text=[f'${x:,.0f}' for x in df['total_cost']],
-            textposition='outside',
-            marker_color='#16a085',
-            name='Monthly Cost',
-            hovertemplate='<b>%{x}</b><br>Total Cost: $%{y:,.2f}<extra></extra>'
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=df["month"],
+                y=df["total_cost"],
+                text=[f"${x:,.0f}" for x in df["total_cost"]],
+                textposition="outside",
+                marker_color="#16a085",
+                name="Monthly Cost",
+                hovertemplate="<b>%{x}</b><br>Total Cost: $%{y:,.2f}<extra></extra>",
+            )
+        )
 
         # Add trend line if we have enough data points
         if len(df) >= 2:
-            fig.add_trace(go.Scatter(
-                x=df['month'],
-                y=df['total_cost'],
-                mode='lines+markers',
-                line=dict(color='#e74c3c', width=3, dash='dash'),
-                marker=dict(size=8, symbol='diamond'),
-                name='Trend',
-                hovertemplate='<b>%{x}</b><br>Cost: $%{y:,.2f}<extra></extra>'
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=df["month"],
+                    y=df["total_cost"],
+                    mode="lines+markers",
+                    line=dict(color="#e74c3c", width=3, dash="dash"),
+                    marker=dict(size=8, symbol="diamond"),
+                    name="Trend",
+                    hovertemplate="<b>%{x}</b><br>Cost: $%{y:,.2f}<extra></extra>",
+                )
+            )
 
         fig.update_layout(
-            title={
-                'text': title,
-                'font': {'size': 20, 'color': '#2c3e50'}
-            },
+            title={"text": title, "font": {"size": 20, "color": "#2c3e50"}},
             xaxis_title="Month",
             yaxis_title="Total Cost (USD)",
             template=self.theme,
             height=600,
             showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            ),
-            bargap=0.3
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            bargap=0.3,
         )
 
-        self.figures.append(('monthly_summary', fig))
+        self.figures.append(("monthly_summary", fig))
         return fig
 
-    def create_anomaly_chart(self, df: pd.DataFrame,
-                            title: str = "Cost Anomalies Detection") -> go.Figure:
+    def create_anomaly_chart(
+        self, df: pd.DataFrame, title: str = "Cost Anomalies Detection"
+    ) -> go.Figure:
         """
         Create a chart highlighting cost anomalies.
 
@@ -390,36 +402,39 @@ class CURVisualizer:
         fig = go.Figure()
 
         # Highlight anomalies
-        fig.add_trace(go.Scatter(
-            x=df['date'],
-            y=df['total_cost'],
-            mode='markers',
-            name='Anomalous Days',
-            marker=dict(
-                size=12,
-                color=df['z_score'],
-                colorscale='RdYlGn',
-                reversescale=True,
-                showscale=True,
-                colorbar=dict(title="Z-Score"),
-                line=dict(width=2, color='darkred')
-            ),
-            hovertemplate='<b>%{x}</b><br>Cost: $%{y:,.2f}<br>Z-Score: %{marker.color:.2f}<extra></extra>'
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=df["date"],
+                y=df["total_cost"],
+                mode="markers",
+                name="Anomalous Days",
+                marker=dict(
+                    size=12,
+                    color=df["z_score"],
+                    colorscale="RdYlGn",
+                    reversescale=True,
+                    showscale=True,
+                    colorbar=dict(title="Z-Score"),
+                    line=dict(width=2, color="darkred"),
+                ),
+                hovertemplate="<b>%{x}</b><br>Cost: $%{y:,.2f}<br>Z-Score: %{marker.color:.2f}<extra></extra>",
+            )
+        )
 
         fig.update_layout(
             title=title,
             xaxis_title="Date",
             yaxis_title="Total Cost (USD)",
             template=self.theme,
-            height=500
+            height=500,
         )
 
-        self.figures.append(('anomalies', fig))
+        self.figures.append(("anomalies", fig))
         return fig
 
-    def create_region_chart(self, df: pd.DataFrame, top_n: int = 10,
-                           title: str = "Cost by Region") -> go.Figure:
+    def create_region_chart(
+        self, df: pd.DataFrame, top_n: int = 10, title: str = "Cost by Region"
+    ) -> go.Figure:
         """
         Create a bar chart of costs by region.
 
@@ -437,14 +452,16 @@ class CURVisualizer:
 
         fig = go.Figure()
 
-        fig.add_trace(go.Bar(
-            x=plot_df['region'],
-            y=plot_df['total_cost'],
-            text=[f'${x:,.2f}' for x in plot_df['total_cost']],
-            textposition='auto',
-            marker_color='#e67e22',
-            hovertemplate='<b>%{x}</b><br>Cost: $%{y:,.2f}<extra></extra>'
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=plot_df["region"],
+                y=plot_df["total_cost"],
+                text=[f"${x:,.2f}" for x in plot_df["total_cost"]],
+                textposition="auto",
+                marker_color="#e67e22",
+                hovertemplate="<b>%{x}</b><br>Cost: $%{y:,.2f}<extra></extra>",
+            )
+        )
 
         fig.update_layout(
             title=title,
@@ -452,14 +469,15 @@ class CURVisualizer:
             yaxis_title="Total Cost (USD)",
             template=self.theme,
             height=500,
-            showlegend=False
+            showlegend=False,
         )
 
-        self.figures.append(('cost_by_region', fig))
+        self.figures.append(("cost_by_region", fig))
         return fig
 
-    def generate_html_report(self, output_path: str, summary_stats: dict,
-                            title: str = "AWS Cost and Usage Report") -> str:
+    def generate_html_report(
+        self, output_path: str, summary_stats: dict, title: str = "AWS Cost and Usage Report"
+    ) -> str:
         """
         Generate a comprehensive HTML report with all visualizations.
 
@@ -581,25 +599,29 @@ class CURVisualizer:
         # Add all figures
         for name, fig in self.figures:
             html_parts.append(f'<div class="chart" id="{name}"></div>')
-            html_parts.append('<script>')
-            html_parts.append(f'var {name}_data = {fig.to_json()};')
+            html_parts.append("<script>")
+            html_parts.append(f"var {name}_data = {fig.to_json()};")
             html_parts.append(f'Plotly.newPlot("{name}", {name}_data.data, {name}_data.layout);')
-            html_parts.append('</script>')
+            html_parts.append("</script>")
 
         # Close HTML
-        html_parts.append(f"""
+        html_parts.append(
+            f"""
                     <div class="timestamp">
                         Report generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                     </div>
                 </div>
             </body>
             </html>
-        """)
+        """
+        )
 
         # Write to file
-        os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else '.', exist_ok=True)
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(html_parts))
+        os.makedirs(
+            os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True
+        )
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(html_parts))
 
         logger.info(f"HTML report generated successfully: {output_path}")
         return output_path

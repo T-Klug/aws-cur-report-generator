@@ -17,8 +17,13 @@ logger = logging.getLogger(__name__)
 class CURReader:
     """Read and process AWS Cost and Usage Reports from S3."""
 
-    def __init__(self, bucket: str, prefix: str, aws_profile: Optional[str] = None,
-                 aws_region: Optional[str] = None):
+    def __init__(
+        self,
+        bucket: str,
+        prefix: str,
+        aws_profile: Optional[str] = None,
+        aws_region: Optional[str] = None,
+    ):
         """
         Initialize the CUR Reader.
 
@@ -29,18 +34,18 @@ class CURReader:
             aws_region: AWS region (optional)
         """
         self.bucket = bucket
-        self.prefix = prefix.rstrip('/')
+        self.prefix = prefix.rstrip("/")
 
         # Initialize AWS session
         session_params = {}
         if aws_profile:
-            session_params['profile_name'] = aws_profile
+            session_params["profile_name"] = aws_profile
         if aws_region:
-            session_params['region_name'] = aws_region
+            session_params["region_name"] = aws_region
 
         try:
             self.session = boto3.Session(**session_params)
-            self.s3_client = self.session.client('s3')
+            self.s3_client = self.session.client("s3")
             logger.info(f"Initialized S3 client for bucket: {bucket}")
         except NoCredentialsError:
             logger.error("AWS credentials not found. Please configure credentials.")
@@ -49,8 +54,9 @@ class CURReader:
             logger.error(f"Error initializing AWS session: {e}")
             raise
 
-    def list_report_files(self, start_date: Optional[datetime] = None,
-                         end_date: Optional[datetime] = None) -> List[str]:
+    def list_report_files(
+        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
+    ) -> List[str]:
         """
         List available CUR report files in S3.
 
@@ -64,21 +70,21 @@ class CURReader:
         try:
             logger.info(f"Listing CUR files in s3://{self.bucket}/{self.prefix}")
 
-            paginator = self.s3_client.get_paginator('list_objects_v2')
+            paginator = self.s3_client.get_paginator("list_objects_v2")
             pages = paginator.paginate(Bucket=self.bucket, Prefix=self.prefix)
 
             report_files = []
             for page in pages:
-                if 'Contents' not in page:
+                if "Contents" not in page:
                     continue
 
-                for obj in page['Contents']:
-                    key = obj['Key']
+                for obj in page["Contents"]:
+                    key = obj["Key"]
                     # CUR files are typically .csv.gz or .parquet
-                    if key.endswith(('.csv.gz', '.parquet', '.csv')):
+                    if key.endswith((".csv.gz", ".parquet", ".csv")):
                         # Filter by date if specified
                         if start_date or end_date:
-                            last_modified = obj['LastModified'].replace(tzinfo=None)
+                            last_modified = obj["LastModified"].replace(tzinfo=None)
                             if start_date and last_modified < start_date:
                                 continue
                             if end_date and last_modified > end_date:
@@ -107,16 +113,16 @@ class CURReader:
 
             # Download file content
             response = self.s3_client.get_object(Bucket=self.bucket, Key=s3_key)
-            content = response['Body'].read()
+            content = response["Body"].read()
 
             # Handle different file formats
-            if s3_key.endswith('.csv.gz'):
+            if s3_key.endswith(".csv.gz"):
                 # Decompress gzip
                 with gzip.GzipFile(fileobj=io.BytesIO(content)) as gz:
                     df = pd.read_csv(gz, low_memory=False)  # type: ignore[arg-type]
-            elif s3_key.endswith('.parquet'):
+            elif s3_key.endswith(".parquet"):
                 df = pd.read_parquet(io.BytesIO(content))
-            elif s3_key.endswith('.csv'):
+            elif s3_key.endswith(".csv"):
                 df = pd.read_csv(io.BytesIO(content), low_memory=False)
             else:
                 raise ValueError(f"Unsupported file format: {s3_key}")
@@ -131,9 +137,12 @@ class CURReader:
             logger.error(f"Error processing CUR file {s3_key}: {e}")
             raise
 
-    def load_cur_data(self, start_date: Optional[datetime] = None,
-                     end_date: Optional[datetime] = None,
-                     sample_files: Optional[int] = None) -> pd.DataFrame:
+    def load_cur_data(
+        self,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        sample_files: Optional[int] = None,
+    ) -> pd.DataFrame:
         """
         Load CUR data from S3 for the specified date range.
 
@@ -199,11 +208,11 @@ class CURReader:
             Name of the date column
         """
         possible_date_columns = [
-            'line_item_usage_start_date',
-            'lineItem/UsageStartDate',
-            'UsageStartDate',
-            'bill_billing_period_start_date',
-            'identity_time_interval'
+            "line_item_usage_start_date",
+            "lineItem/UsageStartDate",
+            "UsageStartDate",
+            "bill_billing_period_start_date",
+            "identity_time_interval",
         ]
 
         for col in possible_date_columns:
@@ -211,7 +220,7 @@ class CURReader:
                 return col
 
         # If none found, look for any column with 'date' in the name
-        date_cols = [col for col in df.columns if 'date' in col.lower()]
+        date_cols = [col for col in df.columns if "date" in col.lower()]
         if date_cols:
             logger.warning(f"Using fallback date column: {date_cols[0]}")
             return date_cols[0]

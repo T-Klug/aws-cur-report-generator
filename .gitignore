@@ -61,4 +61,10 @@ config
 # Testing
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
+.tox/
+
+# uv
+.uv/
+uv.lock

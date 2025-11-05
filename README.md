@@ -394,9 +394,88 @@ aws-cur-report-generator/
 - **Run on EC2** - Better bandwidth to S3
 - **Filter data** - Modify code to filter specific accounts/services if needed
 
+## Development & Testing
+
+### Running Tests
+
+The project includes a comprehensive test suite with >90% coverage.
+
+**Using uv (recommended):**
+```bash
+# Install with dev dependencies
+uv sync --all-extras
+
+# Run all tests
+uv run pytest
+
+# Run tests with coverage report
+uv run pytest --cov=src --cov-report=html
+
+# Run specific test file
+uv run pytest tests/test_s3_reader.py
+
+# Run specific test
+uv run pytest tests/test_s3_reader.py::TestCURReader::test_initialization_success
+```
+
+**Using pip:**
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+```
+
+### Test Structure
+
+```
+tests/
+├── conftest.py              # Shared fixtures and test configuration
+├── test_s3_reader.py       # Tests for S3 reader module
+├── test_data_processor.py  # Tests for data processor module
+├── test_visualizer.py      # Tests for visualizer module
+└── test_cli.py             # Tests for CLI interface
+```
+
+### Code Quality
+
+**Format code with black:**
+```bash
+uv run black src tests
+```
+
+**Lint with ruff:**
+```bash
+uv run ruff check src tests
+```
+
+**Fix linting issues automatically:**
+```bash
+uv run ruff check --fix src tests
+```
+
+### CI/CD
+
+The project uses GitHub Actions for continuous integration:
+- Tests run on Python 3.8-3.12
+- Tests run on Ubuntu, macOS, and Windows
+- Automatic code coverage reporting
+- Linting checks with ruff and black
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`uv run pytest`)
+5. Format code (`uv run black src tests`)
+6. Run linters (`uv run ruff check src tests`)
+7. Commit your changes (`git commit -m 'Add amazing feature'`)
+8. Push to the branch (`git push origin feature/amazing-feature`)
+9. Open a Pull Request
 
 ## License
 

@@ -23,7 +23,7 @@ class CURReader:
         prefix: str,
         aws_profile: Optional[str] = None,
         aws_region: Optional[str] = None,
-    ):
+    ) -> None:
         """
         Initialize the CUR Reader.
 

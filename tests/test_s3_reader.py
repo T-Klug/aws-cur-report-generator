@@ -189,7 +189,11 @@ class TestCURReader:
             mock_session.return_value.client.return_value = mock_client
 
             reader = CURReader(bucket='test-bucket', prefix='test-prefix')
-            df = reader.load_cur_data()
+            # Use explicit dates that match our mock data
+            df = reader.load_cur_data(
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 2, 28)
+            )
 
             assert isinstance(df, pd.DataFrame)
             assert len(df) > 0
@@ -214,7 +218,12 @@ class TestCURReader:
             mock_session.return_value.client.return_value = mock_client
 
             reader = CURReader(bucket='test-bucket', prefix='test-prefix')
-            df = reader.load_cur_data(sample_files=2)
+            # Use explicit dates that match our mock data
+            df = reader.load_cur_data(
+                start_date=datetime(2024, 1, 1),
+                end_date=datetime(2024, 3, 31),
+                sample_files=2
+            )
 
             # Should only process 2 files
             assert mock_client.get_object.call_count == 2

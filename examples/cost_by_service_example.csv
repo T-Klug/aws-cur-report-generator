@@ -1,0 +1,7 @@
+service,total_cost
+AmazonEC2,2341970.56
+AmazonRDS,1484458.74
+AmazonCloudFront,753718.97
+AmazonS3,721507.18
+AmazonDynamoDB,610505.73
+AWSLambda,315556.02999999997

@@ -22,15 +22,15 @@ class CURDataProcessor:
         self.normalized_columns = self._normalize_column_names()
         logger.info(f"Initialized processor with {len(self.df)} records")
 
-    def _normalize_column_names(self) -> Dict[str, str]:
+    def _normalize_column_names(self) -> Dict[str, Optional[str]]:
         """
         Normalize column names to handle different CUR versions.
         Creates a mapping of standard names to actual column names.
 
         Returns:
-            Dictionary mapping normalized names to actual column names
+            Dictionary mapping normalized names to actual column names (or None if not found)
         """
-        column_map = {
+        column_map: Dict[str, Optional[str]] = {
             'cost': None,
             'usage_date': None,
             'account_id': None,

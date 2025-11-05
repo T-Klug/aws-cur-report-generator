@@ -23,7 +23,7 @@ class CURVisualizer:
             theme: Plotly theme to use
         """
         self.theme = theme
-        self.figures = []
+        self.figures: list[tuple[str, go.Figure]] = []
 
     def create_cost_by_service_chart(self, df: pd.DataFrame, top_n: int = 10,
                                      title: str = "Cost by Service") -> go.Figure:

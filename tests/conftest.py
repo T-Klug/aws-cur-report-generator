@@ -9,23 +9,61 @@ import gzip
 
 @pytest.fixture
 def sample_cur_data():
-    """Generate sample CUR data for testing."""
+    """Generate sample CUR data for testing with realistic variations."""
+    import random
+    random.seed(42)  # For reproducibility
+
     dates = pd.date_range(start='2024-01-01', end='2024-01-31', freq='D')
 
+    # Services with different cost patterns and ranges
+    services_config = {
+        'AmazonEC2': {'base': 800, 'variance': 200, 'trend': 0.02},
+        'AmazonS3': {'base': 300, 'variance': 100, 'trend': 0.01},
+        'AmazonRDS': {'base': 600, 'variance': 150, 'trend': 0.015},
+        'AWSLambda': {'base': 150, 'variance': 50, 'trend': 0.03},
+        'AmazonCloudFront': {'base': 400, 'variance': 120, 'trend': 0.01},
+        'AmazonDynamoDB': {'base': 250, 'variance': 80, 'trend': 0.025},
+    }
+
+    regions = ['us-east-1', 'us-west-2', 'eu-west-1', 'ap-southeast-1', 'ap-northeast-1']
+    accounts = ['123456789012', '210987654321', '345678901234']
+
     data = []
-    for date in dates:
-        # Generate sample records
-        for service in ['AmazonEC2', 'AmazonS3', 'AmazonRDS', 'AWSLambda']:
-            for account in ['123456789012', '210987654321']:
+    for i, date in enumerate(dates):
+        for service, config in services_config.items():
+            for account in accounts[:2]:  # Use 2 accounts
+                # Add realistic variations
+                day_factor = 1.0 + (i / len(dates)) * config['trend']  # Gradual trend
+                random_factor = random.uniform(0.7, 1.3)  # Daily variation
+                weekend_factor = 0.7 if date.weekday() >= 5 else 1.0  # Weekend dip
+
+                # Account-specific multipliers
+                account_multiplier = 1.5 if account == '123456789012' else 1.0
+
+                cost = config['base'] * day_factor * random_factor * weekend_factor * account_multiplier
+                cost += random.uniform(-config['variance'], config['variance'])
+                cost = max(10.0, cost)  # Ensure positive
+
+                # Vary regions
+                region_weights = {
+                    'AmazonEC2': regions[:3],  # Primary in first 3 regions
+                    'AmazonS3': regions,  # All regions
+                    'AmazonRDS': regions[:2],  # Primarily first 2
+                    'AWSLambda': regions,
+                    'AmazonCloudFront': regions,
+                    'AmazonDynamoDB': regions[:3],
+                }
+                region = random.choice(region_weights.get(service, regions))
+
                 data.append({
                     'line_item_usage_start_date': date,
                     'line_item_usage_account_id': account,
                     'line_item_product_code': service,
-                    'line_item_unblended_cost': 100.50 + (hash(f"{date}{service}{account}") % 100),
-                    'line_item_usage_type': f'{service}:BoxUsage',
-                    'line_item_operation': 'RunInstances',
-                    'product_region': 'us-east-1',
-                    'line_item_resource_id': f'i-{hash(f"{date}{service}{account}") % 1000000:06d}'
+                    'line_item_unblended_cost': round(cost, 2),
+                    'line_item_usage_type': f'{service}:Usage',
+                    'line_item_operation': 'RunInstances' if service == 'AmazonEC2' else 'StandardStorage',
+                    'product_region': region,
+                    'line_item_resource_id': f'{service[6:9].lower()}-{hash(f"{date}{service}{account}") % 1000000:06d}'
                 })
 
     return pd.DataFrame(data)

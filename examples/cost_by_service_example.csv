@@ -1,5 +1,7 @@
 service,total_cost
-AmazonRDS,9452.0
-AmazonS3,9324.0
-AmazonEC2,9230.0
-AWSLambda,9002.0
+AmazonEC2,58489.46
+AmazonRDS,41980.590000000004
+AmazonCloudFront,28370.2
+AmazonS3,22167.78
+AmazonDynamoDB,17416.13
+AWSLambda,11000.03

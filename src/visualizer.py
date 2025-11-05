@@ -119,6 +119,7 @@ class CURVisualizer:
     ) -> go.Figure:
         """
         Create a line chart showing cost trends for top services.
+        Uses dual Y-axes to handle services with different cost magnitudes.
 
         Args:
             df: DataFrame with date, service, and total_cost columns
@@ -134,11 +135,24 @@ class CURVisualizer:
         # Get unique services
         services = df["service"].unique()
 
+        # Calculate average cost per service to determine which axis to use
+        service_avg_costs = df.groupby("service")["total_cost"].mean().sort_values(ascending=False)
+
+        # If we have more than one service, split them by magnitude
+        # Top 50% by average cost go on primary axis, rest on secondary
+        use_secondary_axis = len(services) > 1
+        midpoint_cost = service_avg_costs.median() if use_secondary_axis else 0
+
         # Define colors - using more distinct colors
         colors = px.colors.qualitative.Bold
 
         for i, service in enumerate(services):
-            service_data = df[df["service"] == service]
+            service_data = df[df["service"] == service].copy()
+            avg_cost = service_avg_costs[service]
+
+            # Assign to secondary Y-axis if cost is below median
+            yaxis = "y2" if (use_secondary_axis and avg_cost < midpoint_cost) else "y"
+
             fig.add_trace(
                 go.Scatter(
                     x=service_data["date"],
@@ -148,18 +162,20 @@ class CURVisualizer:
                     line=dict(color=colors[i % len(colors)], width=3),
                     marker=dict(size=6),
                     opacity=0.85,
+                    yaxis=yaxis,
                     hovertemplate=f"<b>{service}</b><br>Date: %{{x}}<br>Cost: $%{{y:,.2f}}<extra></extra>",
                 )
             )
 
-        fig.update_layout(
-            title=title,
-            xaxis_title="Date",
-            yaxis_title="Total Cost (USD)",
-            template=self.theme,
-            height=650,
-            hovermode="x unified",
-            legend=dict(
+        # Configure layout with dual Y-axes
+        layout_config = {
+            "title": title,
+            "xaxis_title": "Date",
+            "yaxis_title": "High-Cost Services (USD)",
+            "template": self.theme,
+            "height": 650,
+            "hovermode": "x unified",
+            "legend": dict(
                 orientation="v",
                 yanchor="top",
                 y=1,
@@ -169,7 +185,18 @@ class CURVisualizer:
                 bordercolor="#ccc",
                 borderwidth=1,
             ),
-        )
+        }
+
+        # Add secondary Y-axis if we're using it
+        if use_secondary_axis:
+            layout_config["yaxis2"] = dict(
+                title="Low-Cost Services (USD)",
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            )
+
+        fig.update_layout(**layout_config)
 
         self.figures.append(("service_trend", fig))
         return fig
@@ -179,6 +206,7 @@ class CURVisualizer:
     ) -> go.Figure:
         """
         Create a line chart showing cost trends for top accounts.
+        Uses dual Y-axes to handle accounts with different cost magnitudes.
 
         Args:
             df: DataFrame with date, account_id, and total_cost columns
@@ -194,11 +222,24 @@ class CURVisualizer:
         # Get unique accounts
         accounts = df["account_id"].unique()
 
+        # Calculate average cost per account to determine which axis to use
+        account_avg_costs = df.groupby("account_id")["total_cost"].mean().sort_values(ascending=False)
+
+        # If we have more than one account, split them by magnitude
+        # Top 50% by average cost go on primary axis, rest on secondary
+        use_secondary_axis = len(accounts) > 1
+        midpoint_cost = account_avg_costs.median() if use_secondary_axis else 0
+
         # Define colors - using more distinct colors
         colors = px.colors.qualitative.Bold
 
         for i, account in enumerate(accounts):
-            account_data = df[df["account_id"] == account]
+            account_data = df[df["account_id"] == account].copy()
+            avg_cost = account_avg_costs[account]
+
+            # Assign to secondary Y-axis if cost is below median
+            yaxis = "y2" if (use_secondary_axis and avg_cost < midpoint_cost) else "y"
+
             fig.add_trace(
                 go.Scatter(
                     x=account_data["date"],
@@ -208,18 +249,20 @@ class CURVisualizer:
                     line=dict(color=colors[i % len(colors)], width=3),
                     marker=dict(size=6),
                     opacity=0.85,
+                    yaxis=yaxis,
                     hovertemplate=f"<b>Account: {account}</b><br>Date: %{{x}}<br>Cost: $%{{y:,.2f}}<extra></extra>",
                 )
             )
 
-        fig.update_layout(
-            title=title,
-            xaxis_title="Date",
-            yaxis_title="Total Cost (USD)",
-            template=self.theme,
-            height=650,
-            hovermode="x unified",
-            legend=dict(
+        # Configure layout with dual Y-axes
+        layout_config = {
+            "title": title,
+            "xaxis_title": "Date",
+            "yaxis_title": "High-Cost Accounts (USD)",
+            "template": self.theme,
+            "height": 650,
+            "hovermode": "x unified",
+            "legend": dict(
                 orientation="v",
                 yanchor="top",
                 y=1,
@@ -229,7 +272,18 @@ class CURVisualizer:
                 bordercolor="#ccc",
                 borderwidth=1,
             ),
-        )
+        }
+
+        # Add secondary Y-axis if we're using it
+        if use_secondary_axis:
+            layout_config["yaxis2"] = dict(
+                title="Low-Cost Accounts (USD)",
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            )
+
+        fig.update_layout(**layout_config)
 
         self.figures.append(("account_trend", fig))
         return fig

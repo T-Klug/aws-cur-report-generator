@@ -26,9 +26,21 @@ A powerful, easy-to-use tool for generating comprehensive visual analytics from 
 
 📈 **Flexible Output** - Generate HTML reports and/or CSV exports
 
+## 🎯 See It In Action
+
+Check out the **[example report](examples/example_report.html)** generated with mock data to see what the output looks like!
+
+The example includes:
+- 11 interactive visualizations
+- Complete cost analysis for a sample month
+- All chart types (bar, line, pie, heatmap, scatter)
+- ~95KB self-contained HTML file
+
+You can also explore the [example CSV exports](examples/) for data analysis.
+
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.9 or higher
 - AWS account with Cost and Usage Reports enabled
 - S3 bucket with CUR data
 - AWS credentials with S3 read access
@@ -416,6 +428,9 @@ uv run pytest tests/test_s3_reader.py
 
 # Run specific test
 uv run pytest tests/test_s3_reader.py::TestCURReader::test_initialization_success
+
+# Generate example reports
+uv run pytest tests/test_examples.py -v
 ```
 
 **Using pip:**

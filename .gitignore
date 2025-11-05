@@ -47,7 +47,11 @@ reports/
 *.html
 *.csv
 *.json
+# Allow example files
 !examples/
+!examples/*.html
+!examples/*.csv
+!examples/*.json
 
 # AWS
 .aws/

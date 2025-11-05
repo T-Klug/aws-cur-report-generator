@@ -2,10 +2,12 @@
 
 Get up and running with AWS CUR Report Generator in 5 minutes!
 
+👉 **Want to see what the output looks like first?** Check out the **[example report](examples/example_report.html)**
+
 ## Prerequisites Check
 
 Before starting, ensure you have:
-- [ ] Python 3.8+ installed (`python --version`)
+- [ ] Python 3.9+ installed (`python --version`)
 - [ ] AWS CUR enabled and exporting to S3
 - [ ] AWS credentials configured
 - [ ] S3 bucket name and prefix for your CUR data

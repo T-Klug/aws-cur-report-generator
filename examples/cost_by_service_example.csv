@@ -1,0 +1,5 @@
+service,total_cost
+AmazonRDS,9452.0
+AmazonS3,9324.0
+AmazonEC2,9230.0
+AWSLambda,9002.0

@@ -9,57 +9,88 @@ import gzip
 
 @pytest.fixture
 def sample_cur_data():
-    """Generate sample CUR data for testing with realistic variations."""
+    """Generate sample CUR data with distinct patterns for each service."""
     import random
+    import math
     random.seed(42)  # For reproducibility
 
     dates = pd.date_range(start='2024-01-01', end='2024-01-31', freq='D')
-
-    # Services with different cost patterns and ranges
-    services_config = {
-        'AmazonEC2': {'base': 800, 'variance': 200, 'trend': 0.02},
-        'AmazonS3': {'base': 300, 'variance': 100, 'trend': 0.01},
-        'AmazonRDS': {'base': 600, 'variance': 150, 'trend': 0.015},
-        'AWSLambda': {'base': 150, 'variance': 50, 'trend': 0.03},
-        'AmazonCloudFront': {'base': 400, 'variance': 120, 'trend': 0.01},
-        'AmazonDynamoDB': {'base': 250, 'variance': 80, 'trend': 0.025},
-    }
-
     regions = ['us-east-1', 'us-west-2', 'eu-west-1', 'ap-southeast-1', 'ap-northeast-1']
-    accounts = ['123456789012', '210987654321', '345678901234']
+    accounts = ['123456789012', '210987654321']
 
     data = []
+
     for i, date in enumerate(dates):
-        for service, config in services_config.items():
-            for account in accounts[:2]:  # Use 2 accounts
-                # Add realistic variations
-                day_factor = 1.0 + (i / len(dates)) * config['trend']  # Gradual trend
-                random_factor = random.uniform(0.7, 1.3)  # Daily variation
-                weekend_factor = 0.7 if date.weekday() >= 5 else 1.0  # Weekend dip
+        day_of_month = i
+        is_weekend = date.weekday() >= 5
 
-                # Account-specific multipliers
-                account_multiplier = 1.5 if account == '123456789012' else 1.0
+        for account in accounts:
+            # Account multiplier: prod is 2x dev
+            account_mult = 2.0 if account == '123456789012' else 1.0
 
-                cost = config['base'] * day_factor * random_factor * weekend_factor * account_multiplier
-                cost += random.uniform(-config['variance'], config['variance'])
-                cost = max(10.0, cost)  # Ensure positive
+            # EC2: High base, steady upward growth (migration to cloud)
+            ec2_base = 2000 + (day_of_month * 50)  # Strong growth
+            ec2_cost = ec2_base * account_mult
+            ec2_cost *= 0.85 if is_weekend else 1.0  # Less compute on weekends
+            ec2_cost *= random.uniform(0.95, 1.05)  # Small variation
 
-                # Vary regions
-                region_weights = {
-                    'AmazonEC2': regions[:3],  # Primary in first 3 regions
-                    'AmazonS3': regions,  # All regions
-                    'AmazonRDS': regions[:2],  # Primarily first 2
-                    'AWSLambda': regions,
-                    'AmazonCloudFront': regions,
-                    'AmazonDynamoDB': regions[:3],
-                }
-                region = random.choice(region_weights.get(service, regions))
+            # RDS: Medium-high, with weekly spike pattern (batch processing)
+            rds_base = 1500
+            # Spike every 7 days (weekly batch job)
+            rds_spike = 1.8 if day_of_month % 7 == 3 else 1.0
+            rds_cost = rds_base * account_mult * rds_spike
+            rds_cost *= random.uniform(0.9, 1.1)
 
+            # S3: Low and very stable (storage doesn't change much)
+            s3_base = 400 + (day_of_month * 5)  # Slow growth
+            s3_cost = s3_base * account_mult
+            s3_cost *= random.uniform(0.98, 1.02)  # Very stable
+
+            # Lambda: Very spiky event-driven pattern
+            lambda_base = 300
+            # Random spikes to simulate event-driven workloads
+            if day_of_month % 5 == 0 or day_of_month % 11 == 0:
+                lambda_spike = random.uniform(3.0, 5.0)  # Big spikes
+            else:
+                lambda_spike = random.uniform(0.5, 1.5)
+            lambda_cost = lambda_base * account_mult * lambda_spike
+
+            # CloudFront: Cyclical weekly pattern (web traffic)
+            cloudfront_base = 800
+            # Weekly cycle: low on weekends, peak mid-week
+            day_of_week = date.weekday()
+            if day_of_week in [0, 6]:  # Mon, Sun
+                traffic_mult = 0.6
+            elif day_of_week in [2, 3]:  # Wed, Thu peak
+                traffic_mult = 1.4
+            else:
+                traffic_mult = 1.0
+            cloudfront_cost = cloudfront_base * account_mult * traffic_mult
+            cloudfront_cost *= random.uniform(0.9, 1.1)
+
+            # DynamoDB: Step function growth (capacity increases)
+            dynamo_base = 600
+            # Capacity scaling events every ~10 days
+            capacity_level = 1.0 + (day_of_month // 10) * 0.5
+            dynamo_cost = dynamo_base * account_mult * capacity_level
+            dynamo_cost *= random.uniform(0.95, 1.05)
+
+            # Create records for each service
+            services_data = [
+                ('AmazonEC2', ec2_cost, 'us-east-1'),
+                ('AmazonRDS', rds_cost, 'us-east-1'),
+                ('AmazonS3', s3_cost, random.choice(regions)),
+                ('AWSLambda', lambda_cost, random.choice(regions)),
+                ('AmazonCloudFront', cloudfront_cost, random.choice(regions[:3])),
+                ('AmazonDynamoDB', dynamo_cost, 'us-east-1'),
+            ]
+
+            for service, cost, region in services_data:
                 data.append({
                     'line_item_usage_start_date': date,
                     'line_item_usage_account_id': account,
                     'line_item_product_code': service,
-                    'line_item_unblended_cost': round(cost, 2),
+                    'line_item_unblended_cost': round(max(10.0, cost), 2),
                     'line_item_usage_type': f'{service}:Usage',
                     'line_item_operation': 'RunInstances' if service == 'AmazonEC2' else 'StandardStorage',
                     'product_region': region,

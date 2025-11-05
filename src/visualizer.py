@@ -292,10 +292,15 @@ class CURVisualizer:
         pivot_df = df.pivot(index='account_id', columns='service', values='total_cost')
         pivot_df = pivot_df.fillna(0)
 
+        # Convert to lists for better browser compatibility (avoid binary encoding issues)
+        z_values = pivot_df.values.tolist()
+        x_labels = pivot_df.columns.tolist()
+        y_labels = pivot_df.index.tolist()
+
         fig = go.Figure(data=go.Heatmap(
-            z=pivot_df.values,
-            x=pivot_df.columns,
-            y=pivot_df.index,
+            z=z_values,
+            x=x_labels,
+            y=y_labels,
             colorscale='Blues',
             hovertemplate='Account: %{y}<br>Service: %{x}<br>Cost: $%{z:,.2f}<extra></extra>',
             colorbar=dict(title="Cost (USD)")

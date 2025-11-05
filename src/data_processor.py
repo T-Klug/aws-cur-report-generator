@@ -149,14 +149,15 @@ class CURDataProcessor:
         # Remove rows with zero or negative cost
         if 'cost' in working_df.columns:
             initial_rows = len(working_df)
-            working_df = working_df[working_df['cost'] > 0]
+            cost_col: pd.Series = working_df['cost']  # type: ignore[assignment]
+            working_df = working_df[cost_col > 0]
             removed_rows = initial_rows - len(working_df)
             if removed_rows > 0:
                 logger.info(f"Removed {removed_rows} rows with zero or negative cost")
 
         logger.info(f"Prepared {len(working_df)} records for analysis")
         self.prepared_df = working_df
-        return working_df
+        return pd.DataFrame(working_df)  # Explicit cast for type checker
 
     def get_total_cost(self) -> float:
         """Get total cost across all data."""
@@ -236,9 +237,11 @@ class CURDataProcessor:
         top_service_list = self.get_cost_by_service(top_services)['service'].tolist()
 
         # Filter data
-        filtered_df = self.prepared_df[
-            (self.prepared_df['account_id'].isin(top_account_list)) &
-            (self.prepared_df['service'].isin(top_service_list))
+        account_col: pd.Series = self.prepared_df['account_id']  # type: ignore[assignment]
+        service_col: pd.Series = self.prepared_df['service']  # type: ignore[assignment]
+        filtered_df: pd.DataFrame = self.prepared_df[  # type: ignore[assignment]
+            (account_col.isin(top_account_list)) &
+            (service_col.isin(top_service_list))
         ]
 
         # Aggregate
@@ -265,7 +268,7 @@ class CURDataProcessor:
             'cost': 'sum'
         }).reset_index()
         result.columns = ['date', 'total_cost']
-        result = result.sort_values('date')
+        result = result.sort_values(by='date')
 
         # Calculate moving averages
         result['7_day_ma'] = result['total_cost'].rolling(window=7, min_periods=1).mean()
@@ -292,7 +295,8 @@ class CURDataProcessor:
         top_service_list = self.get_cost_by_service(top_services)['service'].tolist()
 
         # Filter and aggregate
-        filtered_df = self.prepared_df[self.prepared_df['service'].isin(top_service_list)]
+        service_col: pd.Series = self.prepared_df['service']  # type: ignore[assignment]
+        filtered_df: pd.DataFrame = self.prepared_df[service_col.isin(top_service_list)]  # type: ignore[assignment]
         result = filtered_df.groupby(['date', 'service']).agg({
             'cost': 'sum'
         }).reset_index()
@@ -320,7 +324,8 @@ class CURDataProcessor:
         top_account_list = self.get_cost_by_account(top_accounts)['account_id'].tolist()
 
         # Filter and aggregate
-        filtered_df = self.prepared_df[self.prepared_df['account_id'].isin(top_account_list)]
+        account_col: pd.Series = self.prepared_df['account_id']  # type: ignore[assignment]
+        filtered_df: pd.DataFrame = self.prepared_df[account_col.isin(top_account_list)]  # type: ignore[assignment]
         result = filtered_df.groupby(['date', 'account_id']).agg({
             'cost': 'sum'
         }).reset_index()
@@ -372,8 +377,9 @@ class CURDataProcessor:
 
         # Identify anomalies
         daily_costs['z_score'] = (daily_costs['total_cost'] - mean_cost) / std_cost
-        anomalies = daily_costs[abs(daily_costs['z_score']) > threshold_std].copy()
-        anomalies = anomalies.sort_values('date')
+        z_score_col: pd.Series = daily_costs['z_score']  # type: ignore[assignment]
+        anomalies: pd.DataFrame = daily_costs[abs(z_score_col) > threshold_std].copy()  # type: ignore[assignment]
+        anomalies = anomalies.sort_values(by='date')
 
         logger.info(f"Found {len(anomalies)} anomalous days")
         return anomalies
@@ -419,13 +425,17 @@ class CURDataProcessor:
 
         df = self.prepared_df
 
+        # Type hints for Series to avoid pyright inference issues
+        account_col: pd.Series = df['account_id']  # type: ignore[assignment]
+        service_col: pd.Series = df['service']  # type: ignore[assignment]
+
         summary = {
             'total_cost': float(df['cost'].sum()),
             'average_daily_cost': float(df.groupby('date')['cost'].sum().mean()),
             'min_daily_cost': float(df.groupby('date')['cost'].sum().min()),
             'max_daily_cost': float(df.groupby('date')['cost'].sum().max()),
-            'num_accounts': int(df['account_id'].nunique()),
-            'num_services': int(df['service'].nunique()),
+            'num_accounts': int(account_col.nunique()),
+            'num_services': int(service_col.nunique()),
             'date_range_start': str(df['usage_date'].min().date()),
             'date_range_end': str(df['usage_date'].max().date()),
             'total_records': len(df)

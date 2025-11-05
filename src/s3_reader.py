@@ -113,7 +113,7 @@ class CURReader:
             if s3_key.endswith('.csv.gz'):
                 # Decompress gzip
                 with gzip.GzipFile(fileobj=io.BytesIO(content)) as gz:
-                    df = pd.read_csv(gz, low_memory=False)
+                    df = pd.read_csv(gz, low_memory=False)  # type: ignore[arg-type]
             elif s3_key.endswith('.parquet'):
                 df = pd.read_parquet(io.BytesIO(content))
             elif s3_key.endswith('.csv'):

@@ -342,7 +342,8 @@ class CURVisualizer:
         if len(plot_df) > top_n:
             top_items = plot_df.head(top_n)
             other_cost = plot_df.iloc[top_n:]['total_cost'].sum()
-            other_row = pd.DataFrame([{plot_df.columns[0]: 'Other', 'total_cost': other_cost}])
+            first_col = str(plot_df.columns[0])  # Ensure it's a string for dict key
+            other_row = pd.DataFrame([{first_col: 'Other', 'total_cost': other_cost}])
             plot_df = pd.concat([top_items, other_row], ignore_index=True)
 
         fig = go.Figure(data=[go.Pie(

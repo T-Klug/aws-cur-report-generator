@@ -1,17 +1,17 @@
 """Pytest fixtures and configuration for test suite."""
 
-import pytest
-import pandas as pd
-from datetime import datetime, timedelta
-import io
 import gzip
+import io
+from datetime import datetime
+
+import pandas as pd
+import pytest
 
 
 @pytest.fixture
 def sample_cur_data():
     """Generate 6 months of monthly CUR data with dramatically distinct patterns per account."""
     import random
-    import math
     random.seed(42)  # For reproducibility
 
     # 6 months of daily data (Jan - Jun 2024)

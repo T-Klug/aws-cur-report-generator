@@ -1,13 +1,13 @@
 """Visualizer - Creates interactive visualizations and reports from CUR data."""
 
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import pandas as pd
-from typing import Optional, List
 import logging
-from datetime import datetime
 import os
+from datetime import datetime
+from typing import Optional
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 
 logger = logging.getLogger(__name__)
 

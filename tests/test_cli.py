@@ -1,12 +1,12 @@
 """Tests for CLI interface."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-from click.testing import CliRunner
-import pandas as pd
-from datetime import datetime
 import os
 import sys
+from unittest.mock import Mock, patch
+
+import pandas as pd
+import pytest
+from click.testing import CliRunner
 
 # Add the parent directory to the path to import the main module
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))

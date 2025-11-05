@@ -1,12 +1,10 @@
 """Tests for data processor module."""
 
-import pytest
-import pandas as pd
-import numpy as np
-from datetime import datetime
-
-import sys
 import os
+import sys
+
+import pandas as pd
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from data_processor import CURDataProcessor

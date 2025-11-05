@@ -1,14 +1,15 @@
 """S3 CUR Data Reader - Handles downloading and reading AWS Cost and Usage Reports from S3."""
 
-import os
-import boto3
-import pandas as pd
-from datetime import datetime, timedelta
-from typing import Optional, List
-import logging
-from botocore.exceptions import ClientError, NoCredentialsError
 import gzip
 import io
+import logging
+import os
+from datetime import datetime, timedelta
+from typing import List, Optional
+
+import boto3
+import pandas as pd
+from botocore.exceptions import ClientError, NoCredentialsError
 
 logger = logging.getLogger(__name__)
 

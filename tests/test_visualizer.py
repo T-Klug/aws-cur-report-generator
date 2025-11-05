@@ -1,11 +1,11 @@
 """Tests for visualizer module."""
 
-import pytest
-import pandas as pd
-from pathlib import Path
 import os
-
 import sys
+from pathlib import Path
+
+import pandas as pd
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from visualizer import CURVisualizer
@@ -235,7 +235,7 @@ class TestCURVisualizer:
         }
 
         output_path = temp_output_dir / 'empty_report.html'
-        result_path = visualizer.generate_html_report(
+        visualizer.generate_html_report(
             str(output_path),
             summary_stats
         )

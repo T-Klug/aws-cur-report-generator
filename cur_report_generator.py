@@ -5,21 +5,23 @@ AWS CUR Report Generator - Main CLI Entry Point
 Generate comprehensive visual reports from AWS Cost and Usage Reports stored in S3.
 """
 
+import logging
 import os
 import sys
-import click
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
-import logging
 from pathlib import Path
-from colorama import init as colorama_init, Fore, Style
+
+import click
+from colorama import Fore, Style
+from colorama import init as colorama_init
+from dotenv import load_dotenv
 from tqdm import tqdm
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from s3_reader import CURReader
 from data_processor import CURDataProcessor
+from s3_reader import CURReader
 from visualizer import CURVisualizer
 
 # Initialize colorama
@@ -130,7 +132,7 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
                 end_dt = datetime.strptime(end_env, '%Y-%m-%d')
             else:
                 end_dt = datetime.now()
-    except ValueError as e:
+    except ValueError:
         print(f"{Fore.RED}Error: Invalid date format. Use YYYY-MM-DD{Style.RESET_ALL}")
         sys.exit(1)
 
@@ -165,7 +167,7 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         processor.prepare_data()
 
         # Get all analytics
-        total_cost = processor.get_total_cost()
+        processor.get_total_cost()
         cost_by_service = processor.get_cost_by_service(top_n=top_n)
         cost_by_account = processor.get_cost_by_account(top_n=top_n)
         cost_by_account_service = processor.get_cost_by_account_and_service(

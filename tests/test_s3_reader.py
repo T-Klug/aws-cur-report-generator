@@ -1,13 +1,14 @@
 """Tests for S3 CUR reader module."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timedelta
+import os
+import sys
+from datetime import datetime
+from unittest.mock import Mock, patch
+
 import pandas as pd
+import pytest
 from botocore.exceptions import ClientError, NoCredentialsError
 
-import sys
-import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from s3_reader import CURReader
@@ -220,7 +221,7 @@ class TestCURReader:
 
             reader = CURReader(bucket='test-bucket', prefix='test-prefix')
             # Use explicit dates that match our mock data (6 months)
-            df = reader.load_cur_data(
+            reader.load_cur_data(
                 start_date=datetime(2024, 1, 1),
                 end_date=datetime(2024, 7, 31),
                 sample_files=2

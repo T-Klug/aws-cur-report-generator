@@ -1,10 +1,8 @@
 """Test that generates example reports for documentation."""
 
-import pytest
-import pandas as pd
-from pathlib import Path
-import sys
 import os
+import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
@@ -58,19 +56,19 @@ class TestExampleReports:
 
         visualizer.create_daily_trend_chart(
             daily_trend,
-            title="Daily Cost Trends with Moving Averages"
+            title="6-Month Cost Trends (Jan-Jun 2024) with Moving Averages"
         )
 
         if not service_trend.empty:
             visualizer.create_service_trend_chart(
                 service_trend,
-                title="Cost Trends Over Time by Service"
+                title="Service Cost Trends (6 Months)"
             )
 
         if not account_trend.empty:
             visualizer.create_account_trend_chart(
                 account_trend,
-                title="Cost Trends Over Time by Account"
+                title="Account Cost Trends (6 Months)"
             )
 
         if not cost_by_account_service.empty:
@@ -117,7 +115,7 @@ class TestExampleReports:
 
         output_path = examples_dir / 'example_report.html'
 
-        result = visualizer.generate_html_report(
+        visualizer.generate_html_report(
             str(output_path),
             summary_stats,
             title="AWS Cost and Usage Report - Example Report"
@@ -137,7 +135,7 @@ class TestExampleReports:
         assert 'Total Cost' in html_content
         assert 'plotly' in html_content.lower()
         assert 'Top 10 AWS Services by Cost' in html_content
-        assert 'Daily Cost Trends' in html_content
+        assert '6-Month Cost Trends' in html_content
 
         # Verify all chart types are included
         assert 'cost_by_service' in html_content

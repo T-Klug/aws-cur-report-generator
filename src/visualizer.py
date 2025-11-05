@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class CURVisualizer:
     """Generate interactive visualizations for AWS Cost and Usage data using Apache ECharts."""
 
-    def __init__(self, theme: str = "macarons"):
+    def __init__(self, theme: str = "macarons") -> None:
         """
         Initialize the visualizer.
 
@@ -438,7 +438,8 @@ class CURVisualizer:
         max_value = 0
         for i, account in enumerate(accounts):
             for j, service in enumerate(services):
-                value = round(pivot_df.loc[pivot_df.index[i], service], 2)
+                # Use values array for cleaner type handling
+                value = round(float(pivot_df.values[i, j]), 2)
                 data.append([j, i, value])
                 max_value = max(max_value, value)
 
@@ -618,7 +619,7 @@ class CURVisualizer:
                 ),
                 itemstyle_opts=opts.ItemStyleOpts(
                     color="#5470c6",
-                    border_radius=[8, 8, 0, 0],
+                    border_radius=8,
                 ),
             )
         )

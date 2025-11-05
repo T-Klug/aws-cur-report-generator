@@ -27,40 +27,6 @@ def sample_cur_data():
         "ca-central-1",
     ]
 
-    # Define 5 accounts with distinct characteristics
-    accounts = {
-        "111111111111": {
-            "name": "Production",
-            "size": "enterprise",
-            "pattern": "stable-high",
-            "primary_region": "us-east-1",
-        },
-        "222222222222": {
-            "name": "Staging",
-            "size": "medium",
-            "pattern": "business-hours",
-            "primary_region": "us-west-2",
-        },
-        "333333333333": {
-            "name": "Development",
-            "size": "small",
-            "pattern": "spiky-testing",
-            "primary_region": "eu-west-1",
-        },
-        "444444444444": {
-            "name": "Sandbox",
-            "size": "tiny",
-            "pattern": "minimal",
-            "primary_region": "us-east-1",
-        },
-        "555555555555": {
-            "name": "Security",
-            "size": "medium",
-            "pattern": "steady",
-            "primary_region": "us-east-1",
-        },
-    }
-
     data = []
 
     for i, date in enumerate(dates):

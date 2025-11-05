@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class CURDataProcessor:
     """Process and analyze AWS Cost and Usage Report data."""
 
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, df: pd.DataFrame) -> None:
         """
         Initialize the data processor.
 

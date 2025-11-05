@@ -9,93 +9,128 @@ import gzip
 
 @pytest.fixture
 def sample_cur_data():
-    """Generate sample CUR data with distinct patterns for each service."""
+    """Generate 6 months of monthly CUR data with dramatically distinct patterns per account."""
     import random
     import math
     random.seed(42)  # For reproducibility
 
-    dates = pd.date_range(start='2024-01-01', end='2024-01-31', freq='D')
+    # 6 months of daily data (Jan - Jun 2024)
+    dates = pd.date_range(start='2024-01-01', end='2024-06-30', freq='D')
     regions = ['us-east-1', 'us-west-2', 'eu-west-1', 'ap-southeast-1', 'ap-northeast-1']
-    accounts = ['123456789012', '210987654321']
 
     data = []
 
     for i, date in enumerate(dates):
-        day_of_month = i
+        day_num = i
+        month_num = date.month - 1  # 0-5 for Jan-Jun
         is_weekend = date.weekday() >= 5
+        day_of_week = date.weekday()
 
-        for account in accounts:
-            # Account multiplier: prod is 2x dev
-            account_mult = 2.0 if account == '123456789012' else 1.0
+        # ========================================
+        # PRODUCTION ACCOUNT (123456789012)
+        # Large enterprise workload with high, steady costs
+        # ========================================
 
-            # EC2: High base, steady upward growth (migration to cloud)
-            ec2_base = 2000 + (day_of_month * 50)  # Strong growth
-            ec2_cost = ec2_base * account_mult
-            ec2_cost *= 0.85 if is_weekend else 1.0  # Less compute on weekends
-            ec2_cost *= random.uniform(0.95, 1.05)  # Small variation
+        # EC2: Massive, steadily growing (cloud migration in progress)
+        ec2_prod_base = 8000 + (month_num * 1500)  # Big growth each month
+        ec2_prod = ec2_prod_base * (0.90 if is_weekend else 1.0)
+        ec2_prod *= random.uniform(0.95, 1.05)
 
-            # RDS: Medium-high, with weekly spike pattern (batch processing)
-            rds_base = 1500
-            # Spike every 7 days (weekly batch job)
-            rds_spike = 1.8 if day_of_month % 7 == 3 else 1.0
-            rds_cost = rds_base * account_mult * rds_spike
-            rds_cost *= random.uniform(0.9, 1.1)
+        # RDS: Very high, stable production databases
+        rds_prod_base = 6500 + (month_num * 200)  # Gradual growth
+        rds_prod = rds_prod_base * random.uniform(0.98, 1.02)  # Very stable
 
-            # S3: Low and very stable (storage doesn't change much)
-            s3_base = 400 + (day_of_month * 5)  # Slow growth
-            s3_cost = s3_base * account_mult
-            s3_cost *= random.uniform(0.98, 1.02)  # Very stable
+        # S3: Large data lake, growing steadily
+        s3_prod_base = 2800 + (day_num * 8)  # Continuous data accumulation
+        s3_prod = s3_prod_base * random.uniform(0.99, 1.01)
 
-            # Lambda: Very spiky event-driven pattern
-            lambda_base = 300
-            # Random spikes to simulate event-driven workloads
-            if day_of_month % 5 == 0 or day_of_month % 11 == 0:
-                lambda_spike = random.uniform(3.0, 5.0)  # Big spikes
-            else:
-                lambda_spike = random.uniform(0.5, 1.5)
-            lambda_cost = lambda_base * account_mult * lambda_spike
+        # Lambda: Heavy serverless usage, consistent
+        lambda_prod_base = 1200
+        lambda_prod = lambda_prod_base * random.uniform(0.8, 1.3)
 
-            # CloudFront: Cyclical weekly pattern (web traffic)
-            cloudfront_base = 800
-            # Weekly cycle: low on weekends, peak mid-week
-            day_of_week = date.weekday()
-            if day_of_week in [0, 6]:  # Mon, Sun
-                traffic_mult = 0.6
-            elif day_of_week in [2, 3]:  # Wed, Thu peak
-                traffic_mult = 1.4
-            else:
-                traffic_mult = 1.0
-            cloudfront_cost = cloudfront_base * account_mult * traffic_mult
-            cloudfront_cost *= random.uniform(0.9, 1.1)
+        # CloudFront: High traffic production website
+        cf_prod_base = 3500
+        # Business hours pattern (higher during weekdays)
+        cf_prod = cf_prod_base * (1.3 if day_of_week < 5 else 0.6)
+        cf_prod *= random.uniform(0.9, 1.1)
 
-            # DynamoDB: Step function growth (capacity increases)
-            dynamo_base = 600
-            # Capacity scaling events every ~10 days
-            capacity_level = 1.0 + (day_of_month // 10) * 0.5
-            dynamo_cost = dynamo_base * account_mult * capacity_level
-            dynamo_cost *= random.uniform(0.95, 1.05)
+        # DynamoDB: Large-scale production NoSQL
+        dynamo_prod_base = 2200 + (month_num * 300)  # Scaling up
+        dynamo_prod = dynamo_prod_base * random.uniform(0.95, 1.05)
 
-            # Create records for each service
-            services_data = [
-                ('AmazonEC2', ec2_cost, 'us-east-1'),
-                ('AmazonRDS', rds_cost, 'us-east-1'),
-                ('AmazonS3', s3_cost, random.choice(regions)),
-                ('AWSLambda', lambda_cost, random.choice(regions)),
-                ('AmazonCloudFront', cloudfront_cost, random.choice(regions[:3])),
-                ('AmazonDynamoDB', dynamo_cost, 'us-east-1'),
-            ]
+        # ========================================
+        # DEVELOPMENT ACCOUNT (210987654321)
+        # Smaller, highly variable with test spikes
+        # ========================================
 
-            for service, cost, region in services_data:
-                data.append({
-                    'line_item_usage_start_date': date,
-                    'line_item_usage_account_id': account,
-                    'line_item_product_code': service,
-                    'line_item_unblended_cost': round(max(10.0, cost), 2),
-                    'line_item_usage_type': f'{service}:Usage',
-                    'line_item_operation': 'RunInstances' if service == 'AmazonEC2' else 'StandardStorage',
-                    'product_region': region,
-                    'line_item_resource_id': f'{service[6:9].lower()}-{hash(f"{date}{service}{account}") % 1000000:06d}'
-                })
+        # EC2: Low baseline, huge spikes during load testing
+        ec2_dev_base = 800
+        # Load testing days (every ~14 days)
+        if day_num % 14 in [0, 1, 2]:  # 3-day load test
+            ec2_dev = ec2_dev_base * random.uniform(5.0, 8.0)  # Massive spike
+        else:
+            ec2_dev = ec2_dev_base * random.uniform(0.3, 0.7)  # Very low baseline
+
+        # RDS: Medium, spiky (database testing)
+        rds_dev_base = 1200
+        # Testing spikes on specific days
+        if day_num % 10 == 5:  # Every 10 days
+            rds_dev = rds_dev_base * random.uniform(2.5, 3.5)
+        else:
+            rds_dev = rds_dev_base * random.uniform(0.5, 1.0)
+
+        # S3: Small, very stable
+        s3_dev_base = 350 + (day_num * 1)  # Slow growth
+        s3_dev = s3_dev_base * random.uniform(0.95, 1.05)
+
+        # Lambda: EXTREMELY spiky (integration testing)
+        lambda_dev_base = 150
+        # Random massive spikes
+        if day_num % 7 == 3 or day_num % 11 == 7:
+            lambda_dev = lambda_dev_base * random.uniform(8.0, 15.0)  # Huge spikes
+        elif is_weekend:
+            lambda_dev = lambda_dev_base * random.uniform(0.1, 0.3)  # Nearly zero
+        else:
+            lambda_dev = lambda_dev_base * random.uniform(0.5, 2.0)
+
+        # CloudFront: Low traffic, testing only
+        cf_dev_base = 400
+        cf_dev = cf_dev_base * random.uniform(0.3, 1.5)
+        cf_dev *= 0.2 if is_weekend else 1.0  # Off on weekends
+
+        # DynamoDB: Small, declining (moving to RDS)
+        dynamo_dev_base = 600 - (month_num * 80)  # Decreasing over time
+        dynamo_dev = max(100, dynamo_dev_base * random.uniform(0.8, 1.2))
+
+        # Add all records
+        services = [
+            # Production account
+            ('123456789012', 'AmazonEC2', ec2_prod, 'us-east-1'),
+            ('123456789012', 'AmazonRDS', rds_prod, 'us-east-1'),
+            ('123456789012', 'AmazonS3', s3_prod, random.choice(regions)),
+            ('123456789012', 'AWSLambda', lambda_prod, random.choice(regions)),
+            ('123456789012', 'AmazonCloudFront', cf_prod, 'us-east-1'),
+            ('123456789012', 'AmazonDynamoDB', dynamo_prod, 'us-east-1'),
+            # Dev account
+            ('210987654321', 'AmazonEC2', ec2_dev, 'us-west-2'),
+            ('210987654321', 'AmazonRDS', rds_dev, 'us-west-2'),
+            ('210987654321', 'AmazonS3', s3_dev, random.choice(regions)),
+            ('210987654321', 'AWSLambda', lambda_dev, random.choice(regions)),
+            ('210987654321', 'AmazonCloudFront', cf_dev, 'us-west-2'),
+            ('210987654321', 'AmazonDynamoDB', dynamo_dev, 'us-west-2'),
+        ]
+
+        for account, service, cost, region in services:
+            data.append({
+                'line_item_usage_start_date': date,
+                'line_item_usage_account_id': account,
+                'line_item_product_code': service,
+                'line_item_unblended_cost': round(max(10.0, cost), 2),
+                'line_item_usage_type': f'{service}:Usage',
+                'line_item_operation': 'RunInstances' if service == 'AmazonEC2' else 'StandardStorage',
+                'product_region': region,
+                'line_item_resource_id': f'{service[6:9].lower()}-{hash(f"{date}{service}{account}") % 1000000:06d}'
+            })
 
     return pd.DataFrame(data)
 
@@ -117,22 +152,43 @@ def sample_cur_csv_gz_content(sample_cur_csv_content):
 
 @pytest.fixture
 def mock_s3_objects():
-    """Generate mock S3 object list."""
+    """Generate mock S3 object list for 6 months of CUR exports."""
     return [
+        # January 2024 - available at end of January
         {
             'Key': 'cur-reports/test-cur/20240101-20240201/test-cur-00001.csv.gz',
-            'LastModified': datetime(2024, 1, 15),
-            'Size': 1024
+            'LastModified': datetime(2024, 1, 31),
+            'Size': 2048
         },
-        {
-            'Key': 'cur-reports/test-cur/20240101-20240201/test-cur-00002.csv.gz',
-            'LastModified': datetime(2024, 1, 16),
-            'Size': 1024
-        },
+        # February 2024 - available at end of February
         {
             'Key': 'cur-reports/test-cur/20240201-20240301/test-cur-00001.csv.gz',
-            'LastModified': datetime(2024, 2, 15),
-            'Size': 1024
+            'LastModified': datetime(2024, 2, 29),
+            'Size': 2048
+        },
+        # March 2024 - available at end of March
+        {
+            'Key': 'cur-reports/test-cur/20240301-20240401/test-cur-00001.csv.gz',
+            'LastModified': datetime(2024, 3, 31),
+            'Size': 2048
+        },
+        # April 2024 - available at end of April
+        {
+            'Key': 'cur-reports/test-cur/20240401-20240501/test-cur-00001.csv.gz',
+            'LastModified': datetime(2024, 4, 30),
+            'Size': 2048
+        },
+        # May 2024 - available at end of May
+        {
+            'Key': 'cur-reports/test-cur/20240501-20240601/test-cur-00001.csv.gz',
+            'LastModified': datetime(2024, 5, 31),
+            'Size': 2048
+        },
+        # June 2024 - available at end of June
+        {
+            'Key': 'cur-reports/test-cur/20240601-20240701/test-cur-00001.csv.gz',
+            'LastModified': datetime(2024, 6, 30),
+            'Size': 2048
         }
     ]
 

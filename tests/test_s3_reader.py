@@ -60,7 +60,8 @@ class TestCURReader:
             reader = CURReader(bucket='test-bucket', prefix='test-prefix')
             files = reader.list_report_files()
 
-            assert len(files) == 3
+            # Should get all 6 monthly CUR files (Jan-Jun 2024)
+            assert len(files) == 6
             assert all(f.endswith('.csv.gz') for f in files)
 
     def test_list_report_files_with_date_filter(self, mock_s3_objects):
@@ -82,8 +83,8 @@ class TestCURReader:
             end_date = datetime(2024, 1, 31)
             files = reader.list_report_files(start_date=start_date, end_date=end_date)
 
-            # Should only get the 2 January files
-            assert len(files) == 2
+            # Should only get the 1 January file
+            assert len(files) == 1
 
     def test_list_report_files_empty(self):
         """Test listing files when bucket is empty."""
@@ -189,10 +190,10 @@ class TestCURReader:
             mock_session.return_value.client.return_value = mock_client
 
             reader = CURReader(bucket='test-bucket', prefix='test-prefix')
-            # Use explicit dates that match our mock data
+            # Use explicit dates that match our mock data (6 months)
             df = reader.load_cur_data(
                 start_date=datetime(2024, 1, 1),
-                end_date=datetime(2024, 2, 28)
+                end_date=datetime(2024, 7, 31)
             )
 
             assert isinstance(df, pd.DataFrame)
@@ -218,10 +219,10 @@ class TestCURReader:
             mock_session.return_value.client.return_value = mock_client
 
             reader = CURReader(bucket='test-bucket', prefix='test-prefix')
-            # Use explicit dates that match our mock data
+            # Use explicit dates that match our mock data (6 months)
             df = reader.load_cur_data(
                 start_date=datetime(2024, 1, 1),
-                end_date=datetime(2024, 3, 31),
+                end_date=datetime(2024, 7, 31),
                 sample_files=2
             )
 

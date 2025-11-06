@@ -54,7 +54,7 @@ Before using this tool, you need to set up Cost and Usage Reports in AWS:
    - Click "Create report"
    - Configure report settings:
      - Report name: Choose a name (e.g., "my-cur-report")
-     - Time granularity: Hourly or Daily
+     - Time granularity: Monthly
      - Enable "Resource IDs" for detailed analysis
      - Enable "Split cost allocation data"
    - Choose S3 bucket for delivery

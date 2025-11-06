@@ -6,21 +6,21 @@ A powerful, easy-to-use tool for generating comprehensive visual analytics from 
 
 🚀 **Easy to Use** - Simple CLI interface with environment-based configuration
 
-📊 **Rich Visualizations** - Interactive charts and graphs powered by Plotly
-- Cost trends over time with moving averages
+📊 **Rich Visualizations** - Interactive charts and graphs powered by Apache ECharts
+- Cost trends over time
 - Cost breakdown by AWS account
 - Cost breakdown by service
 - Multi-dimensional analysis (account × service)
 - Regional cost distribution
 - Cost anomaly detection
-- Monthly/daily aggregations
+- Monthly aggregations
 
 🔍 **Deep Analysis** - Goes beyond basic billing reports:
 - Statistical anomaly detection for unusual spending
-- Trend analysis with 7-day and 30-day moving averages
+- Trend analysis across time periods
 - Heatmaps showing cost relationships between accounts and services
 - Top cost drivers identification
-- Time-series analysis for forecasting
+- Time-series analysis
 
 🔒 **Secure** - Uses environment variables for credentials (no secrets in code)
 
@@ -221,20 +221,18 @@ The tool generates a comprehensive HTML report with:
 
 - **Summary Dashboard** - Key metrics at a glance
   - Total cost
-  - Average daily cost
   - Number of accounts and services
   - Date range covered
-  - Peak daily cost
+  - Total records analyzed
 
 - **Interactive Visualizations**
   - Cost by Service (bar chart)
   - Cost by Account (bar chart)
-  - Daily Cost Trends (line chart with moving averages)
   - Cost Trends by Service (multi-line time series)
   - Cost Trends by Account (multi-line time series)
   - Account vs Service Heatmap (detailed breakdown)
   - Cost Distribution Pie Charts
-  - Monthly Summary (bar chart)
+  - Monthly Summary (bar chart with trend line)
   - Cost Anomalies (scatter plot with z-scores)
   - Cost by Region (bar chart)
 
@@ -505,7 +503,7 @@ For issues, questions, or feature requests, please open an issue on GitHub.
 Built with:
 - [Boto3](https://boto3.amazonaws.com/) - AWS SDK for Python
 - [Pandas](https://pandas.pydata.org/) - Data analysis
-- [Plotly](https://plotly.com/) - Interactive visualizations
+- [Apache ECharts (pyecharts)](https://echarts.apache.org/) - Interactive visualizations
 - [Click](https://click.palletsprojects.com/) - CLI framework
 
 ## Roadmap

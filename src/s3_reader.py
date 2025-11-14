@@ -194,6 +194,32 @@ class CURReader:
         combined_df = pd.concat(dataframes, ignore_index=True)
         logger.info(f"Total records loaded: {len(combined_df)}")
 
+        # Deduplicate by line item ID to prevent double counting
+        # AWS CUR files can be updated multiple times as charges are finalized
+        line_item_id_cols = [
+            "identity_line_item_id",
+            "identity/LineItemId",
+            "lineItem/LineItemId",
+        ]
+
+        dedup_col = None
+        for col in line_item_id_cols:
+            if col in combined_df.columns:
+                dedup_col = col
+                break
+
+        if dedup_col:
+            initial_count = len(combined_df)
+            combined_df = combined_df.drop_duplicates(subset=[dedup_col], keep="last")
+            deduped_count = initial_count - len(combined_df)
+            if deduped_count > 0:
+                logger.info(f"Removed {deduped_count} duplicate records based on {dedup_col}")
+        else:
+            logger.warning(
+                "No line item ID column found - skipping deduplication. "
+                "This may lead to double counting if files have been updated."
+            )
+
         return combined_df
 
     def get_date_column(self, df: pd.DataFrame) -> str:

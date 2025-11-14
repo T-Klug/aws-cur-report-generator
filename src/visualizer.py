@@ -36,6 +36,26 @@ class CURVisualizer:
         self.theme = theme_map.get(theme.lower(), ThemeType.MACARONS)
         self.charts = []
 
+    @staticmethod
+    def _get_tooltip_style() -> str:
+        """
+        Get consistent tooltip styling for all charts.
+
+        Returns:
+            CSS style string for tooltips
+        """
+        return """
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 13px;
+            line-height: 1.6;
+        """
+
     def create_cost_by_service_chart(
         self, df: pd.DataFrame, top_n: int = 10, title: str = "Cost by Service"
     ) -> Bar:
@@ -93,8 +113,17 @@ class CURVisualizer:
                     trigger="axis",
                     axis_pointer_type="shadow",
                     formatter=JsCode(
-                        "function(params) { return params[0].name + '<br/>Cost: $' + params[0].value.toLocaleString(); }"
+                        """function(params) {
+                            return '<div style="' + `"""
+                        + self._get_tooltip_style()
+                        + """` + '">' +
+                                '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/>' +
+                                '<span style="opacity: 0.9;">Total Cost: </span>' +
+                                '<strong style="font-size: 15px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
+                                '</div>';
+                        }"""
                     ),
+                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
                 ),
                 toolbox_opts=opts.ToolboxOpts(
                     is_show=True,
@@ -167,8 +196,18 @@ class CURVisualizer:
                     trigger="axis",
                     axis_pointer_type="shadow",
                     formatter=JsCode(
-                        "function(params) { return 'Account: ' + params[0].name + '<br/>Cost: $' + params[0].value.toLocaleString(); }"
+                        """function(params) {
+                            return '<div style="' + `"""
+                        + self._get_tooltip_style()
+                        + """` + '">' +
+                                '<strong style="font-size: 14px;">Account ID</strong><br/>' +
+                                '<span style="font-size: 13px; opacity: 0.9;">' + params[0].name + '</span><br/><br/>' +
+                                '<span style="opacity: 0.9;">Total Cost: </span>' +
+                                '<strong style="font-size: 15px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
+                                '</div>';
+                        }"""
                     ),
+                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
                 ),
                 toolbox_opts=opts.ToolboxOpts(
                     is_show=True,
@@ -185,13 +224,13 @@ class CURVisualizer:
         return bar
 
     def create_service_trend_chart(
-        self, df: pd.DataFrame, title: str = "Cost Trends by Service"
+        self, df: pd.DataFrame, title: str = "Monthly Cost Trends by Service"
     ) -> Line:
         """
-        Create a line chart showing cost trends for top services.
+        Create a line chart showing monthly cost trends for top services.
 
         Args:
-            df: DataFrame with date, service, and total_cost columns
+            df: DataFrame with month, service, and total_cost columns
             title: Chart title
 
         Returns:
@@ -199,15 +238,15 @@ class CURVisualizer:
         """
         logger.info("Creating service trend chart...")
 
-        # Get unique dates and services
-        dates = sorted(df["date"].unique())
+        # Get unique months and services
+        months = sorted(df["month"].unique())
         services = df["service"].unique()
 
-        # Convert dates to strings for x-axis
-        date_strs = [str(d) for d in dates]
+        # Month strings for x-axis
+        month_strs = [str(m) for m in months]
 
         line = Line(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
-        line.add_xaxis(date_strs)
+        line.add_xaxis(month_strs)
 
         # Color palette for better distinction
         colors = [
@@ -224,9 +263,9 @@ class CURVisualizer:
         for i, service in enumerate(services):
             service_data = df[df["service"] == service]
             # Create a dict for quick lookup
-            cost_by_date = dict(zip(service_data["date"].astype(str), service_data["total_cost"]))
-            # Ensure we have values for all dates
-            values = [round(cost_by_date.get(str(d), 0), 2) for d in dates]
+            cost_by_month = dict(zip(service_data["month"].astype(str), service_data["total_cost"]))
+            # Ensure we have values for all months
+            values = [round(cost_by_month.get(str(m), 0), 2) for m in months]
 
             line.add_yaxis(
                 series_name=service,
@@ -245,7 +284,7 @@ class CURVisualizer:
                 pos_top="1%",
             ),
             xaxis_opts=opts.AxisOpts(
-                name="Date",
+                name="Month",
                 type_="category",
                 boundary_gap=False,
                 axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
@@ -261,13 +300,23 @@ class CURVisualizer:
                 axis_pointer_type="cross",
                 formatter=JsCode(
                     """function(params) {
-                        var result = params[0].name + '<br/>';
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
+                        var result = '<div style="' + style + '">';
+                        result += '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/><br/>';
                         params.forEach(function(item) {
-                            result += item.marker + item.seriesName + ': $' + item.value.toLocaleString() + '<br/>';
+                            result += '<div style="margin: 4px 0;">';
+                            result += item.marker + ' ';
+                            result += '<span style="opacity: 0.9;">' + item.seriesName + ':</span> ';
+                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';
+                            result += '</div>';
                         });
+                        result += '</div>';
                         return result;
                     }"""
                 ),
+                textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
             ),
             legend_opts=opts.LegendOpts(
                 type_="scroll",
@@ -299,13 +348,13 @@ class CURVisualizer:
         return line
 
     def create_account_trend_chart(
-        self, df: pd.DataFrame, title: str = "Cost Trends by Account"
+        self, df: pd.DataFrame, title: str = "Monthly Cost Trends by Account"
     ) -> Line:
         """
-        Create a line chart showing cost trends for top accounts.
+        Create a line chart showing monthly cost trends for top accounts.
 
         Args:
-            df: DataFrame with date, account_id, and total_cost columns
+            df: DataFrame with month, account_id, and total_cost columns
             title: Chart title
 
         Returns:
@@ -313,15 +362,15 @@ class CURVisualizer:
         """
         logger.info("Creating account trend chart...")
 
-        # Get unique dates and accounts
-        dates = sorted(df["date"].unique())
+        # Get unique months and accounts
+        months = sorted(df["month"].unique())
         accounts = df["account_id"].unique()
 
-        # Convert dates to strings for x-axis
-        date_strs = [str(d) for d in dates]
+        # Month strings for x-axis
+        month_strs = [str(m) for m in months]
 
         line = Line(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
-        line.add_xaxis(date_strs)
+        line.add_xaxis(month_strs)
 
         # Color palette
         colors = [
@@ -338,9 +387,9 @@ class CURVisualizer:
         for i, account in enumerate(accounts):
             account_data = df[df["account_id"] == account]
             # Create a dict for quick lookup
-            cost_by_date = dict(zip(account_data["date"].astype(str), account_data["total_cost"]))
-            # Ensure we have values for all dates
-            values = [round(cost_by_date.get(str(d), 0), 2) for d in dates]
+            cost_by_month = dict(zip(account_data["month"].astype(str), account_data["total_cost"]))
+            # Ensure we have values for all months
+            values = [round(cost_by_month.get(str(m), 0), 2) for m in months]
 
             line.add_yaxis(
                 series_name=str(account),
@@ -359,7 +408,7 @@ class CURVisualizer:
                 pos_top="1%",
             ),
             xaxis_opts=opts.AxisOpts(
-                name="Date",
+                name="Month",
                 type_="category",
                 boundary_gap=False,
                 axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
@@ -375,13 +424,23 @@ class CURVisualizer:
                 axis_pointer_type="cross",
                 formatter=JsCode(
                     """function(params) {
-                        var result = params[0].name + '<br/>';
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
+                        var result = '<div style="' + style + '">';
+                        result += '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/><br/>';
                         params.forEach(function(item) {
-                            result += item.marker + 'Account ' + item.seriesName + ': $' + item.value.toLocaleString() + '<br/>';
+                            result += '<div style="margin: 4px 0;">';
+                            result += item.marker + ' ';
+                            result += '<span style="opacity: 0.9;">Account ' + item.seriesName + ':</span> ';
+                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';
+                            result += '</div>';
                         });
+                        result += '</div>';
                         return result;
                     }"""
                 ),
+                textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
             ),
             legend_opts=opts.LegendOpts(
                 type_="scroll",
@@ -486,9 +545,18 @@ class CURVisualizer:
                 tooltip_opts=opts.TooltipOpts(
                     formatter=JsCode(
                         """function(params) {
-                            return 'Account: ' + params.name + '<br/>Service: ' + params.value[0] + '<br/>Cost: $' + params.value[2].toLocaleString();
+                            var style = `"""
+                        + self._get_tooltip_style()
+                        + """`;
+                            return '<div style="' + style + '">' +
+                                '<strong style="font-size: 14px;">Cost Breakdown</strong><br/><br/>' +
+                                '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Account: </span><strong>' + params.name + '</strong></div>' +
+                                '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Service: </span><strong>' + params.value[0] + '</strong></div>' +
+                                '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Total Cost: </span><strong>$' + params.value[2].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +
+                                '</div>';
                         }"""
-                    )
+                    ),
+                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
                 ),
                 toolbox_opts=opts.ToolboxOpts(
                     is_show=True,
@@ -569,8 +637,17 @@ class CURVisualizer:
                 tooltip_opts=opts.TooltipOpts(
                     trigger="item",
                     formatter=JsCode(
-                        "function(params) { return params.name + '<br/>Cost: $' + params.value.toLocaleString() + '<br/>Percentage: ' + params.percent + '%'; }"
+                        """function(params) {
+                            return '<div style="' + `"""
+                        + self._get_tooltip_style()
+                        + """` + '">' +
+                                '<strong style="font-size: 14px;">' + params.name + '</strong><br/><br/>' +
+                                '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +
+                                '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +
+                                '</div>';
+                        }"""
                     ),
+                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
                 ),
                 toolbox_opts=opts.ToolboxOpts(
                     is_show=True,
@@ -663,13 +740,23 @@ class CURVisualizer:
                 axis_pointer_type="shadow",
                 formatter=JsCode(
                     """function(params) {
-                        var result = params[0].name + '<br/>';
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
+                        var result = '<div style="' + style + '">';
+                        result += '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/><br/>';
                         params.forEach(function(item) {
-                            result += item.marker + item.seriesName + ': $' + item.value.toLocaleString() + '<br/>';
+                            result += '<div style="margin: 4px 0;">';
+                            result += item.marker + ' ';
+                            result += '<span style="opacity: 0.9;">' + item.seriesName + ':</span> ';
+                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';
+                            result += '</div>';
                         });
+                        result += '</div>';
                         return result;
                     }"""
                 ),
+                textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
             ),
             legend_opts=opts.LegendOpts(pos_top="8%"),
             toolbox_opts=opts.ToolboxOpts(
@@ -686,13 +773,13 @@ class CURVisualizer:
         return bar
 
     def create_anomaly_chart(
-        self, df: pd.DataFrame, title: str = "Cost Anomalies Detection"
+        self, df: pd.DataFrame, title: str = "Cost Anomalies by Service"
     ) -> Scatter:
         """
-        Create a chart highlighting cost anomalies.
+        Create a chart highlighting cost anomalies by service and month.
 
         Args:
-            df: DataFrame with date, total_cost, and z_score columns
+            df: DataFrame with month, service, total_cost, mean_cost, z_score, pct_change columns
             title: Chart title
 
         Returns:
@@ -700,81 +787,133 @@ class CURVisualizer:
         """
         logger.info("Creating cost anomaly chart...")
 
-        dates = df["date"].astype(str).tolist()
-        costs = df["total_cost"].tolist()
-        z_scores = df["z_score"].tolist()
-
-        # Color code by severity
-        data = []
-        for i in range(len(dates)):
-            z_score = z_scores[i]
-            if abs(z_score) < 2:
-                symbol_size = 8
-                color = "#91cc75"
-            elif abs(z_score) < 3:
-                symbol_size = 12
-                color = "#fac858"
-            else:
-                symbol_size = 16
-                color = "#ee6666"
-
-            data.append(
-                {
-                    "value": [dates[i], round(costs[i], 2), round(z_score, 2)],
-                    "itemStyle": {"color": color},
-                    "symbolSize": symbol_size,
-                }
+        if df.empty:
+            logger.warning("No anomalies to visualize")
+            # Return empty chart
+            scatter = Scatter(
+                init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%")
             )
+            return scatter
 
-        scatter = (
-            Scatter(init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%"))
-            .add_xaxis(dates)
-            .add_yaxis(
-                "Anomalous Days",
-                data,
+        # Get unique months and services
+        months = sorted(df["month"].unique())
+        services = df["service"].unique()
+
+        # Color palette for services
+        colors = [
+            "#ee6666",  # Red for anomalies
+            "#fac858",  # Orange
+            "#91cc75",  # Green
+            "#73c0de",  # Blue
+            "#5470c6",  # Dark blue
+            "#9a60b4",  # Purple
+            "#fc8452",  # Orange-red
+            "#3ba272",  # Teal
+        ]
+
+        scatter = Scatter(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
+        scatter.add_xaxis(months)
+
+        # Add series for each service
+        for i, service in enumerate(services):
+            service_data = df[df["service"] == service]
+
+            # Prepare data points with all information
+            data = []
+            for _, row in service_data.iterrows():
+                month_str = str(row["month"])
+                z_score = row["z_score"]
+
+                # Size based on severity
+                if abs(z_score) < 2.5:
+                    symbol_size = 12
+                elif abs(z_score) < 3:
+                    symbol_size = 16
+                else:
+                    symbol_size = 20
+
+                data.append(
+                    {
+                        "value": [
+                            month_str,
+                            round(row["total_cost"], 2),
+                            round(z_score, 2),
+                            round(row["mean_cost"], 2),
+                            round(row["pct_change"], 1),
+                        ],
+                        "symbolSize": symbol_size,
+                    }
+                )
+
+            scatter.add_yaxis(
+                series_name=service,
+                y_axis=data,
+                symbol="circle",
                 label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=colors[i % len(colors)]),
             )
-            .set_global_opts(
-                title_opts=opts.TitleOpts(
-                    title=title,
-                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
-                    pos_top="1%",
-                    item_gap=15,
+
+        scatter.set_global_opts(
+            title_opts=opts.TitleOpts(
+                title=title,
+                subtitle="Months where service costs deviate significantly from average",
+                title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                pos_top="1%",
+                item_gap=15,
+            ),
+            xaxis_opts=opts.AxisOpts(
+                name="Month",
+                type_="category",
+                axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
+            ),
+            yaxis_opts=opts.AxisOpts(
+                name="Cost (USD)",
+                axislabel_opts=opts.LabelOpts(
+                    formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
                 ),
-                xaxis_opts=opts.AxisOpts(
-                    name="Date",
-                    type_="category",
-                    axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
+            ),
+            tooltip_opts=opts.TooltipOpts(
+                trigger="item",
+                formatter=JsCode(
+                    """function(params) {
+                        var value = params.value;
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
+                        var result = '<div style="' + style + '">';
+                        result += '<strong style="font-size: 14px;">' + params.seriesName + '</strong><br/><br/>';
+                        result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Month: </span><strong>' + value[0] + '</strong></div>';
+                        result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Cost: </span><strong>$' + value[1].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';
+                        result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Average: </span><strong>$' + value[3].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';
+                        result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Change: </span><strong style="color: ' + (value[4] > 0 ? '#ff6b6b' : '#51cf66') + ';">' + (value[4] > 0 ? '+' : '') + value[4].toFixed(1) + '%</strong></div>';
+                        result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Z-Score: </span><strong>' + value[2].toFixed(2) + '</strong></div>';
+                        result += '</div>';
+                        return result;
+                    }"""
                 ),
-                yaxis_opts=opts.AxisOpts(
-                    name="Total Cost (USD)",
-                    axislabel_opts=opts.LabelOpts(
-                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
+            ),
+            legend_opts=opts.LegendOpts(
+                type_="scroll",
+                orient="horizontal",
+                pos_top="12%",
+                selected_mode="multiple",
+            ),
+            datazoom_opts=[
+                opts.DataZoomOpts(type_="slider", range_start=0, range_end=100),
+                opts.DataZoomOpts(type_="inside"),
+            ],
+            toolbox_opts=opts.ToolboxOpts(
+                is_show=True,
+                feature=opts.ToolBoxFeatureOpts(
+                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(
+                        zoom_title="Zoom", back_title="Reset Zoom"
                     ),
+                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
                 ),
-                tooltip_opts=opts.TooltipOpts(
-                    formatter=JsCode(
-                        """function(params) {
-                            return 'Date: ' + params.value[0] + '<br/>Cost: $' + params.value[1].toLocaleString() + '<br/>Z-Score: ' + params.value[2];
-                        }"""
-                    )
-                ),
-                datazoom_opts=[
-                    opts.DataZoomOpts(type_="slider", range_start=0, range_end=100),
-                    opts.DataZoomOpts(type_="inside"),
-                ],
-                toolbox_opts=opts.ToolboxOpts(
-                    is_show=True,
-                    feature=opts.ToolBoxFeatureOpts(
-                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
-                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                        data_zoom=opts.ToolBoxFeatureDataZoomOpts(
-                            zoom_title="Zoom", back_title="Reset Zoom"
-                        ),
-                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                    ),
-                ),
-            )
+            ),
         )
 
         self.charts.append(("anomalies", scatter))
@@ -836,8 +975,17 @@ class CURVisualizer:
                     trigger="axis",
                     axis_pointer_type="shadow",
                     formatter=JsCode(
-                        "function(params) { return params[0].name + '<br/>Cost: $' + params[0].value.toLocaleString(); }"
+                        """function(params) {
+                            return '<div style="' + `"""
+                        + self._get_tooltip_style()
+                        + """` + '">' +
+                                '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/>' +
+                                '<span style="opacity: 0.9;">Total Cost: </span>' +
+                                '<strong style="font-size: 15px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
+                                '</div>';
+                        }"""
                     ),
+                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
                 ),
                 toolbox_opts=opts.ToolboxOpts(
                     is_show=True,

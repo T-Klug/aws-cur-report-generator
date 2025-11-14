@@ -185,11 +185,11 @@
 <body >
     <style>.box { justify-content:center; display:flex; flex-wrap:wrap;  } </style>
     <div class="box">
-                <div id="d57cafc486cd41c1892ce549d732af0a" class="chart-container" style="width:100%; height:500px; "></div>
+                <div id="52c086bcf5d7443e8488388e6096547f" class="chart-container" style="width:100%; height:500px; "></div>
     <script>
-        var chart_d57cafc486cd41c1892ce549d732af0a = echarts.init(
-            document.getElementById('d57cafc486cd41c1892ce549d732af0a'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_d57cafc486cd41c1892ce549d732af0a = {
+        var chart_52c086bcf5d7443e8488388e6096547f = echarts.init(
+            document.getElementById('52c086bcf5d7443e8488388e6096547f'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_52c086bcf5d7443e8488388e6096547f = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -287,9 +287,9 @@
         "confine": false,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) { return params[0].name + '<br/>Cost: $' + params[0].value.toLocaleString(); },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                '<strong style=\"font-size: 15px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
         "textStyle": {
-            "fontSize": 14
+            "color": "#ffffff"
         },
         "borderWidth": 0,
         "padding": 5,
@@ -450,16 +450,16 @@
         }
     }
 };
-        chart_d57cafc486cd41c1892ce549d732af0a.setOption(option_d57cafc486cd41c1892ce549d732af0a);
+        chart_52c086bcf5d7443e8488388e6096547f.setOption(option_52c086bcf5d7443e8488388e6096547f);
             window.addEventListener('resize', function(){
-                chart_d57cafc486cd41c1892ce549d732af0a.resize();
+                chart_52c086bcf5d7443e8488388e6096547f.resize();
             })
     </script>
-<br/>                <div id="29fa7043ca50457ebe205b20311c486c" class="chart-container" style="width:100%; height:500px; "></div>
+<br/>                <div id="cae0c363e1524447acbe04f576011d33" class="chart-container" style="width:100%; height:500px; "></div>
     <script>
-        var chart_29fa7043ca50457ebe205b20311c486c = echarts.init(
-            document.getElementById('29fa7043ca50457ebe205b20311c486c'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_29fa7043ca50457ebe205b20311c486c = {
+        var chart_cae0c363e1524447acbe04f576011d33 = echarts.init(
+            document.getElementById('cae0c363e1524447acbe04f576011d33'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_cae0c363e1524447acbe04f576011d33 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -552,9 +552,9 @@
         "confine": false,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) { return 'Account: ' + params[0].name + '<br/>Cost: $' + params[0].value.toLocaleString(); },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">Account ID</strong><br/>' +                                '<span style=\"font-size: 13px; opacity: 0.9;\">' + params[0].name + '</span><br/><br/>' +                                '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                '<strong style=\"font-size: 15px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
         "textStyle": {
-            "fontSize": 14
+            "color": "#ffffff"
         },
         "borderWidth": 0,
         "padding": 5,
@@ -709,16 +709,16 @@
         }
     }
 };
-        chart_29fa7043ca50457ebe205b20311c486c.setOption(option_29fa7043ca50457ebe205b20311c486c);
+        chart_cae0c363e1524447acbe04f576011d33.setOption(option_cae0c363e1524447acbe04f576011d33);
             window.addEventListener('resize', function(){
-                chart_29fa7043ca50457ebe205b20311c486c.resize();
+                chart_cae0c363e1524447acbe04f576011d33.resize();
             })
     </script>
-<br/>                <div id="bed3373361bf46438b82b131e3f76b4c" class="chart-container" style="width:100%; height:650px; "></div>
+<br/>                <div id="cfc7d44bad7046feb8641476afe3801c" class="chart-container" style="width:100%; height:650px; "></div>
     <script>
-        var chart_bed3373361bf46438b82b131e3f76b4c = echarts.init(
-            document.getElementById('bed3373361bf46438b82b131e3f76b4c'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_bed3373361bf46438b82b131e3f76b4c = {
+        var chart_cfc7d44bad7046feb8641476afe3801c = echarts.init(
+            document.getElementById('cfc7d44bad7046feb8641476afe3801c'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_cfc7d44bad7046feb8641476afe3801c = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -744,27 +744,27 @@
             "stackStrategy": "samesign",
             "data": [
                 [
-                    "2024-01-01",
+                    "2024-01",
                     669440.72
                 ],
                 [
-                    "2024-02-01",
+                    "2024-02",
                     682374.96
                 ],
                 [
-                    "2024-03-01",
+                    "2024-03",
                     786593.47
                 ],
                 [
-                    "2024-04-01",
+                    "2024-04",
                     789579.96
                 ],
                 [
-                    "2024-05-01",
+                    "2024-05",
                     925175.36
                 ],
                 [
-                    "2024-06-01",
+                    "2024-06",
                     935412.51
                 ]
             ],
@@ -805,27 +805,27 @@
             "stackStrategy": "samesign",
             "data": [
                 [
-                    "2024-01-01",
+                    "2024-01",
                     362394.24
                 ],
                 [
-                    "2024-02-01",
+                    "2024-02",
                     350453.03
                 ],
                 [
-                    "2024-03-01",
+                    "2024-03",
                     460216.16
                 ],
                 [
-                    "2024-04-01",
+                    "2024-04",
                     429530.69
                 ],
                 [
-                    "2024-05-01",
+                    "2024-05",
                     512778.01
                 ],
                 [
-                    "2024-06-01",
+                    "2024-06",
                     513287.38
                 ]
             ],
@@ -866,27 +866,27 @@
             "stackStrategy": "samesign",
             "data": [
                 [
-                    "2024-01-01",
+                    "2024-01",
                     425394.92
                 ],
                 [
-                    "2024-02-01",
+                    "2024-02",
                     453458.74
                 ],
                 [
-                    "2024-03-01",
+                    "2024-03",
                     501451.44
                 ],
                 [
-                    "2024-04-01",
+                    "2024-04",
                     536004.92
                 ],
                 [
-                    "2024-05-01",
+                    "2024-05",
                     615847.64
                 ],
                 [
-                    "2024-06-01",
+                    "2024-06",
                     642546.86
                 ]
             ],
@@ -927,27 +927,27 @@
             "stackStrategy": "samesign",
             "data": [
                 [
-                    "2024-01-01",
+                    "2024-01",
                     305980.23
                 ],
                 [
-                    "2024-02-01",
+                    "2024-02",
                     326937.77
                 ],
                 [
-                    "2024-03-01",
+                    "2024-03",
                     341015.74
                 ],
                 [
-                    "2024-04-01",
+                    "2024-04",
                     360682.22
                 ],
                 [
-                    "2024-05-01",
+                    "2024-05",
                     381743.12
                 ],
                 [
-                    "2024-06-01",
+                    "2024-06",
                     397328.94
                 ]
             ],
@@ -1025,9 +1025,9 @@
         "confine": false,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                        var result = params[0].name + '<br/>';                        params.forEach(function(item) {                            result += item.marker + item.seriesName + ': $' + item.value.toLocaleString() + '<br/>';                        });                        return result;                    },
+        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 4px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">' + item.seriesName + ':</span> ';                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
         "textStyle": {
-            "fontSize": 14
+            "color": "#ffffff"
         },
         "borderWidth": 0,
         "padding": 5,
@@ -1036,7 +1036,7 @@
     "xAxis": [
         {
             "type": "category",
-            "name": "Date",
+            "name": "Month",
             "show": true,
             "scale": false,
             "nameLocation": "end",
@@ -1072,12 +1072,12 @@
             "animationEasingUpdate": "cubicOut",
             "animationDelayUpdate": 0,
             "data": [
-                "2024-01-01",
-                "2024-02-01",
-                "2024-03-01",
-                "2024-04-01",
-                "2024-05-01",
-                "2024-06-01"
+                "2024-01",
+                "2024-02",
+                "2024-03",
+                "2024-04",
+                "2024-05",
+                "2024-06"
             ]
         }
     ],
@@ -1224,16 +1224,16 @@
         }
     ]
 };
-        chart_bed3373361bf46438b82b131e3f76b4c.setOption(option_bed3373361bf46438b82b131e3f76b4c);
+        chart_cfc7d44bad7046feb8641476afe3801c.setOption(option_cfc7d44bad7046feb8641476afe3801c);
             window.addEventListener('resize', function(){
-                chart_bed3373361bf46438b82b131e3f76b4c.resize();
+                chart_cfc7d44bad7046feb8641476afe3801c.resize();
             })
     </script>
-<br/>                <div id="99b64474672f4805a4f8c8c54d11fa17" class="chart-container" style="width:100%; height:650px; "></div>
+<br/>                <div id="b3e1578696834d9b97d48c93f5218a20" class="chart-container" style="width:100%; height:650px; "></div>
     <script>
-        var chart_99b64474672f4805a4f8c8c54d11fa17 = echarts.init(
-            document.getElementById('99b64474672f4805a4f8c8c54d11fa17'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_99b64474672f4805a4f8c8c54d11fa17 = {
+        var chart_b3e1578696834d9b97d48c93f5218a20 = echarts.init(
+            document.getElementById('b3e1578696834d9b97d48c93f5218a20'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_b3e1578696834d9b97d48c93f5218a20 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -1259,27 +1259,27 @@
             "stackStrategy": "samesign",
             "data": [
                 [
-                    "2024-01-01",
+                    "2024-01",
                     1773340.82
                 ],
                 [
-                    "2024-02-01",
+                    "2024-02",
                     1997306.05
                 ],
                 [
-                    "2024-03-01",
+                    "2024-03",
                     2226321.7
                 ],
                 [
-                    "2024-04-01",
+                    "2024-04",
                     2413038.66
                 ],
                 [
-                    "2024-05-01",
+                    "2024-05",
                     2610575.77
                 ],
                 [
-                    "2024-06-01",
+                    "2024-06",
                     2803118.47
                 ]
             ],
@@ -1320,27 +1320,27 @@
             "stackStrategy": "samesign",
             "data": [
                 [
-                    "2024-01-01",
+                    "2024-01",
                     519064.31
                 ],
                 [
-                    "2024-02-01",
+                    "2024-02",
                     535260.62
                 ],
                 [
-                    "2024-03-01",
+                    "2024-03",
                     557975.98
                 ],
                 [
-                    "2024-04-01",
+                    "2024-04",
                     564538.95
                 ],
                 [
-                    "2024-05-01",
+                    "2024-05",
                     661787.28
                 ],
                 [
-                    "2024-06-01",
+                    "2024-06",
                     682323.53
                 ]
             ],
@@ -1416,9 +1416,9 @@
         "confine": false,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                        var result = params[0].name + '<br/>';                        params.forEach(function(item) {                            result += item.marker + 'Account ' + item.seriesName + ': $' + item.value.toLocaleString() + '<br/>';                        });                        return result;                    },
+        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 4px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">Account ' + item.seriesName + ':</span> ';                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
         "textStyle": {
-            "fontSize": 14
+            "color": "#ffffff"
         },
         "borderWidth": 0,
         "padding": 5,
@@ -1427,7 +1427,7 @@
     "xAxis": [
         {
             "type": "category",
-            "name": "Date",
+            "name": "Month",
             "show": true,
             "scale": false,
             "nameLocation": "end",
@@ -1463,12 +1463,12 @@
             "animationEasingUpdate": "cubicOut",
             "animationDelayUpdate": 0,
             "data": [
-                "2024-01-01",
-                "2024-02-01",
-                "2024-03-01",
-                "2024-04-01",
-                "2024-05-01",
-                "2024-06-01"
+                "2024-01",
+                "2024-02",
+                "2024-03",
+                "2024-04",
+                "2024-05",
+                "2024-06"
             ]
         }
     ],
@@ -1615,16 +1615,16 @@
         }
     ]
 };
-        chart_99b64474672f4805a4f8c8c54d11fa17.setOption(option_99b64474672f4805a4f8c8c54d11fa17);
+        chart_b3e1578696834d9b97d48c93f5218a20.setOption(option_b3e1578696834d9b97d48c93f5218a20);
             window.addEventListener('resize', function(){
-                chart_99b64474672f4805a4f8c8c54d11fa17.resize();
+                chart_b3e1578696834d9b97d48c93f5218a20.resize();
             })
     </script>
-<br/>                <div id="7b3bb9e8f27e44eca884df677f49f170" class="chart-container" style="width:100%; height:600px; "></div>
+<br/>                <div id="691344b6e7454f6a9df13bd6a7d535a7" class="chart-container" style="width:100%; height:600px; "></div>
     <script>
-        var chart_7b3bb9e8f27e44eca884df677f49f170 = echarts.init(
-            document.getElementById('7b3bb9e8f27e44eca884df677f49f170'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_7b3bb9e8f27e44eca884df677f49f170 = {
+        var chart_691344b6e7454f6a9df13bd6a7d535a7 = echarts.init(
+            document.getElementById('691344b6e7454f6a9df13bd6a7d535a7'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_691344b6e7454f6a9df13bd6a7d535a7 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -1738,9 +1738,9 @@
         "confine": false,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                            return 'Account: ' + params.name + '<br/>Service: ' + params.value[0] + '<br/>Cost: $' + params.value[2].toLocaleString();                        },
+        "formatter": function(params) {                            var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        `;                            return '<div style=\"' + style + '\">' +                                '<strong style=\"font-size: 14px;\">Cost Breakdown</strong><br/><br/>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Account: </span><strong>' + params.name + '</strong></div>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Service: </span><strong>' + params.value[0] + '</strong></div>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value[2].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '</div>';                        },
         "textStyle": {
-            "fontSize": 14
+            "color": "#ffffff"
         },
         "borderWidth": 0,
         "padding": 5,
@@ -1919,16 +1919,16 @@
         "borderWidth": 0
     }
 };
-        chart_7b3bb9e8f27e44eca884df677f49f170.setOption(option_7b3bb9e8f27e44eca884df677f49f170);
+        chart_691344b6e7454f6a9df13bd6a7d535a7.setOption(option_691344b6e7454f6a9df13bd6a7d535a7);
             window.addEventListener('resize', function(){
-                chart_7b3bb9e8f27e44eca884df677f49f170.resize();
+                chart_691344b6e7454f6a9df13bd6a7d535a7.resize();
             })
     </script>
-<br/>                <div id="0c0661eaed1647209f1d5b2c8e13fa6b" class="chart-container" style="width:100%; height:600px; "></div>
+<br/>                <div id="5cb237d84a0c4ef09859a0c7f02147ee" class="chart-container" style="width:100%; height:600px; "></div>
     <script>
-        var chart_0c0661eaed1647209f1d5b2c8e13fa6b = echarts.init(
-            document.getElementById('0c0661eaed1647209f1d5b2c8e13fa6b'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_0c0661eaed1647209f1d5b2c8e13fa6b = {
+        var chart_5cb237d84a0c4ef09859a0c7f02147ee = echarts.init(
+            document.getElementById('5cb237d84a0c4ef09859a0c7f02147ee'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_5cb237d84a0c4ef09859a0c7f02147ee = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -2089,9 +2089,9 @@
         "confine": false,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) { return params.name + '<br/>Cost: $' + params.value.toLocaleString() + '<br/>Percentage: ' + params.percent + '%'; },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">' + params.name + '</strong><br/><br/>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +                                '</div>';                        },
         "textStyle": {
-            "fontSize": 14
+            "color": "#ffffff"
         },
         "borderWidth": 0,
         "padding": 5,
@@ -2165,16 +2165,16 @@
         }
     }
 };
-        chart_0c0661eaed1647209f1d5b2c8e13fa6b.setOption(option_0c0661eaed1647209f1d5b2c8e13fa6b);
+        chart_5cb237d84a0c4ef09859a0c7f02147ee.setOption(option_5cb237d84a0c4ef09859a0c7f02147ee);
             window.addEventListener('resize', function(){
-                chart_0c0661eaed1647209f1d5b2c8e13fa6b.resize();
+                chart_5cb237d84a0c4ef09859a0c7f02147ee.resize();
             })
     </script>
-<br/>                <div id="07221f850d754193b56fa184f3c91eab" class="chart-container" style="width:100%; height:600px; "></div>
+<br/>                <div id="e7278b47aed246849c7519ac30662fe2" class="chart-container" style="width:100%; height:600px; "></div>
     <script>
-        var chart_07221f850d754193b56fa184f3c91eab = echarts.init(
-            document.getElementById('07221f850d754193b56fa184f3c91eab'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_07221f850d754193b56fa184f3c91eab = {
+        var chart_e7278b47aed246849c7519ac30662fe2 = echarts.init(
+            document.getElementById('e7278b47aed246849c7519ac30662fe2'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_e7278b47aed246849c7519ac30662fe2 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -2315,9 +2315,9 @@
         "confine": false,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) { return params.name + '<br/>Cost: $' + params.value.toLocaleString() + '<br/>Percentage: ' + params.percent + '%'; },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">' + params.name + '</strong><br/><br/>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +                                '</div>';                        },
         "textStyle": {
-            "fontSize": 14
+            "color": "#ffffff"
         },
         "borderWidth": 0,
         "padding": 5,
@@ -2391,16 +2391,16 @@
         }
     }
 };
-        chart_07221f850d754193b56fa184f3c91eab.setOption(option_07221f850d754193b56fa184f3c91eab);
+        chart_e7278b47aed246849c7519ac30662fe2.setOption(option_e7278b47aed246849c7519ac30662fe2);
             window.addEventListener('resize', function(){
-                chart_07221f850d754193b56fa184f3c91eab.resize();
+                chart_e7278b47aed246849c7519ac30662fe2.resize();
             })
     </script>
-<br/>                <div id="8d895b6ff60c41138630b872bfb4fa48" class="chart-container" style="width:100%; height:600px; "></div>
+<br/>                <div id="40b76384184c4524b7a48dcaf06e2698" class="chart-container" style="width:100%; height:600px; "></div>
     <script>
-        var chart_8d895b6ff60c41138630b872bfb4fa48 = echarts.init(
-            document.getElementById('8d895b6ff60c41138630b872bfb4fa48'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_8d895b6ff60c41138630b872bfb4fa48 = {
+        var chart_40b76384184c4524b7a48dcaf06e2698 = echarts.init(
+            document.getElementById('40b76384184c4524b7a48dcaf06e2698'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_40b76384184c4524b7a48dcaf06e2698 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -2448,12 +2448,7 @@
             },
             "itemStyle": {
                 "color": "#5470c6",
-                "borderRadius": [
-                    8,
-                    8,
-                    0,
-                    0
-                ]
+                "borderRadius": 8
             }
         },
         {
@@ -2562,9 +2557,9 @@
         "confine": false,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                        var result = params[0].name + '<br/>';                        params.forEach(function(item) {                            result += item.marker + item.seriesName + ': $' + item.value.toLocaleString() + '<br/>';                        });                        return result;                    },
+        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 4px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">' + item.seriesName + ':</span> ';                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
         "textStyle": {
-            "fontSize": 14
+            "color": "#ffffff"
         },
         "borderWidth": 0,
         "padding": 5,
@@ -2720,16 +2715,328 @@
         }
     }
 };
-        chart_8d895b6ff60c41138630b872bfb4fa48.setOption(option_8d895b6ff60c41138630b872bfb4fa48);
+        chart_40b76384184c4524b7a48dcaf06e2698.setOption(option_40b76384184c4524b7a48dcaf06e2698);
             window.addEventListener('resize', function(){
-                chart_8d895b6ff60c41138630b872bfb4fa48.resize();
+                chart_40b76384184c4524b7a48dcaf06e2698.resize();
             })
     </script>
-<br/>                <div id="0f069be8d38848b897ce90b9b93b0954" class="chart-container" style="width:100%; height:500px; "></div>
+<br/>                <div id="2f7fbd8e55a6484db93156efec493414" class="chart-container" style="width:100%; height:650px; "></div>
     <script>
-        var chart_0f069be8d38848b897ce90b9b93b0954 = echarts.init(
-            document.getElementById('0f069be8d38848b897ce90b9b93b0954'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_0f069be8d38848b897ce90b9b93b0954 = {
+        var chart_2f7fbd8e55a6484db93156efec493414 = echarts.init(
+            document.getElementById('2f7fbd8e55a6484db93156efec493414'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_2f7fbd8e55a6484db93156efec493414 = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "aria": {
+        "enabled": false
+    },
+    "series": [
+        {
+            "type": "scatter",
+            "name": "AmazonCloudFront",
+            "symbol": "circle",
+            "symbolSize": 10,
+            "data": [
+                {
+                    "value": [
+                        "2024-06",
+                        203772.05,
+                        -1.83,
+                        222887.57,
+                        -8.6
+                    ],
+                    "symbolSize": 12
+                }
+            ],
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#ee6666"
+            }
+        },
+        {
+            "type": "scatter",
+            "name": "AmazonDynamoDB",
+            "symbol": "circle",
+            "symbolSize": 10,
+            "data": [
+                {
+                    "value": [
+                        "2024-06",
+                        251544.37,
+                        1.54,
+                        209754.64,
+                        19.9
+                    ],
+                    "symbolSize": 12
+                }
+            ],
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#fac858"
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                "AmazonCloudFront",
+                "AmazonDynamoDB"
+            ],
+            "selected": {},
+            "type": "scroll",
+            "selectedMode": "multiple",
+            "show": true,
+            "top": "12%",
+            "orient": "horizontal",
+            "padding": 5,
+            "itemGap": 10,
+            "itemWidth": 25,
+            "itemHeight": 14,
+            "backgroundColor": "transparent",
+            "borderColor": "#ccc",
+            "borderRadius": 0,
+            "pageButtonItemGap": 5,
+            "pageButtonPosition": "end",
+            "pageFormatter": "{current}/{total}",
+            "pageIconColor": "#2f4554",
+            "pageIconInactiveColor": "#aaa",
+            "pageIconSize": 15,
+            "animationDurationUpdate": 800,
+            "selector": false,
+            "selectorPosition": "auto",
+            "selectorItemGap": 7,
+            "selectorButtonGap": 10
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "item",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "line"
+        },
+        "showContent": true,
+        "alwaysShowContent": false,
+        "showDelay": 0,
+        "hideDelay": 100,
+        "enterable": false,
+        "confine": false,
+        "appendToBody": false,
+        "transitionDuration": 0.4,
+        "formatter": function(params) {                        var value = params.value;                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 14px;\">' + params.seriesName + '</strong><br/><br/>';                        result += '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Month: </span><strong>' + value[0] + '</strong></div>';                        result += '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Cost: </span><strong>$' + value[1].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';                        result += '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Average: </span><strong>$' + value[3].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';                        result += '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Change: </span><strong style=\"color: ' + (value[4] > 0 ? '#ff6b6b' : '#51cf66') + ';\">' + (value[4] > 0 ? '+' : '') + value[4].toFixed(1) + '%</strong></div>';                        result += '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Z-Score: </span><strong>' + value[2].toFixed(2) + '</strong></div>';                        result += '</div>';                        return result;                    },
+        "textStyle": {
+            "color": "#ffffff"
+        },
+        "borderWidth": 0,
+        "padding": 5,
+        "order": "seriesAsc"
+    },
+    "xAxis": [
+        {
+            "type": "category",
+            "name": "Month",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "axisLabel": {
+                "show": true,
+                "rotate": 45,
+                "margin": 8,
+                "interval": "auto",
+                "valueAnimation": false
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": true,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "animation": true,
+            "animationThreshold": 2000,
+            "animationDuration": 1000,
+            "animationEasing": "cubicOut",
+            "animationDelay": 0,
+            "animationDurationUpdate": 300,
+            "animationEasingUpdate": "cubicOut",
+            "animationDelayUpdate": 0,
+            "data": [
+                "2024-06"
+            ]
+        }
+    ],
+    "yAxis": [
+        {
+            "name": "Cost (USD)",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "axisLabel": {
+                "show": true,
+                "margin": 8,
+                "formatter": function(value) { return '$' + value.toLocaleString(); },
+                "valueAnimation": false
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": true,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "animation": true,
+            "animationThreshold": 2000,
+            "animationDuration": 1000,
+            "animationEasing": "cubicOut",
+            "animationDelay": 0,
+            "animationDurationUpdate": 300,
+            "animationEasingUpdate": "cubicOut",
+            "animationDelayUpdate": 0
+        }
+    ],
+    "title": [
+        {
+            "show": true,
+            "text": "Cost Anomalies Detection (Statistical Outliers)",
+            "target": "blank",
+            "subtext": "Months where service costs deviate significantly from average",
+            "subtarget": "blank",
+            "top": "1%",
+            "padding": 5,
+            "itemGap": 15,
+            "textAlign": "auto",
+            "textVerticalAlign": "auto",
+            "triggerEvent": false,
+            "textStyle": {
+                "fontWeight": "bold",
+                "fontSize": 18
+            }
+        }
+    ],
+    "toolbox": {
+        "show": true,
+        "orient": "horizontal",
+        "itemSize": 15,
+        "itemGap": 10,
+        "left": "80%",
+        "feature": {
+            "saveAsImage": {
+                "type": "png",
+                "backgroundColor": "auto",
+                "connectedBackgroundColor": "#fff",
+                "show": true,
+                "title": "Save as Image",
+                "pixelRatio": 1
+            },
+            "restore": {
+                "show": true,
+                "title": "Restore"
+            },
+            "dataView": {
+                "show": true,
+                "title": "Data View",
+                "readOnly": false,
+                "backgroundColor": "#fff",
+                "textareaColor": "#fff",
+                "textareaBorderColor": "#333",
+                "textColor": "#000",
+                "buttonColor": "#c23531",
+                "buttonTextColor": "#fff"
+            },
+            "dataZoom": {
+                "show": true,
+                "title": {
+                    "zoom": "Zoom",
+                    "back": "Reset Zoom"
+                },
+                "icon": {},
+                "filterMode": "filter"
+            },
+            "magicType": {
+                "show": true,
+                "type": [
+                    "line",
+                    "bar",
+                    "stack",
+                    "tiled"
+                ],
+                "title": {},
+                "icon": {}
+            }
+        }
+    },
+    "dataZoom": [
+        {
+            "show": true,
+            "type": "slider",
+            "showDetail": true,
+            "showDataShadow": true,
+            "realtime": true,
+            "start": 0,
+            "end": 100,
+            "orient": "horizontal",
+            "zoomLock": false,
+            "filterMode": "filter"
+        },
+        {
+            "show": true,
+            "type": "inside",
+            "showDetail": true,
+            "showDataShadow": true,
+            "realtime": true,
+            "start": 20,
+            "end": 80,
+            "orient": "horizontal",
+            "zoomLock": false,
+            "filterMode": "filter",
+            "disabled": false,
+            "zoomOnMouseWheel": true,
+            "moveOnMouseMove": true,
+            "moveOnMouseWheel": true,
+            "preventDefaultMouseMove": true
+        }
+    ]
+};
+        chart_2f7fbd8e55a6484db93156efec493414.setOption(option_2f7fbd8e55a6484db93156efec493414);
+            window.addEventListener('resize', function(){
+                chart_2f7fbd8e55a6484db93156efec493414.resize();
+            })
+    </script>
+<br/>                <div id="42198b6d4aa348fb8136d2f64d8e1ae5" class="chart-container" style="width:100%; height:500px; "></div>
+    <script>
+        var chart_42198b6d4aa348fb8136d2f64d8e1ae5 = echarts.init(
+            document.getElementById('42198b6d4aa348fb8136d2f64d8e1ae5'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_42198b6d4aa348fb8136d2f64d8e1ae5 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -2822,9 +3129,9 @@
         "confine": false,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) { return params[0].name + '<br/>Cost: $' + params[0].value.toLocaleString(); },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                '<strong style=\"font-size: 15px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
         "textStyle": {
-            "fontSize": 14
+            "color": "#ffffff"
         },
         "borderWidth": 0,
         "padding": 5,
@@ -2980,9 +3287,9 @@
         }
     }
 };
-        chart_0f069be8d38848b897ce90b9b93b0954.setOption(option_0f069be8d38848b897ce90b9b93b0954);
+        chart_42198b6d4aa348fb8136d2f64d8e1ae5.setOption(option_42198b6d4aa348fb8136d2f64d8e1ae5);
             window.addEventListener('resize', function(){
-                chart_0f069be8d38848b897ce90b9b93b0954.resize();
+                chart_42198b6d4aa348fb8136d2f64d8e1ae5.resize();
             })
     </script>
 <br/>    </div>
@@ -2994,7 +3301,7 @@
                     </div>
                 </div>
                 <div class="footer">
-                    <strong>Report generated on 2025-11-05 14:46:44</strong><br>
+                    <strong>Report generated on 2025-11-14 11:29:05</strong><br>
                     Powered by Apache ECharts | AWS Cost and Usage Report Generator
                 </div>
             </div>

@@ -56,9 +56,9 @@ class TestCURVisualizer:
         """Test creation of service trend chart."""
         df = pd.DataFrame(
             {
-                "date": pd.date_range("2024-01-01", periods=10).tolist() * 2,
-                "service": ["AmazonEC2"] * 10 + ["AmazonS3"] * 10,
-                "total_cost": [100.0] * 10 + [50.0] * 10,
+                "month": ["2024-01", "2024-02", "2024-03", "2024-04", "2024-05"] * 2,
+                "service": ["AmazonEC2"] * 5 + ["AmazonS3"] * 5,
+                "total_cost": [100.0] * 5 + [50.0] * 5,
             }
         )
 
@@ -72,9 +72,9 @@ class TestCURVisualizer:
         """Test creation of account trend chart."""
         df = pd.DataFrame(
             {
-                "date": pd.date_range("2024-01-01", periods=10).tolist() * 2,
-                "account_id": ["123456789012"] * 10 + ["210987654321"] * 10,
-                "total_cost": [100.0] * 10 + [50.0] * 10,
+                "month": ["2024-01", "2024-02", "2024-03", "2024-04", "2024-05"] * 2,
+                "account_id": ["123456789012"] * 5 + ["210987654321"] * 5,
+                "total_cost": [100.0] * 5 + [50.0] * 5,
             }
         )
 
@@ -139,11 +139,24 @@ class TestCURVisualizer:
         """Test creation of anomaly chart."""
         df = pd.DataFrame(
             {
-                "date": pd.date_range("2024-01-01", periods=5),
-                "total_cost": [100.0, 110.0, 500.0, 105.0, 108.0],
-                "z_score": [0.1, 0.2, 3.5, 0.15, 0.18],
+                "month": ["2024-01", "2024-02", "2024-03"],
+                "service": ["AmazonEC2", "AmazonEC2", "AmazonS3"],
+                "total_cost": [1000.0, 5000.0, 800.0],
+                "mean_cost": [2000.0, 2000.0, 600.0],
+                "z_score": [0.5, 3.5, 2.1],
+                "pct_change": [-50.0, 150.0, 33.3],
             }
         )
+
+        visualizer = CURVisualizer()
+        chart = visualizer.create_anomaly_chart(df)
+
+        assert chart is not None
+        assert isinstance(chart, Scatter)
+
+    def test_create_anomaly_chart_empty(self):
+        """Test creation of anomaly chart with empty data."""
+        df = pd.DataFrame()
 
         visualizer = CURVisualizer()
         chart = visualizer.create_anomaly_chart(df)
@@ -176,12 +189,10 @@ class TestCURVisualizer:
 
         summary_stats = {
             "total_cost": 10000.0,
-            "average_daily_cost": 333.33,
             "num_accounts": 2,
             "num_services": 3,
             "date_range_start": "2024-01-01",
             "date_range_end": "2024-01-31",
-            "max_daily_cost": 400.0,
             "total_records": 1000,
         }
 
@@ -208,12 +219,10 @@ class TestCURVisualizer:
 
         summary_stats = {
             "total_cost": 0.0,
-            "average_daily_cost": 0.0,
             "num_accounts": 0,
             "num_services": 0,
             "date_range_start": "2024-01-01",
             "date_range_end": "2024-01-31",
-            "max_daily_cost": 0.0,
             "total_records": 0,
         }
 

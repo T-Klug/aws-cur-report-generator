@@ -237,55 +237,59 @@ class CURDataProcessor:
 
     def get_cost_trend_by_service(self, top_services: int = 5) -> pd.DataFrame:
         """
-        Get cost trends over time for top services.
+        Get monthly cost trends over time for top services.
 
         Args:
             top_services: Number of top services to include
 
         Returns:
-            DataFrame with service cost trends
+            DataFrame with service cost trends by month
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
 
-        logger.info(f"Calculating cost trends for top {top_services} services...")
+        logger.info(f"Calculating monthly cost trends for top {top_services} services...")
 
         # Get top services
         top_service_list = self.get_cost_by_service(top_services)["service"].tolist()
 
-        # Filter and aggregate
+        # Filter and aggregate by month
         service_col: pd.Series = self.prepared_df["service"]  # type: ignore[assignment]
         filtered_df: pd.DataFrame = self.prepared_df[service_col.isin(top_service_list)]  # type: ignore[assignment]
-        result = filtered_df.groupby(["date", "service"]).agg({"cost": "sum"}).reset_index()
-        result.columns = ["date", "service", "total_cost"]
-        result = result.sort_values(["service", "date"])
+        result = filtered_df.groupby(["year_month", "service"]).agg({"cost": "sum"}).reset_index()
+        result.columns = ["month", "service", "total_cost"]
+        result["month"] = result["month"].astype(str)
+        result = result.sort_values(["service", "month"])
 
         return result
 
     def get_cost_trend_by_account(self, top_accounts: int = 5) -> pd.DataFrame:
         """
-        Get cost trends over time for top accounts.
+        Get monthly cost trends over time for top accounts.
 
         Args:
             top_accounts: Number of top accounts to include
 
         Returns:
-            DataFrame with account cost trends
+            DataFrame with account cost trends by month
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
 
-        logger.info(f"Calculating cost trends for top {top_accounts} accounts...")
+        logger.info(f"Calculating monthly cost trends for top {top_accounts} accounts...")
 
         # Get top accounts
         top_account_list = self.get_cost_by_account(top_accounts)["account_id"].tolist()
 
-        # Filter and aggregate
+        # Filter and aggregate by month
         account_col: pd.Series = self.prepared_df["account_id"]  # type: ignore[assignment]
         filtered_df: pd.DataFrame = self.prepared_df[account_col.isin(top_account_list)]  # type: ignore[assignment]
-        result = filtered_df.groupby(["date", "account_id"]).agg({"cost": "sum"}).reset_index()
-        result.columns = ["date", "account_id", "total_cost"]
-        result = result.sort_values(["account_id", "date"])
+        result = (
+            filtered_df.groupby(["year_month", "account_id"]).agg({"cost": "sum"}).reset_index()
+        )
+        result.columns = ["month", "account_id", "total_cost"]
+        result["month"] = result["month"].astype(str)
+        result = result.sort_values(["account_id", "month"])
 
         return result
 
@@ -305,42 +309,83 @@ class CURDataProcessor:
             .agg({"cost": ["sum", "mean", "count"]})
             .reset_index()
         )
-        result.columns = ["month", "total_cost", "avg_daily_cost", "num_records"]
+        result.columns = ["month", "total_cost", "avg_record_cost", "num_records"]
         result["month"] = result["month"].astype(str)
 
         return result
 
-    def detect_cost_anomalies(self, threshold_std: float = 2.0) -> pd.DataFrame:
+    def detect_cost_anomalies(
+        self, threshold_std: float = 2.0, top_services: int = 10
+    ) -> pd.DataFrame:
         """
-        Detect days with anomalous costs (statistical outliers).
+        Detect months with anomalous costs by service (statistical outliers).
+
+        Identifies service/month combinations where costs are significantly higher
+        or lower than the service's typical monthly cost.
 
         Args:
             threshold_std: Number of standard deviations for anomaly detection
+            top_services: Number of top services to analyze for anomalies
 
         Returns:
-            DataFrame with anomalous cost days
+            DataFrame with anomalous service costs by month, including:
+            - month: The month period
+            - service: AWS service name
+            - total_cost: Cost for that service in that month
+            - mean_cost: Average cost for that service across all months
+            - z_score: Z-score (number of std deviations from mean)
+            - pct_change: Percentage change from the mean
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
 
-        logger.info("Detecting cost anomalies...")
+        logger.info("Detecting cost anomalies by service and month...")
 
-        # Calculate daily costs
-        daily_costs = self.prepared_df.groupby("date").agg({"cost": "sum"}).reset_index()
-        daily_costs.columns = ["date", "total_cost"]
-        daily_costs = daily_costs.sort_values(by="date")
+        # Get top services to focus analysis
+        top_service_list = self.get_cost_by_service(top_services)["service"].tolist()
 
-        # Calculate statistics
-        mean_cost = daily_costs["total_cost"].mean()
-        std_cost = daily_costs["total_cost"].std()
+        # Filter to top services
+        service_col: pd.Series = self.prepared_df["service"]  # type: ignore[assignment]
+        filtered_df: pd.DataFrame = self.prepared_df[service_col.isin(top_service_list)]  # type: ignore[assignment]
 
-        # Identify anomalies
-        daily_costs["z_score"] = (daily_costs["total_cost"] - mean_cost) / std_cost
-        z_score_col: pd.Series = daily_costs["z_score"]  # type: ignore[assignment]
-        anomalies: pd.DataFrame = daily_costs[abs(z_score_col) > threshold_std].copy()  # type: ignore[assignment]
-        anomalies = anomalies.sort_values(by="date")
+        # Calculate monthly costs by service
+        monthly_costs = (
+            filtered_df.groupby(["year_month", "service"]).agg({"cost": "sum"}).reset_index()
+        )
+        monthly_costs.columns = ["month", "service", "total_cost"]
+        monthly_costs["month"] = monthly_costs["month"].astype(str)
 
-        logger.info(f"Found {len(anomalies)} anomalous days")
+        # Calculate mean and std for each service across all months
+        service_stats = (
+            monthly_costs.groupby("service")["total_cost"].agg(["mean", "std"]).reset_index()
+        )
+        service_stats.columns = ["service", "mean_cost", "std_cost"]
+
+        # Merge stats back to monthly costs
+        monthly_costs = monthly_costs.merge(service_stats, on="service")
+
+        # Calculate z-scores and percentage change
+        monthly_costs["z_score"] = (
+            monthly_costs["total_cost"] - monthly_costs["mean_cost"]
+        ) / monthly_costs["std_cost"]
+        monthly_costs["pct_change"] = (
+            (monthly_costs["total_cost"] - monthly_costs["mean_cost"]) / monthly_costs["mean_cost"]
+        ) * 100
+
+        # Identify anomalies (only where we have enough variance)
+        # Skip services with zero std dev (consistent cost every month)
+        z_score_col: pd.Series = monthly_costs["z_score"]  # type: ignore[assignment]
+        std_col: pd.Series = monthly_costs["std_cost"]  # type: ignore[assignment]
+        anomalies: pd.DataFrame = monthly_costs[  # type: ignore[assignment]
+            (abs(z_score_col) > threshold_std) & (std_col > 0.01)
+        ].copy()
+
+        # Sort by absolute z-score to show most significant anomalies first
+        anomalies["abs_z_score"] = abs(anomalies["z_score"])
+        anomalies = anomalies.sort_values(by="abs_z_score", ascending=False)
+        anomalies = anomalies.drop(columns=["abs_z_score", "std_cost"])
+
+        logger.info(f"Found {len(anomalies)} anomalous service/month combinations")
         return anomalies
 
     def get_cost_by_region(self, top_n: Optional[int] = None) -> pd.DataFrame:

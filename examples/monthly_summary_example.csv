@@ -1,4 +1,4 @@
-month,total_cost,avg_daily_cost,num_records
+month,total_cost,avg_record_cost,num_records
 2024-01,3034995.52,77820.39794871795,39
 2024-02,3153669.09,80863.31,39
 2024-03,3539254.56,90750.11692307693,39

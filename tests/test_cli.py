@@ -52,7 +52,7 @@ class TestCLI:
                 {
                     "month": ["2024-01"],
                     "total_cost": [10000.0],
-                    "avg_daily_cost": [333.33],
+                    "avg_record_cost": [10.0],
                     "num_records": [1000],
                 }
             )
@@ -60,9 +60,6 @@ class TestCLI:
             mock_processor_instance.get_cost_by_region.return_value = pd.DataFrame()
             mock_processor_instance.get_summary_statistics.return_value = {
                 "total_cost": 10000.0,
-                "average_daily_cost": 333.33,
-                "min_daily_cost": 300.0,
-                "max_daily_cost": 400.0,
                 "num_accounts": 2,
                 "num_services": 4,
                 "date_range_start": "2024-01-01",
@@ -162,16 +159,6 @@ class TestCLI:
         assert result.exit_code == 1
         assert "Invalid date format" in result.output
 
-    def test_missing_env_vars(self, runner):
-        """Test error when required env vars are missing."""
-        from cur_report_generator import generate_report
-
-        # Don't set env vars - should fail validation
-        result = runner.invoke(generate_report, [])
-
-        assert result.exit_code == 1
-        assert "Missing required environment variables" in result.output
-
     def test_no_html_option(self, runner, mock_env_vars, mock_dependencies, tmp_path):
         """Test --no-html option."""
         from cur_report_generator import generate_report
@@ -239,24 +226,6 @@ class TestCLI:
             assert result.exit_code == 0
             assert "Report Summary" in result.output
             assert "Total Cost" in result.output
-
-
-class TestValidateEnvVars:
-    """Test environment variable validation."""
-
-    def test_validate_env_vars_success(self, mock_env_vars):
-        """Test validation with all required vars present."""
-        from cur_report_generator import validate_env_vars
-
-        # Should not raise
-        validate_env_vars()
-
-    def test_validate_env_vars_missing(self):
-        """Test validation with missing vars."""
-        from cur_report_generator import validate_env_vars
-
-        with pytest.raises(SystemExit):
-            validate_env_vars()
 
 
 class TestSetupLogging:

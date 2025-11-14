@@ -121,23 +121,23 @@ class TestCURDataProcessor:
         assert len(breakdown) > 0
 
     def test_get_cost_trend_by_service(self, sample_cur_data):
-        """Test cost trends over time for services."""
+        """Test monthly cost trends over time for services."""
         processor = CURDataProcessor(sample_cur_data)
         service_trend = processor.get_cost_trend_by_service(top_services=2)
 
         assert isinstance(service_trend, pd.DataFrame)
-        assert "date" in service_trend.columns
+        assert "month" in service_trend.columns
         assert "service" in service_trend.columns
         assert "total_cost" in service_trend.columns
         assert len(service_trend) > 0
 
     def test_get_cost_trend_by_account(self, sample_cur_data):
-        """Test cost trends over time for accounts."""
+        """Test monthly cost trends over time for accounts."""
         processor = CURDataProcessor(sample_cur_data)
         account_trend = processor.get_cost_trend_by_account(top_accounts=2)
 
         assert isinstance(account_trend, pd.DataFrame)
-        assert "date" in account_trend.columns
+        assert "month" in account_trend.columns
         assert "account_id" in account_trend.columns
         assert "total_cost" in account_trend.columns
         assert len(account_trend) > 0
@@ -150,25 +150,46 @@ class TestCURDataProcessor:
         assert isinstance(monthly_summary, pd.DataFrame)
         assert "month" in monthly_summary.columns
         assert "total_cost" in monthly_summary.columns
-        assert "avg_daily_cost" in monthly_summary.columns
+        assert "avg_record_cost" in monthly_summary.columns
         assert "num_records" in monthly_summary.columns
 
     def test_detect_cost_anomalies(self):
-        """Test cost anomaly detection."""
-        # Create data with a clear anomaly
-        dates = pd.date_range(start="2024-01-01", periods=30)
-        costs = [100.0] * 30
-        costs[15] = 1000.0  # Anomaly
+        """Test cost anomaly detection by service and month."""
+        # Create data spanning 6 months with an anomaly in month 3 for EC2
+        dates = []
+        services = []
+        costs = []
+
+        # Normal months for EC2: 1000, 1000, 5000 (anomaly), 1000, 1000, 1000
+        for month in range(1, 7):
+            for day in range(1, 6):  # 5 days per month
+                dates.append(f"2024-{month:02d}-{day:02d}")
+                services.append("AmazonEC2")
+                # Month 3 has unusually high costs
+                costs.append(1000.0 if month != 3 else 1000.0)
+
+        # Add another month with very high cost for EC2 to create anomaly
+        for day in range(1, 6):
+            dates.append(f"2024-03-{day:02d}")
+            services.append("AmazonEC2")
+            costs.append(5000.0)  # This will make March anomalous
+
+        # Add S3 with consistent costs (no anomalies)
+        for month in range(1, 7):
+            for day in range(1, 6):
+                dates.append(f"2024-{month:02d}-{day:02d}")
+                services.append("AmazonS3")
+                costs.append(500.0)
 
         df = pd.DataFrame(
             {
                 "line_item_usage_start_date": dates,
-                "line_item_usage_account_id": ["123456789012"] * 30,
-                "line_item_product_code": ["AmazonEC2"] * 30,
+                "line_item_usage_account_id": ["123456789012"] * len(dates),
+                "line_item_product_code": services,
                 "line_item_unblended_cost": costs,
-                "line_item_usage_type": ["BoxUsage"] * 30,
-                "line_item_operation": ["RunInstances"] * 30,
-                "product_region": ["us-east-1"] * 30,
+                "line_item_usage_type": ["Usage"] * len(dates),
+                "line_item_operation": ["Operation"] * len(dates),
+                "product_region": ["us-east-1"] * len(dates),
             }
         )
 
@@ -176,31 +197,43 @@ class TestCURDataProcessor:
         anomalies = processor.detect_cost_anomalies(threshold_std=2.0)
 
         assert isinstance(anomalies, pd.DataFrame)
-        assert len(anomalies) > 0  # Should detect the anomaly
+        assert len(anomalies) > 0  # Should detect the EC2 anomaly in March
+        assert "month" in anomalies.columns
+        assert "service" in anomalies.columns
         assert "z_score" in anomalies.columns
+        assert "pct_change" in anomalies.columns
+        assert "mean_cost" in anomalies.columns
 
     def test_detect_cost_anomalies_none(self):
         """Test anomaly detection with consistent data."""
-        # Create data with no anomalies
-        dates = pd.date_range(start="2024-01-01", periods=30)
-        costs = [100.0] * 30
+        # Create data spanning 6 months with consistent costs (no anomalies)
+        dates = []
+        services = []
+        costs = []
+
+        # Consistent costs for EC2 across all months
+        for month in range(1, 7):
+            for day in range(1, 6):
+                dates.append(f"2024-{month:02d}-{day:02d}")
+                services.append("AmazonEC2")
+                costs.append(1000.0)
 
         df = pd.DataFrame(
             {
                 "line_item_usage_start_date": dates,
-                "line_item_usage_account_id": ["123456789012"] * 30,
-                "line_item_product_code": ["AmazonEC2"] * 30,
+                "line_item_usage_account_id": ["123456789012"] * len(dates),
+                "line_item_product_code": services,
                 "line_item_unblended_cost": costs,
-                "line_item_usage_type": ["BoxUsage"] * 30,
-                "line_item_operation": ["RunInstances"] * 30,
-                "product_region": ["us-east-1"] * 30,
+                "line_item_usage_type": ["BoxUsage"] * len(dates),
+                "line_item_operation": ["RunInstances"] * len(dates),
+                "product_region": ["us-east-1"] * len(dates),
             }
         )
 
         processor = CURDataProcessor(df)
         anomalies = processor.detect_cost_anomalies(threshold_std=2.0)
 
-        # Should find no anomalies
+        # Should find no anomalies (std is 0, so filtered out)
         assert len(anomalies) == 0
 
     def test_get_cost_by_region(self, sample_cur_data):

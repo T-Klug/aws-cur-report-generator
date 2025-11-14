@@ -218,8 +218,8 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
             visualizer.create_monthly_summary_chart(monthly_summary)
             pbar.update(1)
 
-            if not anomalies.empty:
-                visualizer.create_anomaly_chart(anomalies)
+            # Always create anomaly chart (handles empty data gracefully)
+            visualizer.create_anomaly_chart(anomalies)
             pbar.update(1)
 
             if not cost_by_region.empty:

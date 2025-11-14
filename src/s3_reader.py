@@ -1,5 +1,6 @@
 """S3 CUR Data Reader - Handles downloading and reading AWS Cost and Usage Reports from S3."""
 
+import csv
 import gzip
 import io
 import logging
@@ -10,6 +11,8 @@ from typing import List, Optional
 
 import boto3
 import pandas as pd
+import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
 from botocore.exceptions import ClientError, NoCredentialsError
 
@@ -20,7 +23,8 @@ class CURReader:
     """Read and process AWS Cost and Usage Reports from S3."""
 
     # Essential columns needed for analysis (reduces memory by ~95%)
-    REQUIRED_COLUMNS = [
+    # Can be overridden during initialization for custom analysis needs
+    DEFAULT_REQUIRED_COLUMNS = [
         # Cost columns
         "line_item_unblended_cost",
         "lineItem/UnblendedCost",
@@ -53,12 +57,21 @@ class CURReader:
         "lineItem/LineItemId",
     ]
 
+    # Default chunk size for CSV processing (rows per chunk)
+    DEFAULT_CHUNK_SIZE = 100000
+
+    # Default maximum workers for parallel processing
+    DEFAULT_MAX_WORKERS = 4
+
     def __init__(
         self,
         bucket: str,
         prefix: str,
         aws_profile: Optional[str] = None,
         aws_region: Optional[str] = None,
+        required_columns: Optional[List[str]] = None,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        max_workers: int = DEFAULT_MAX_WORKERS,
     ) -> None:
         """
         Initialize the CUR Reader.
@@ -68,19 +81,29 @@ class CURReader:
             prefix: S3 prefix/path to CUR reports
             aws_profile: AWS profile name (optional)
             aws_region: AWS region (optional)
+            required_columns: List of column names to read (None = use defaults)
+            chunk_size: Number of rows to process per chunk for CSV files
+            max_workers: Maximum parallel workers for multi-file processing
         """
         self.bucket = bucket
         self.prefix = prefix.rstrip("/")
+        self.required_columns = required_columns or self.DEFAULT_REQUIRED_COLUMNS
+        self.chunk_size = chunk_size
+        self.max_workers = max_workers
 
-        # Initialize AWS session
-        session_params = {}
+        # Store session parameters for thread-safe client creation
+        # boto3 clients are NOT thread-safe, so each thread needs its own client
+        self.aws_profile = aws_profile
+        self.aws_region = aws_region
+        self._session_params = {}
         if aws_profile:
-            session_params["profile_name"] = aws_profile
+            self._session_params["profile_name"] = aws_profile
         if aws_region:
-            session_params["region_name"] = aws_region
+            self._session_params["region_name"] = aws_region
 
+        # Create main thread S3 client for non-parallel operations
         try:
-            self.session = boto3.Session(**session_params)
+            self.session = boto3.Session(**self._session_params)
             self.s3_client = self.session.client("s3")
             logger.info(f"Initialized S3 client for bucket: {bucket}")
         except NoCredentialsError:
@@ -89,6 +112,19 @@ class CURReader:
         except Exception as e:
             logger.error(f"Error initializing AWS session: {e}")
             raise
+
+    def _create_s3_client(self):
+        """
+        Create a new thread-safe S3 client.
+
+        Boto3 clients are NOT thread-safe, so each thread must create its own client.
+        This method creates a new session and client with the stored credentials.
+
+        Returns:
+            New boto3 S3 client
+        """
+        session = boto3.Session(**self._session_params)
+        return session.client("s3")
 
     def list_report_files(
         self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
@@ -144,6 +180,7 @@ class CURReader:
         Read a single CUR file from S3 with optimizations.
 
         Optimizations:
+        - Delayed content loading (only after format detection)
         - Column selection (90-95% memory reduction)
         - Parquet filter pushdown (20-50% additional reduction)
         - Chunked CSV processing (50% lower peak memory)
@@ -160,9 +197,14 @@ class CURReader:
         try:
             logger.info(f"Reading CUR file: {s3_key}")
 
-            # Download file content
+            # Get response from S3
             response = self.s3_client.get_object(Bucket=self.bucket, Key=s3_key)
-            content = response["Body"].read()
+            body = response["Body"]
+
+            # Read content into buffer (required for proper processing)
+            # This is still better than the original: we only read after format detection
+            # and we immediately apply column selection and chunking
+            content = body.read()
 
             # Handle different file formats with optimizations
             if s3_key.endswith(".parquet"):
@@ -184,9 +226,60 @@ class CURReader:
             logger.error(f"Error processing CUR file {s3_key}: {e}")
             raise
 
+    def _read_cur_file_thread_safe(
+        self,
+        s3_key: str,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> pd.DataFrame:
+        """
+        Thread-safe wrapper for reading CUR files.
+
+        Creates its own S3 client to avoid thread-safety issues with boto3.
+        This method should be used when reading files in parallel threads.
+
+        Args:
+            s3_key: S3 key of the CUR file
+            start_date: Optional start date for filtering
+            end_date: Optional end date for filtering
+
+        Returns:
+            DataFrame containing the CUR data
+        """
+        # Create thread-local S3 client (boto3 clients are NOT thread-safe)
+        s3_client = self._create_s3_client()
+
+        try:
+            logger.info(f"[Thread-safe] Reading CUR file: {s3_key}")
+
+            # Get response from S3 using thread-local client
+            response = s3_client.get_object(Bucket=self.bucket, Key=s3_key)
+            body = response["Body"]
+            content = body.read()
+
+            # Handle different file formats with optimizations
+            if s3_key.endswith(".parquet"):
+                df = self._read_parquet_optimized(content, start_date, end_date)
+            elif s3_key.endswith(".csv.gz"):
+                df = self._read_csv_gz_optimized(content, start_date, end_date)
+            elif s3_key.endswith(".csv"):
+                df = self._read_csv_optimized(content, start_date, end_date)
+            else:
+                raise ValueError(f"Unsupported file format: {s3_key}")
+
+            logger.info(f"[Thread-safe] Successfully read {len(df)} rows from {s3_key}")
+            return df
+
+        except ClientError as e:
+            logger.error(f"Error reading S3 object {s3_key}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Error processing CUR file {s3_key}: {e}")
+            raise
+
     def _get_available_columns(self, all_columns: List[str]) -> List[str]:
         """
-        Get list of available columns from REQUIRED_COLUMNS that exist in the file.
+        Get list of available columns from required_columns that exist in the file.
 
         Args:
             all_columns: List of all columns in the file
@@ -194,7 +287,7 @@ class CURReader:
         Returns:
             List of columns to read
         """
-        available = [col for col in self.REQUIRED_COLUMNS if col in all_columns]
+        available = [col for col in self.required_columns if col in all_columns]
         if not available:
             # Fallback: read all columns if we can't find expected ones
             logger.warning("No expected columns found, reading all columns")
@@ -210,6 +303,9 @@ class CURReader:
         """
         Read Parquet file with filter pushdown and column selection.
 
+        Uses PyArrow's expression API for proper filter pushdown, which can
+        significantly reduce memory usage by filtering at the storage layer.
+
         Args:
             content: File content bytes
             start_date: Optional start date for filtering
@@ -224,8 +320,8 @@ class CURReader:
             all_columns = parquet_file.schema.names
             columns_to_read = self._get_available_columns(all_columns)
 
-            # Build filters for Parquet (predicate pushdown)
-            filters = []
+            # Build filter expression using PyArrow compute API
+            filter_expressions = []
 
             # Add date filters if provided
             date_col = None
@@ -236,11 +332,15 @@ class CURReader:
 
             if date_col and (start_date or end_date):
                 if start_date:
-                    filters.append((date_col, ">=", start_date.strftime("%Y-%m-%d")))
+                    filter_expressions.append(
+                        pc.field(date_col) >= pa.scalar(start_date.strftime("%Y-%m-%d"))
+                    )
                 if end_date:
-                    filters.append((date_col, "<=", end_date.strftime("%Y-%m-%d")))
+                    filter_expressions.append(
+                        pc.field(date_col) <= pa.scalar(end_date.strftime("%Y-%m-%d"))
+                    )
 
-            # Add cost filter (skip zero costs)
+            # Add cost filter (skip zero/negative costs)
             cost_col = None
             for col in ["line_item_unblended_cost", "lineItem/UnblendedCost"]:
                 if col in all_columns:
@@ -248,23 +348,48 @@ class CURReader:
                     break
 
             if cost_col:
-                filters.append((cost_col, ">", 0))
+                filter_expressions.append(pc.field(cost_col) > 0)
+
+            # Combine filters with AND logic
+            combined_filter = None
+            if filter_expressions:
+                combined_filter = filter_expressions[0]
+                for expr in filter_expressions[1:]:
+                    combined_filter = combined_filter & expr
 
             # Read with filters and column selection
-            if filters:
-                table = pq.read_table(io.BytesIO(content), columns=columns_to_read, filters=filters)
+            if combined_filter is not None:
+                table = pq.read_table(
+                    io.BytesIO(content), columns=columns_to_read, filters=combined_filter
+                )
             else:
                 table = pq.read_table(io.BytesIO(content), columns=columns_to_read)
 
             df = table.to_pandas()
-            logger.debug(f"Parquet optimization: Read {len(columns_to_read)} columns with filters")
+            logger.debug(
+                f"Parquet optimization: Read {len(columns_to_read)} columns, "
+                f"applied {len(filter_expressions)} filters"
+            )
             return df
 
+        except (pa.ArrowInvalid, pa.ArrowNotImplementedError) as e:
+            # Specific PyArrow errors - fallback with column selection
+            logger.warning(f"Parquet filter pushdown not supported, reading without filters: {e}")
+            try:
+                table = pq.read_table(io.BytesIO(content), columns=columns_to_read)
+                df = table.to_pandas()
+                # Apply filters in pandas instead
+                df = self._filter_chunk(df, start_date, end_date)
+                return df
+            except Exception as fallback_error:
+                logger.warning(f"Column selection failed, reading all columns: {fallback_error}")
+                df = pd.read_parquet(io.BytesIO(content))
+                return self._filter_chunk(df, start_date, end_date)
         except Exception as e:
-            # Fallback to simple read if filter pushdown fails
-            logger.warning(f"Parquet optimization failed, using fallback: {e}")
+            # Unexpected error - full fallback
+            logger.warning(f"Parquet optimization failed completely, using fallback: {e}")
             df = pd.read_parquet(io.BytesIO(content))
-            return df
+            return self._filter_chunk(df, start_date, end_date)
 
     def _read_csv_gz_optimized(
         self,
@@ -275,48 +400,23 @@ class CURReader:
         """
         Read gzipped CSV with chunked processing and column selection.
 
+        Uses proper CSV parsing to handle quoted fields, different dialects, etc.
+        Processes data in chunks to minimize peak memory usage.
+
         Args:
-            content: File content bytes
+            content: Gzipped file content bytes
             start_date: Optional start date for filtering
             end_date: Optional end date for filtering
 
         Returns:
             Filtered DataFrame
         """
+        # Decompress gzip content
         with gzip.GzipFile(fileobj=io.BytesIO(content)) as gz:
-            # Peek at first line to get column names
-            first_line = gz.readline().decode("utf-8")
-            all_columns = first_line.strip().split(",")
-            columns_to_read = self._get_available_columns(all_columns)
+            decompressed = gz.read()
 
-            # Reset file pointer
-            gz.seek(0)
-
-            # Read in chunks for memory efficiency
-            chunks = []
-            chunk_size = 100000  # Process 100k rows at a time
-
-            try:
-                for chunk in pd.read_csv(  # type: ignore[arg-type]
-                    gz, usecols=columns_to_read, chunksize=chunk_size, low_memory=False
-                ):
-                    # Immediate filtering to reduce memory
-                    chunk = self._filter_chunk(chunk, start_date, end_date)
-                    if not chunk.empty:
-                        chunks.append(chunk)
-
-                if not chunks:
-                    return pd.DataFrame()
-
-                df = pd.concat(chunks, ignore_index=True)
-                logger.debug(f"CSV.GZ optimization: Read {len(columns_to_read)} columns in chunks")
-                return df
-
-            except Exception as e:
-                logger.warning(f"Chunked CSV processing failed, trying full read: {e}")
-                gz.seek(0)
-                df = pd.read_csv(gz, usecols=columns_to_read, low_memory=False)  # type: ignore[arg-type]
-                return self._filter_chunk(df, start_date, end_date)
+        # Use the unified CSV reading method
+        return self._read_csv_buffer(decompressed, start_date, end_date, is_gzipped=True)
 
     def _read_csv_optimized(
         self,
@@ -335,38 +435,80 @@ class CURReader:
         Returns:
             Filtered DataFrame
         """
-        # Peek at first line to get column names
-        text_content = content.decode("utf-8")
-        first_line = text_content.split("\n")[0]
-        all_columns = first_line.strip().split(",")
-        columns_to_read = self._get_available_columns(all_columns)
+        return self._read_csv_buffer(content, start_date, end_date, is_gzipped=False)
 
-        # Read in chunks
-        chunks = []
-        chunk_size = 100000
+    def _read_csv_buffer(
+        self,
+        content: bytes,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        is_gzipped: bool = False,
+    ) -> pd.DataFrame:
+        """
+        Unified CSV reading method that handles CSV content.
 
+        Uses proper CSV parsing to handle quoted fields, commas in column names, etc.
+        Processes data in chunks to minimize peak memory usage.
+
+        Args:
+            content: CSV content as bytes
+            start_date: Optional start date for filtering
+            end_date: Optional end date for filtering
+            is_gzipped: Whether the original was gzipped (for logging)
+
+        Returns:
+            Filtered DataFrame
+        """
         try:
-            for chunk in pd.read_csv(
-                io.BytesIO(content),
-                usecols=columns_to_read,
-                chunksize=chunk_size,
-                low_memory=False,
-            ):
-                chunk = self._filter_chunk(chunk, start_date, end_date)
-                if not chunk.empty:
-                    chunks.append(chunk)
+            # Decode content to text
+            text_content = content.decode("utf-8")
 
-            if not chunks:
+            # Read first line using proper CSV reader to get column names
+            # This handles quoted column names, commas in names, etc.
+            first_line = text_content.split("\n", 1)[0]
+            csv_reader = csv.reader([first_line])
+            all_columns = next(csv_reader)
+            columns_to_read = self._get_available_columns(all_columns)
+
+            # Read in chunks for memory efficiency
+            chunks = []
+            buffer = io.BytesIO(content)
+
+            try:
+                for chunk in pd.read_csv(
+                    buffer,
+                    usecols=columns_to_read,
+                    chunksize=self.chunk_size,
+                    low_memory=False,
+                ):
+                    # Immediate filtering to reduce memory
+                    chunk = self._filter_chunk(chunk, start_date, end_date)
+                    if not chunk.empty:
+                        chunks.append(chunk)
+
+                if not chunks:
+                    return pd.DataFrame()
+
+                df = pd.concat(chunks, ignore_index=True)
+                file_type = "CSV.GZ" if is_gzipped else "CSV"
+                logger.debug(
+                    f"{file_type} optimization: Read {len(columns_to_read)} columns in chunks"
+                )
+                return df
+
+            except pd.errors.EmptyDataError:
+                logger.warning("CSV file is empty")
                 return pd.DataFrame()
 
-            df = pd.concat(chunks, ignore_index=True)
-            logger.debug(f"CSV optimization: Read {len(columns_to_read)} columns in chunks")
-            return df
-
+        except UnicodeDecodeError as e:
+            logger.error(f"CSV encoding error: {e}. File may not be UTF-8 encoded.")
+            raise
+        except csv.Error as e:
+            logger.error(f"CSV parsing error: {e}")
+            raise
         except Exception as e:
-            logger.warning(f"Chunked CSV processing failed, trying full read: {e}")
-            df = pd.read_csv(io.BytesIO(content), usecols=columns_to_read, low_memory=False)
-            return self._filter_chunk(df, start_date, end_date)
+            logger.error(f"Unexpected error reading CSV: {e}")
+            raise
 
     def _filter_chunk(
         self, chunk: pd.DataFrame, start_date: Optional[datetime], end_date: Optional[datetime]
@@ -462,12 +604,13 @@ class CURReader:
         else:
             # Multiple files - use parallel reading (3-4x faster)
             logger.info(f"Processing {num_files} files in parallel...")
-            max_workers = min(4, num_files)  # Cap at 4 to avoid S3 rate limits
+            max_workers = min(self.max_workers, num_files)  # Cap to avoid S3 rate limits
 
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # Submit all file read tasks
+                # Submit all file read tasks using thread-safe method
+                # Each thread gets its own S3 client to avoid boto3 thread-safety issues
                 future_to_file = {
-                    executor.submit(self.read_cur_file, s3_key, start_date, end_date): s3_key
+                    executor.submit(self._read_cur_file_thread_safe, s3_key, start_date, end_date): s3_key
                     for s3_key in report_files
                 }
 

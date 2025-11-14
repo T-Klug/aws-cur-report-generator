@@ -114,7 +114,9 @@ class CURVisualizer:
                     axis_pointer_type="shadow",
                     formatter=JsCode(
                         """function(params) {
-                            return '<div style="' + `""" + self._get_tooltip_style() + """` + '">' +
+                            return '<div style="' + `"""
+                        + self._get_tooltip_style()
+                        + """` + '">' +
                                 '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/>' +
                                 '<span style="opacity: 0.9;">Total Cost: </span>' +
                                 '<strong style="font-size: 15px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
@@ -195,7 +197,9 @@ class CURVisualizer:
                     axis_pointer_type="shadow",
                     formatter=JsCode(
                         """function(params) {
-                            return '<div style="' + `""" + self._get_tooltip_style() + """` + '">' +
+                            return '<div style="' + `"""
+                        + self._get_tooltip_style()
+                        + """` + '">' +
                                 '<strong style="font-size: 14px;">Account ID</strong><br/>' +
                                 '<span style="font-size: 13px; opacity: 0.9;">' + params[0].name + '</span><br/><br/>' +
                                 '<span style="opacity: 0.9;">Total Cost: </span>' +
@@ -296,7 +300,9 @@ class CURVisualizer:
                 axis_pointer_type="cross",
                 formatter=JsCode(
                     """function(params) {
-                        var style = `""" + self._get_tooltip_style() + """`;
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
                         var result = '<div style="' + style + '">';
                         result += '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/><br/>';
                         params.forEach(function(item) {
@@ -418,7 +424,9 @@ class CURVisualizer:
                 axis_pointer_type="cross",
                 formatter=JsCode(
                     """function(params) {
-                        var style = `""" + self._get_tooltip_style() + """`;
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
                         var result = '<div style="' + style + '">';
                         result += '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/><br/>';
                         params.forEach(function(item) {
@@ -537,7 +545,9 @@ class CURVisualizer:
                 tooltip_opts=opts.TooltipOpts(
                     formatter=JsCode(
                         """function(params) {
-                            var style = `""" + self._get_tooltip_style() + """`;
+                            var style = `"""
+                        + self._get_tooltip_style()
+                        + """`;
                             return '<div style="' + style + '">' +
                                 '<strong style="font-size: 14px;">Cost Breakdown</strong><br/><br/>' +
                                 '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Account: </span><strong>' + params.name + '</strong></div>' +
@@ -628,7 +638,9 @@ class CURVisualizer:
                     trigger="item",
                     formatter=JsCode(
                         """function(params) {
-                            return '<div style="' + `""" + self._get_tooltip_style() + """` + '">' +
+                            return '<div style="' + `"""
+                        + self._get_tooltip_style()
+                        + """` + '">' +
                                 '<strong style="font-size: 14px;">' + params.name + '</strong><br/><br/>' +
                                 '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +
                                 '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +
@@ -728,7 +740,9 @@ class CURVisualizer:
                 axis_pointer_type="shadow",
                 formatter=JsCode(
                     """function(params) {
-                        var style = `""" + self._get_tooltip_style() + """`;
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
                         var result = '<div style="' + style + '">';
                         result += '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/><br/>';
                         params.forEach(function(item) {
@@ -776,7 +790,9 @@ class CURVisualizer:
         if df.empty:
             logger.warning("No anomalies to visualize")
             # Return empty chart
-            scatter = Scatter(init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%"))
+            scatter = Scatter(
+                init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%")
+            )
             return scatter
 
         # Get unique months and services
@@ -861,7 +877,9 @@ class CURVisualizer:
                 formatter=JsCode(
                     """function(params) {
                         var value = params.value;
-                        var style = `""" + self._get_tooltip_style() + """`;
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
                         var result = '<div style="' + style + '">';
                         result += '<strong style="font-size: 14px;">' + params.seriesName + '</strong><br/><br/>';
                         result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Month: </span><strong>' + value[0] + '</strong></div>';
@@ -958,7 +976,9 @@ class CURVisualizer:
                     axis_pointer_type="shadow",
                     formatter=JsCode(
                         """function(params) {
-                            return '<div style="' + `""" + self._get_tooltip_style() + """` + '">' +
+                            return '<div style="' + `"""
+                        + self._get_tooltip_style()
+                        + """` + '">' +
                                 '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/>' +
                                 '<span style="opacity: 0.9;">Total Cost: </span>' +
                                 '<strong style="font-size: 15px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +

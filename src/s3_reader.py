@@ -213,9 +213,7 @@ class CURReader:
             combined_df = combined_df.drop_duplicates(subset=[dedup_col], keep="last")
             deduped_count = initial_count - len(combined_df)
             if deduped_count > 0:
-                logger.info(
-                    f"Removed {deduped_count} duplicate records based on {dedup_col}"
-                )
+                logger.info(f"Removed {deduped_count} duplicate records based on {dedup_col}")
         else:
             logger.warning(
                 "No line item ID column found - skipping deduplication. "

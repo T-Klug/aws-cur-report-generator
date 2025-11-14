@@ -284,7 +284,9 @@ class CURDataProcessor:
         # Filter and aggregate by month
         account_col: pd.Series = self.prepared_df["account_id"]  # type: ignore[assignment]
         filtered_df: pd.DataFrame = self.prepared_df[account_col.isin(top_account_list)]  # type: ignore[assignment]
-        result = filtered_df.groupby(["year_month", "account_id"]).agg({"cost": "sum"}).reset_index()
+        result = (
+            filtered_df.groupby(["year_month", "account_id"]).agg({"cost": "sum"}).reset_index()
+        )
         result.columns = ["month", "account_id", "total_cost"]
         result["month"] = result["month"].astype(str)
         result = result.sort_values(["account_id", "month"])
@@ -312,7 +314,9 @@ class CURDataProcessor:
 
         return result
 
-    def detect_cost_anomalies(self, threshold_std: float = 2.0, top_services: int = 10) -> pd.DataFrame:
+    def detect_cost_anomalies(
+        self, threshold_std: float = 2.0, top_services: int = 10
+    ) -> pd.DataFrame:
         """
         Detect months with anomalous costs by service (statistical outliers).
 
@@ -345,12 +349,16 @@ class CURDataProcessor:
         filtered_df: pd.DataFrame = self.prepared_df[service_col.isin(top_service_list)]  # type: ignore[assignment]
 
         # Calculate monthly costs by service
-        monthly_costs = filtered_df.groupby(["year_month", "service"]).agg({"cost": "sum"}).reset_index()
+        monthly_costs = (
+            filtered_df.groupby(["year_month", "service"]).agg({"cost": "sum"}).reset_index()
+        )
         monthly_costs.columns = ["month", "service", "total_cost"]
         monthly_costs["month"] = monthly_costs["month"].astype(str)
 
         # Calculate mean and std for each service across all months
-        service_stats = monthly_costs.groupby("service")["total_cost"].agg(["mean", "std"]).reset_index()
+        service_stats = (
+            monthly_costs.groupby("service")["total_cost"].agg(["mean", "std"]).reset_index()
+        )
         service_stats.columns = ["service", "mean_cost", "std_cost"]
 
         # Merge stats back to monthly costs
@@ -358,11 +366,11 @@ class CURDataProcessor:
 
         # Calculate z-scores and percentage change
         monthly_costs["z_score"] = (
-            (monthly_costs["total_cost"] - monthly_costs["mean_cost"]) / monthly_costs["std_cost"]
-        )
+            monthly_costs["total_cost"] - monthly_costs["mean_cost"]
+        ) / monthly_costs["std_cost"]
         monthly_costs["pct_change"] = (
-            ((monthly_costs["total_cost"] - monthly_costs["mean_cost"]) / monthly_costs["mean_cost"]) * 100
-        )
+            (monthly_costs["total_cost"] - monthly_costs["mean_cost"]) / monthly_costs["mean_cost"]
+        ) * 100
 
         # Identify anomalies (only where we have enough variance)
         # Skip services with zero std dev (consistent cost every month)

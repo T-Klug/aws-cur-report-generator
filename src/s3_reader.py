@@ -610,7 +610,9 @@ class CURReader:
                 # Submit all file read tasks using thread-safe method
                 # Each thread gets its own S3 client to avoid boto3 thread-safety issues
                 future_to_file = {
-                    executor.submit(self._read_cur_file_thread_safe, s3_key, start_date, end_date): s3_key
+                    executor.submit(
+                        self._read_cur_file_thread_safe, s3_key, start_date, end_date
+                    ): s3_key
                     for s3_key in report_files
                 }
 

@@ -5,6 +5,7 @@ import sys
 from unittest.mock import Mock, patch
 
 import pandas as pd
+import polars as pl
 import pytest
 from click.testing import CliRunner
 
@@ -188,7 +189,7 @@ class TestCLI:
 
             # Mock reader returns empty DataFrame
             mock_reader_instance = Mock()
-            mock_reader_instance.load_cur_data.return_value = pd.DataFrame()
+            mock_reader_instance.load_cur_data.return_value = pl.DataFrame()
             mock_reader.return_value = mock_reader_instance
 
             with runner.isolated_filesystem(temp_dir=tmp_path):

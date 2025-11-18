@@ -1,24 +1,26 @@
-"""Data Processor - Handles processing and aggregation of AWS CUR data."""
+"""Data Processor - Handles processing and aggregation of AWS CUR data using Polars."""
 
 import logging
 from typing import Dict, Optional
 
 import pandas as pd
+import polars as pl
 
 logger = logging.getLogger(__name__)
 
 
 class CURDataProcessor:
-    """Process and analyze AWS Cost and Usage Report data."""
+    """Process and analyze AWS Cost and Usage Report data using Polars."""
 
-    def __init__(self, df: pd.DataFrame) -> None:
+    def __init__(self, df: pl.DataFrame) -> None:
         """
         Initialize the data processor.
 
         Args:
-            df: DataFrame containing CUR data
+            df: Polars DataFrame containing CUR data
         """
-        self.df = df.copy()
+        # No copy needed for Polars (immutable/CoW)
+        self.df = df
         self.normalized_columns = self._normalize_column_names()
         logger.info(f"Initialized processor with {len(self.df)} records")
 
@@ -84,9 +86,10 @@ class CURDataProcessor:
         }
 
         # Find actual column names
+        available_columns = self.df.columns
         for standard_name, possible_names in column_patterns.items():
             for col_name in possible_names:
-                if col_name in self.df.columns:
+                if col_name in available_columns:
                     column_map[standard_name] = col_name
                     break
 
@@ -99,55 +102,69 @@ class CURDataProcessor:
 
         return column_map
 
-    def prepare_data(self) -> pd.DataFrame:
+    def prepare_data(self) -> pl.DataFrame:
         """
         Prepare and clean the CUR data for analysis.
 
         Returns:
-            Cleaned DataFrame with normalized column names
+            Cleaned Polars DataFrame with normalized column names
         """
         logger.info("Preparing CUR data...")
 
-        # Create working dataframe with normalized columns
-        working_df = pd.DataFrame()
-
+        # Build expressions for selection and renaming
+        expressions = []
         for standard_name, actual_name in self.normalized_columns.items():
             if actual_name and actual_name in self.df.columns:
-                working_df[standard_name] = self.df[actual_name]
+                expressions.append(pl.col(actual_name).alias(standard_name))
 
-        # Convert cost to numeric, handling any non-numeric values
-        if "cost" in working_df.columns:
-            working_df["cost"] = pd.to_numeric(working_df["cost"], errors="coerce")
-            working_df["cost"] = working_df["cost"].fillna(0)
+        if not expressions:
+            logger.warning("No valid columns found to process")
+            self.prepared_df = pl.DataFrame()
+            return self.prepared_df
 
-        # Convert date columns
-        if "usage_date" in working_df.columns:
-            working_df["usage_date"] = pd.to_datetime(working_df["usage_date"], errors="coerce")
-            working_df["year_month"] = working_df["usage_date"].dt.to_period("M")
-            working_df["year_week"] = working_df["usage_date"].dt.to_period("W")
-            working_df["date"] = working_df["usage_date"].dt.date
+        # Select and rename columns
+        lf = self.df.lazy().select(expressions)
 
-        # Clean string columns and convert to category dtype (30-40% memory reduction)
-        # Service names, account IDs, regions repeat millions of times
+        # Type casting and transformations
+        if "cost" in self.normalized_columns and self.normalized_columns["cost"]:
+            lf = lf.with_columns(pl.col("cost").cast(pl.Float64, strict=False).fill_null(0.0))
+            # Filter zero/negative costs
+            lf = lf.filter(pl.col("cost") > 0)
+
+        if "usage_date" in self.normalized_columns and self.normalized_columns["usage_date"]:
+            # Check if conversion is needed
+            original_col = self.normalized_columns["usage_date"]
+            if original_col in self.df.columns:
+                dtype = self.df.schema[original_col]
+                if dtype == pl.Utf8 or dtype == pl.String:
+                    lf = lf.with_columns(
+                        [
+                            pl.col("usage_date").str.to_datetime(strict=False).alias("usage_date"),
+                        ]
+                    )
+
+            # Add derived date columns
+            lf = lf.with_columns(
+                [
+                    pl.col("usage_date").dt.strftime("%Y-%m").alias("year_month"),
+                    pl.col("usage_date").dt.date().alias("date"),
+                ]
+            )
+
+        # Fill nulls for string columns
         string_columns = ["account_id", "service", "usage_type", "operation", "region"]
+        fill_exprs = []
         for col in string_columns:
-            if col in working_df.columns:
-                working_df[col] = working_df[col].fillna("Unknown")
-                # Convert to category dtype for memory efficiency
-                working_df[col] = working_df[col].astype("category")
+            if col in self.normalized_columns and self.normalized_columns[col]:
+                fill_exprs.append(pl.col(col).fill_null("Unknown").cast(pl.Categorical))
 
-        # Remove rows with zero or negative cost
-        if "cost" in working_df.columns:
-            initial_rows = len(working_df)
-            cost_col: pd.Series = working_df["cost"]  # type: ignore[assignment]
-            working_df = working_df[cost_col > 0]
-            removed_rows = initial_rows - len(working_df)
-            if removed_rows > 0:
-                logger.info(f"Removed {removed_rows} rows with zero or negative cost")
+        if fill_exprs:
+            lf = lf.with_columns(fill_exprs)
 
-        logger.info(f"Prepared {len(working_df)} records for analysis")
-        self.prepared_df = working_df
-        return pd.DataFrame(working_df)  # Explicit cast for type checker
+        # Execute transformations
+        self.prepared_df = lf.collect()
+        logger.info(f"Prepared {len(self.prepared_df)} records for analysis")
+        return self.prepared_df
 
     def get_total_cost(self) -> float:
         """Get total cost across all data."""
@@ -163,22 +180,22 @@ class CURDataProcessor:
             top_n: Return only top N services by cost
 
         Returns:
-            DataFrame with service costs
+            Pandas DataFrame with service costs (for visualization compatibility)
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
 
         logger.info("Calculating cost by service...")
         result = (
-            self.prepared_df.groupby("service", observed=True).agg({"cost": "sum"}).reset_index()
+            self.prepared_df.group_by("service")
+            .agg(pl.col("cost").sum().alias("total_cost"))
+            .sort("total_cost", descending=True)
         )
-        result.columns = ["service", "total_cost"]
-        result = result.sort_values("total_cost", ascending=False)
 
         if top_n:
             result = result.head(top_n)
 
-        return result
+        return result.to_pandas()
 
     def get_cost_by_account(self, top_n: Optional[int] = None) -> pd.DataFrame:
         """
@@ -188,22 +205,22 @@ class CURDataProcessor:
             top_n: Return only top N accounts by cost
 
         Returns:
-            DataFrame with account costs
+            Pandas DataFrame with account costs
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
 
         logger.info("Calculating cost by account...")
         result = (
-            self.prepared_df.groupby("account_id", observed=True).agg({"cost": "sum"}).reset_index()
+            self.prepared_df.group_by("account_id")
+            .agg(pl.col("cost").sum().alias("total_cost"))
+            .sort("total_cost", descending=True)
         )
-        result.columns = ["account_id", "total_cost"]
-        result = result.sort_values("total_cost", ascending=False)
 
         if top_n:
             result = result.head(top_n)
 
-        return result
+        return result.to_pandas()
 
     def get_cost_by_account_and_service(
         self, top_accounts: int = 10, top_services: int = 10
@@ -216,7 +233,7 @@ class CURDataProcessor:
             top_services: Number of top services to include
 
         Returns:
-            DataFrame with account-service cost breakdown
+            Pandas DataFrame with account-service cost breakdown
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
@@ -224,26 +241,24 @@ class CURDataProcessor:
         logger.info("Calculating cost by account and service...")
 
         # Get top accounts and services
-        top_account_list = self.get_cost_by_account(top_accounts)["account_id"].tolist()
-        top_service_list = self.get_cost_by_service(top_services)["service"].tolist()
+        top_account_df = self.get_cost_by_account(top_accounts)
+        top_service_df = self.get_cost_by_service(top_services)
 
-        # Filter data
-        account_col: pd.Series = self.prepared_df["account_id"]  # type: ignore[assignment]
-        service_col: pd.Series = self.prepared_df["service"]  # type: ignore[assignment]
-        filtered_df: pd.DataFrame = self.prepared_df[  # type: ignore[assignment]
-            (account_col.isin(top_account_list)) & (service_col.isin(top_service_list))
-        ]
+        top_accounts_list = top_account_df["account_id"].tolist()
+        top_services_list = top_service_df["service"].tolist()
 
-        # Aggregate
+        # Filter and aggregate
         result = (
-            filtered_df.groupby(["account_id", "service"], observed=True)
-            .agg({"cost": "sum"})
-            .reset_index()
+            self.prepared_df.filter(
+                pl.col("account_id").is_in(top_accounts_list)
+                & pl.col("service").is_in(top_services_list)
+            )
+            .group_by(["account_id", "service"])
+            .agg(pl.col("cost").sum().alias("total_cost"))
+            .sort(["account_id", "total_cost"], descending=[False, True])
         )
-        result.columns = ["account_id", "service", "total_cost"]
-        result = result.sort_values(["account_id", "total_cost"], ascending=[True, False])
 
-        return result
+        return result.to_pandas()
 
     def get_cost_trend_by_service(self, top_services: int = 5) -> pd.DataFrame:
         """
@@ -253,7 +268,7 @@ class CURDataProcessor:
             top_services: Number of top services to include
 
         Returns:
-            DataFrame with service cost trends by month
+            Pandas DataFrame with service cost trends by month
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
@@ -261,21 +276,19 @@ class CURDataProcessor:
         logger.info(f"Calculating monthly cost trends for top {top_services} services...")
 
         # Get top services
-        top_service_list = self.get_cost_by_service(top_services)["service"].tolist()
+        top_service_df = self.get_cost_by_service(top_services)
+        top_services_list = top_service_df["service"].tolist()
 
-        # Filter and aggregate by month
-        service_col: pd.Series = self.prepared_df["service"]  # type: ignore[assignment]
-        filtered_df: pd.DataFrame = self.prepared_df[service_col.isin(top_service_list)]  # type: ignore[assignment]
+        # Filter and aggregate
         result = (
-            filtered_df.groupby(["year_month", "service"], observed=True)
-            .agg({"cost": "sum"})
-            .reset_index()
+            self.prepared_df.filter(pl.col("service").is_in(top_services_list))
+            .group_by(["year_month", "service"])
+            .agg(pl.col("cost").sum().alias("total_cost"))
+            .sort(["service", "year_month"])
+            .with_columns(pl.col("year_month").cast(pl.String).alias("month"))
         )
-        result.columns = ["month", "service", "total_cost"]
-        result["month"] = result["month"].astype(str)
-        result = result.sort_values(["service", "month"])
 
-        return result
+        return result.to_pandas()
 
     def get_cost_trend_by_account(self, top_accounts: int = 5) -> pd.DataFrame:
         """
@@ -285,7 +298,7 @@ class CURDataProcessor:
             top_accounts: Number of top accounts to include
 
         Returns:
-            DataFrame with account cost trends by month
+            Pandas DataFrame with account cost trends by month
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
@@ -293,42 +306,45 @@ class CURDataProcessor:
         logger.info(f"Calculating monthly cost trends for top {top_accounts} accounts...")
 
         # Get top accounts
-        top_account_list = self.get_cost_by_account(top_accounts)["account_id"].tolist()
+        top_account_df = self.get_cost_by_account(top_accounts)
+        top_accounts_list = top_account_df["account_id"].tolist()
 
-        # Filter and aggregate by month
-        account_col: pd.Series = self.prepared_df["account_id"]  # type: ignore[assignment]
-        filtered_df: pd.DataFrame = self.prepared_df[account_col.isin(top_account_list)]  # type: ignore[assignment]
+        # Filter and aggregate
         result = (
-            filtered_df.groupby(["year_month", "account_id"], observed=True)
-            .agg({"cost": "sum"})
-            .reset_index()
+            self.prepared_df.filter(pl.col("account_id").is_in(top_accounts_list))
+            .group_by(["year_month", "account_id"])
+            .agg(pl.col("cost").sum().alias("total_cost"))
+            .sort(["account_id", "year_month"])
+            .with_columns(pl.col("year_month").cast(pl.String).alias("month"))
         )
-        result.columns = ["month", "account_id", "total_cost"]
-        result["month"] = result["month"].astype(str)
-        result = result.sort_values(["account_id", "month"])
 
-        return result
+        return result.to_pandas()
 
     def get_monthly_summary(self) -> pd.DataFrame:
         """
         Get monthly cost summary.
 
         Returns:
-            DataFrame with monthly aggregated costs
+            Pandas DataFrame with monthly aggregated costs
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
 
         logger.info("Calculating monthly summary...")
         result = (
-            self.prepared_df.groupby("year_month")
-            .agg({"cost": ["sum", "mean", "count"]})
-            .reset_index()
+            self.prepared_df.group_by("year_month")
+            .agg(
+                [
+                    pl.col("cost").sum().alias("total_cost"),
+                    pl.col("cost").mean().alias("avg_record_cost"),
+                    pl.col("cost").count().alias("num_records"),
+                ]
+            )
+            .sort("year_month")
+            .with_columns(pl.col("year_month").cast(pl.String).alias("month"))
         )
-        result.columns = ["month", "total_cost", "avg_record_cost", "num_records"]
-        result["month"] = result["month"].astype(str)
 
-        return result
+        return result.to_pandas()
 
     def detect_cost_anomalies(
         self, threshold_std: float = 2.0, top_services: int = 10
@@ -336,77 +352,52 @@ class CURDataProcessor:
         """
         Detect months with anomalous costs by service (statistical outliers).
 
-        Identifies service/month combinations where costs are significantly higher
-        or lower than the service's typical monthly cost.
-
         Args:
             threshold_std: Number of standard deviations for anomaly detection
             top_services: Number of top services to analyze for anomalies
 
         Returns:
-            DataFrame with anomalous service costs by month, including:
-            - month: The month period
-            - service: AWS service name
-            - total_cost: Cost for that service in that month
-            - mean_cost: Average cost for that service across all months
-            - z_score: Z-score (number of std deviations from mean)
-            - pct_change: Percentage change from the mean
+            Pandas DataFrame with anomalous service costs by month
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
 
         logger.info("Detecting cost anomalies by service and month...")
 
-        # Get top services to focus analysis
-        top_service_list = self.get_cost_by_service(top_services)["service"].tolist()
+        # Get top services
+        top_service_df = self.get_cost_by_service(top_services)
+        top_services_list = top_service_df["service"].tolist()
 
-        # Filter to top services
-        service_col: pd.Series = self.prepared_df["service"]  # type: ignore[assignment]
-        filtered_df: pd.DataFrame = self.prepared_df[service_col.isin(top_service_list)]  # type: ignore[assignment]
-
-        # Calculate monthly costs by service
-        monthly_costs = (
-            filtered_df.groupby(["year_month", "service"], observed=True)
-            .agg({"cost": "sum"})
-            .reset_index()
+        # Calculate monthly costs and stats using window functions
+        # Polars makes this much cleaner than Pandas self-joins
+        result = (
+            self.prepared_df.filter(pl.col("service").is_in(top_services_list))
+            .group_by(["year_month", "service"])
+            .agg(pl.col("cost").sum().alias("total_cost"))
+            .with_columns(
+                [
+                    pl.col("total_cost").mean().over("service").alias("mean_cost"),
+                    pl.col("total_cost").std().over("service").alias("std_cost"),
+                ]
+            )
+            .with_columns(
+                [
+                    ((pl.col("total_cost") - pl.col("mean_cost")) / pl.col("std_cost")).alias(
+                        "z_score"
+                    ),
+                    (
+                        (pl.col("total_cost") - pl.col("mean_cost")) / pl.col("mean_cost") * 100
+                    ).alias("pct_change"),
+                    pl.col("year_month").cast(pl.String).alias("month"),
+                ]
+            )
+            .filter((pl.col("z_score").abs() > threshold_std) & (pl.col("std_cost") > 0.01))
+            .sort(pl.col("z_score").abs(), descending=True)
+            .drop(["std_cost"])
         )
-        monthly_costs.columns = ["month", "service", "total_cost"]
-        monthly_costs["month"] = monthly_costs["month"].astype(str)
 
-        # Calculate mean and std for each service across all months
-        service_stats = (
-            monthly_costs.groupby("service", observed=True)["total_cost"]
-            .agg(["mean", "std"])
-            .reset_index()
-        )
-        service_stats.columns = ["service", "mean_cost", "std_cost"]
-
-        # Merge stats back to monthly costs
-        monthly_costs = monthly_costs.merge(service_stats, on="service")
-
-        # Calculate z-scores and percentage change
-        monthly_costs["z_score"] = (
-            monthly_costs["total_cost"] - monthly_costs["mean_cost"]
-        ) / monthly_costs["std_cost"]
-        monthly_costs["pct_change"] = (
-            (monthly_costs["total_cost"] - monthly_costs["mean_cost"]) / monthly_costs["mean_cost"]
-        ) * 100
-
-        # Identify anomalies (only where we have enough variance)
-        # Skip services with zero std dev (consistent cost every month)
-        z_score_col: pd.Series = monthly_costs["z_score"]  # type: ignore[assignment]
-        std_col: pd.Series = monthly_costs["std_cost"]  # type: ignore[assignment]
-        anomalies: pd.DataFrame = monthly_costs[  # type: ignore[assignment]
-            (abs(z_score_col) > threshold_std) & (std_col > 0.01)
-        ].copy()
-
-        # Sort by absolute z-score to show most significant anomalies first
-        anomalies["abs_z_score"] = abs(anomalies["z_score"])
-        anomalies = anomalies.sort_values(by="abs_z_score", ascending=False)
-        anomalies = anomalies.drop(columns=["abs_z_score", "std_cost"])
-
-        logger.info(f"Found {len(anomalies)} anomalous service/month combinations")
-        return anomalies
+        logger.info(f"Found {len(result)} anomalous service/month combinations")
+        return result.to_pandas()
 
     def get_cost_by_region(self, top_n: Optional[int] = None) -> pd.DataFrame:
         """
@@ -416,7 +407,7 @@ class CURDataProcessor:
             top_n: Return only top N regions by cost
 
         Returns:
-            DataFrame with region costs
+            Pandas DataFrame with region costs
         """
         if not hasattr(self, "prepared_df"):
             self.prepare_data()
@@ -427,15 +418,15 @@ class CURDataProcessor:
 
         logger.info("Calculating cost by region...")
         result = (
-            self.prepared_df.groupby("region", observed=True).agg({"cost": "sum"}).reset_index()
+            self.prepared_df.group_by("region")
+            .agg(pl.col("cost").sum().alias("total_cost"))
+            .sort("total_cost", descending=True)
         )
-        result.columns = ["region", "total_cost"]
-        result = result.sort_values("total_cost", ascending=False)
 
         if top_n:
             result = result.head(top_n)
 
-        return result
+        return result.to_pandas()
 
     def get_summary_statistics(self) -> Dict:
         """
@@ -449,16 +440,12 @@ class CURDataProcessor:
 
         df = self.prepared_df
 
-        # Type hints for Series to avoid pyright inference issues
-        account_col: pd.Series = df["account_id"]  # type: ignore[assignment]
-        service_col: pd.Series = df["service"]  # type: ignore[assignment]
-
         summary = {
             "total_cost": float(df["cost"].sum()),
-            "num_accounts": int(account_col.nunique()),
-            "num_services": int(service_col.nunique()),
-            "date_range_start": str(df["usage_date"].min().date()),
-            "date_range_end": str(df["usage_date"].max().date()),
+            "num_accounts": int(df["account_id"].n_unique()),
+            "num_services": int(df["service"].n_unique()),
+            "date_range_start": str(df["usage_date"].min().date()),  # type: ignore
+            "date_range_end": str(df["usage_date"].max().date()),  # type: ignore
             "total_records": len(df),
         }
 

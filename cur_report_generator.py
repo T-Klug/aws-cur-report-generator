@@ -159,7 +159,7 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         cur_data = reader.load_cur_data(start_date=start_dt, end_date=end_dt,
                                        sample_files=sample_files)
 
-        if cur_data.empty:
+        if cur_data.is_empty():
             print(f"{Fore.RED}Error: No CUR data found for the specified date range{Style.RESET_ALL}")
             sys.exit(1)
 

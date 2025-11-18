@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 from datetime import datetime
 from typing import Optional
 
@@ -1020,6 +1021,46 @@ class CURVisualizer:
         # Create Page object to combine all charts
         page = Page(layout=Page.SimplePageLayout)
 
+        # Add all charts to the page
+        for name, chart in self.charts:
+            page.add(chart)
+
+        # Save the page
+        page.render(output_path)
+
+        # Read the generated HTML and inject our custom header
+        with open(output_path, "r", encoding="utf-8") as f:
+            chart_html = f.read()
+
+        # Extract script dependencies from head (ECharts libraries)
+        scripts = []
+        head_match = re.search(r"<head>(.*?)</head>", chart_html, re.DOTALL)
+        if head_match:
+            head_content = head_match.group(1)
+            # Find all script tags (both src and inline)
+            scripts = re.findall(r"<script[^>]*>.*?</script>", head_content, re.DOTALL)
+
+        script_block = "\n".join(scripts)
+
+        # Extract the chart content (everything after <body>)
+        # Use regex to find body tag with potential attributes
+        body_match = re.search(r"<body[^>]*>", chart_html)
+        if body_match:
+            chart_content = chart_html[body_match.end() :]  # Skip <body> tag
+
+            # Remove closing tags to append footer properly
+            chart_content = chart_content.replace("</body>", "").replace("</html>", "")
+
+            # Replace Chinese locale with English
+            chart_content = chart_content.replace("locale: 'ZH'", "locale: 'EN'")
+            chart_content = chart_content.replace('locale: "ZH"', 'locale: "EN"')
+        else:
+            # Fallback if no body tag found (unlikely with pyecharts)
+            chart_content = chart_html
+            # Replace Chinese locale with English
+            chart_content = chart_content.replace("locale: 'ZH'", "locale: 'EN'")
+            chart_content = chart_content.replace('locale: "ZH"', 'locale: "EN"')
+
         # Create summary HTML
         summary_html = f"""
         <!DOCTYPE html>
@@ -1028,6 +1069,7 @@ class CURVisualizer:
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>{title}</title>
+            {script_block}
             <style>
                 * {{
                     margin: 0;
@@ -1197,35 +1239,6 @@ class CURVisualizer:
                         <h2>Detailed Analysis</h2>
         """
 
-        # Add all charts to the page
-        for name, chart in self.charts:
-            page.add(chart)
-
-        # Save the page
-        page.render(output_path)
-
-        # Read the generated HTML and inject our custom header
-        with open(output_path, "r", encoding="utf-8") as f:
-            chart_html = f.read()
-
-        # Extract the chart content (everything after <body>)
-        body_start = chart_html.find("<body>")
-        if body_start != -1:
-            chart_content = chart_html[body_start + 6 :]  # Skip <body>
-            # Replace Chinese locale with English
-            chart_content = chart_content.replace("locale: 'ZH'", "locale: 'EN'")
-            chart_content = chart_content.replace('locale: "ZH"', 'locale: "EN"')
-            # Wrap charts in containers
-            chart_content = chart_content.replace(
-                '<div id="', '<div class="chart-container"><div id="'
-            )
-            chart_content = chart_content.replace("</script>", "</script></div>")
-        else:
-            chart_content = chart_html
-            # Replace Chinese locale with English (in case body tag wasn't found)
-            chart_content = chart_content.replace("locale: 'ZH'", "locale: 'EN'")
-            chart_content = chart_content.replace('locale: "ZH"', 'locale: "EN"')
-
         # Combine our custom HTML with the charts
         footer_html = f"""
                     </div>
@@ -1235,6 +1248,8 @@ class CURVisualizer:
                     Powered by Apache ECharts | AWS Cost and Usage Report Generator
                 </div>
             </div>
+        </body>
+        </html>
         """
 
         final_html = summary_html + chart_content + footer_html

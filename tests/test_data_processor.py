@@ -4,6 +4,7 @@ import os
 import sys
 
 import pandas as pd
+import polars as pl
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -46,14 +47,14 @@ class TestCURDataProcessor:
         assert "date" in prepared_df.columns
 
         # Check that costs are numeric
-        assert pd.api.types.is_numeric_dtype(prepared_df["cost"])
+        assert prepared_df["cost"].dtype == pl.Float64
 
         # Check that no costs are negative
         assert (prepared_df["cost"] > 0).all()
 
     def test_prepare_data_removes_zero_costs(self):
         """Test that zero and negative costs are removed."""
-        df = pd.DataFrame(
+        df = pl.DataFrame(
             {
                 "line_item_usage_start_date": ["2024-01-01"] * 5,
                 "line_item_usage_account_id": ["123456789012"] * 5,
@@ -181,7 +182,7 @@ class TestCURDataProcessor:
                 services.append("AmazonS3")
                 costs.append(500.0)
 
-        df = pd.DataFrame(
+        df = pl.DataFrame(
             {
                 "line_item_usage_start_date": dates,
                 "line_item_usage_account_id": ["123456789012"] * len(dates),
@@ -218,7 +219,7 @@ class TestCURDataProcessor:
                 services.append("AmazonEC2")
                 costs.append(1000.0)
 
-        df = pd.DataFrame(
+        df = pl.DataFrame(
             {
                 "line_item_usage_start_date": dates,
                 "line_item_usage_account_id": ["123456789012"] * len(dates),
@@ -265,7 +266,7 @@ class TestCURDataProcessor:
 
     def test_alternative_column_format(self):
         """Test handling of alternative CUR column format."""
-        df = pd.DataFrame(
+        df = pl.DataFrame(
             {
                 "lineItem/UsageStartDate": pd.date_range("2024-01-01", periods=10),
                 "lineItem/UsageAccountId": ["123456789012"] * 10,
@@ -287,8 +288,8 @@ class TestCURDataProcessor:
 
     def test_empty_dataframe(self):
         """Test handling of empty DataFrame."""
-        df = pd.DataFrame()
+        df = pl.DataFrame()
         processor = CURDataProcessor(df)
 
         # Should not crash
-        assert processor.df.empty
+        assert processor.df.is_empty()

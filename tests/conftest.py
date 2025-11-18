@@ -5,6 +5,7 @@ import io
 from datetime import datetime
 
 import pandas as pd
+import polars as pl
 import pytest
 
 
@@ -273,13 +274,13 @@ def sample_cur_data():
                     }
                 )
 
-    return pd.DataFrame(data)
+    return pl.DataFrame(data)
 
 
 @pytest.fixture
 def sample_cur_csv_content(sample_cur_data):
     """Generate CSV content from sample data."""
-    return sample_cur_data.to_csv(index=False).encode("utf-8")
+    return sample_cur_data.to_pandas().to_csv(index=False).encode("utf-8")
 
 
 @pytest.fixture

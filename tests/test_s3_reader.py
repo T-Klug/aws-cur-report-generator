@@ -5,10 +5,9 @@ import sys
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-import pandas as pd
 import polars as pl
 import pytest
-from botocore.exceptions import ClientError, NoCredentialsError
+from botocore.exceptions import NoCredentialsError
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 

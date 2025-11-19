@@ -1,7 +1,6 @@
 """S3 CUR Data Reader - Handles downloading and reading AWS Cost and Usage Reports from S3."""
 
 import logging
-import os
 from datetime import datetime, timedelta
 from typing import List, Optional
 

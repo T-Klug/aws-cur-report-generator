@@ -28,16 +28,6 @@ cd aws-cur-report-generator
 uv sync
 ```
 
-<details>
-<summary>Using pip instead? Click here for traditional installation</summary>
-
-```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-</details>
-
 ### 2. Configure
 
 ```bash

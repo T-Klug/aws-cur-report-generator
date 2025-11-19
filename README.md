@@ -106,32 +106,6 @@ Before using this tool, you need to set up Cost and Usage Reports in AWS:
    TOP_N=10
    ```
 
-### Using pip (Traditional Method)
-
-<details>
-<summary>Click to expand pip installation instructions</summary>
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/aws-cur-report-generator.git
-   cd aws-cur-report-generator
-   ```
-
-2. **Create a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure as above**
-
-</details>
-
 ## Configuration
 
 ### Environment Variables
@@ -287,7 +261,6 @@ aws-cur-report-generator/
 │   ├── data_processor.py    # Data processing and aggregation
 │   └── visualizer.py         # Visualization generation
 ├── cur_report_generator.py  # Main CLI interface
-├── requirements.txt          # Python dependencies
 ├── .env.example             # Environment template
 ├── .gitignore               # Git ignore rules
 └── README.md                # This file
@@ -429,15 +402,6 @@ uv run pytest tests/test_s3_reader.py::TestCURReader::test_initialization_succes
 
 # Generate example reports
 uv run pytest tests/test_examples.py -v
-```
-
-**Using pip:**
-```bash
-# Install dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest
 ```
 
 ### Test Structure

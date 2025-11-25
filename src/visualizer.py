@@ -1,10 +1,12 @@
 """Visualizer - Creates interactive visualizations and reports from CUR data using Apache ECharts."""
 
+import html
 import logging
+import math
 import os
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Any, List, Optional
 
 import pandas as pd
 from pyecharts import options as opts
@@ -13,6 +15,48 @@ from pyecharts.commons.utils import JsCode
 from pyecharts.globals import ThemeType
 
 logger = logging.getLogger(__name__)
+
+
+def _safe_round(value: Any, decimals: int = 2) -> float:
+    """Safely round a value, handling NaN/None/Inf."""
+    if value is None:
+        return 0.0
+    try:
+        float_val = float(value)
+        if math.isnan(float_val) or math.isinf(float_val):
+            return 0.0
+        return round(float_val, decimals)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _safe_round_list(values: List[Any], decimals: int = 2) -> List[float]:
+    """Safely round a list of values."""
+    return [_safe_round(v, decimals) for v in values]
+
+
+def _validate_dataframe(df: pd.DataFrame, required_columns: List[str], context: str) -> bool:
+    """
+    Validate that DataFrame is not empty and has required columns.
+
+    Args:
+        df: DataFrame to validate
+        required_columns: List of column names that must be present
+        context: Description of the calling context for logging
+
+    Returns:
+        True if valid, False otherwise
+    """
+    if df is None or df.empty:
+        logger.warning(f"{context}: DataFrame is empty")
+        return False
+
+    missing_cols = [col for col in required_columns if col not in df.columns]
+    if missing_cols:
+        logger.warning(f"{context}: Missing required columns: {missing_cols}")
+        return False
+
+    return True
 
 
 class CURVisualizer:
@@ -65,7 +109,7 @@ class CURVisualizer:
 
         Args:
             df: DataFrame with service and total_cost columns
-            top_n: Number of services to show
+            top_n: Number of services to show (must be > 0)
             title: Chart title
 
         Returns:
@@ -73,15 +117,30 @@ class CURVisualizer:
         """
         logger.info(f"Creating cost by service chart (top {top_n})...")
 
-        # Take top N
-        plot_df = df.head(top_n).copy()
+        # Validate inputs
+        if top_n <= 0:
+            logger.warning(f"Invalid top_n value: {top_n}, using default 10")
+            top_n = 10
+
+        # Validate DataFrame
+        if not _validate_dataframe(df, ["service", "total_cost"], "create_cost_by_service_chart"):
+            # Return empty chart with message
+            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+            bar.set_global_opts(
+                title_opts=opts.TitleOpts(title=title, subtitle="No data available")
+            )
+            self.charts.append(("cost_by_service", bar))
+            return bar
+
+        # Take top N - head() returns a new DataFrame, no copy needed
+        plot_df = df.head(top_n)
 
         bar = (
             Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
             .add_xaxis(plot_df["service"].tolist())
             .add_yaxis(
                 "Total Cost (USD)",
-                [round(x, 2) for x in plot_df["total_cost"].tolist()],
+                _safe_round_list(plot_df["total_cost"].tolist()),
                 label_opts=opts.LabelOpts(
                     is_show=True,
                     position="top",
@@ -148,7 +207,7 @@ class CURVisualizer:
 
         Args:
             df: DataFrame with account_id and total_cost columns
-            top_n: Number of accounts to show
+            top_n: Number of accounts to show (must be > 0)
             title: Chart title
 
         Returns:
@@ -156,15 +215,32 @@ class CURVisualizer:
         """
         logger.info(f"Creating cost by account chart (top {top_n})...")
 
-        # Take top N
-        plot_df = df.head(top_n).copy()
+        # Validate inputs
+        if top_n <= 0:
+            logger.warning(f"Invalid top_n value: {top_n}, using default 10")
+            top_n = 10
+
+        # Validate DataFrame
+        if not _validate_dataframe(
+            df, ["account_id", "total_cost"], "create_cost_by_account_chart"
+        ):
+            # Return empty chart with message
+            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+            bar.set_global_opts(
+                title_opts=opts.TitleOpts(title=title, subtitle="No data available")
+            )
+            self.charts.append(("cost_by_account", bar))
+            return bar
+
+        # Take top N - head() returns a new DataFrame, no copy needed
+        plot_df = df.head(top_n)
 
         bar = (
             Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
             .add_xaxis(plot_df["account_id"].astype(str).tolist())
             .add_yaxis(
                 "Total Cost (USD)",
-                [round(x, 2) for x in plot_df["total_cost"].tolist()],
+                _safe_round_list(plot_df["total_cost"].tolist()),
                 label_opts=opts.LabelOpts(
                     is_show=True,
                     position="top",
@@ -1061,6 +1137,15 @@ class CURVisualizer:
             chart_content = chart_content.replace("locale: 'ZH'", "locale: 'EN'")
             chart_content = chart_content.replace('locale: "ZH"', 'locale: "EN"')
 
+        # Escape user-provided content to prevent XSS
+        safe_title = html.escape(str(title))
+        safe_total_cost = _safe_round(summary_stats.get("total_cost", 0), 2)
+        safe_num_accounts = int(summary_stats.get("num_accounts", 0))
+        safe_num_services = int(summary_stats.get("num_services", 0))
+        safe_date_start = html.escape(str(summary_stats.get("date_range_start", "N/A")))
+        safe_date_end = html.escape(str(summary_stats.get("date_range_end", "N/A")))
+        safe_total_records = int(summary_stats.get("total_records", 0))
+
         # Create summary HTML
         summary_html = f"""
         <!DOCTYPE html>
@@ -1068,7 +1153,7 @@ class CURVisualizer:
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>{title}</title>
+            <title>{safe_title}</title>
             {script_block}
             <style>
                 * {{
@@ -1206,7 +1291,7 @@ class CURVisualizer:
         <body>
             <div class="main-container">
                 <div class="header">
-                    <h1>{title}</h1>
+                    <h1>{safe_title}</h1>
                     <p>Comprehensive analysis of AWS costs and usage patterns</p>
                 </div>
                 <div class="content">
@@ -1215,23 +1300,23 @@ class CURVisualizer:
                         <div class="summary-grid">
                             <div class="summary-card">
                                 <h3>Total Cost</h3>
-                                <div class="value">${summary_stats.get('total_cost', 0):,.2f}</div>
+                                <div class="value">${safe_total_cost:,.2f}</div>
                             </div>
                             <div class="summary-card">
                                 <h3>Number of Accounts</h3>
-                                <div class="value">{summary_stats.get('num_accounts', 0)}</div>
+                                <div class="value">{safe_num_accounts}</div>
                             </div>
                             <div class="summary-card">
                                 <h3>Number of Services</h3>
-                                <div class="value">{summary_stats.get('num_services', 0)}</div>
+                                <div class="value">{safe_num_services}</div>
                             </div>
                             <div class="summary-card small-text">
                                 <h3>Date Range</h3>
-                                <div class="value">{summary_stats.get('date_range_start', 'N/A')}<br>to<br>{summary_stats.get('date_range_end', 'N/A')}</div>
+                                <div class="value">{safe_date_start}<br>to<br>{safe_date_end}</div>
                             </div>
                             <div class="summary-card">
                                 <h3>Total Records</h3>
-                                <div class="value">{summary_stats.get('total_records', 0):,}</div>
+                                <div class="value">{safe_total_records:,}</div>
                             </div>
                         </div>
                     </div>

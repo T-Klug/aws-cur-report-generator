@@ -115,7 +115,22 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
 
     # Use provided values or defaults from env
     output_dir = output_dir or os.getenv('OUTPUT_DIR', 'reports')
-    top_n = top_n or int(os.getenv('TOP_N', '10'))
+
+    # Safely parse TOP_N from environment with validation
+    try:
+        top_n = top_n if top_n is not None else int(os.getenv('TOP_N', '10'))
+    except ValueError:
+        print(f"{Fore.RED}Error: TOP_N environment variable must be an integer{Style.RESET_ALL}")
+        sys.exit(1)
+
+    # Validate numeric parameters
+    if top_n <= 0:
+        print(f"{Fore.RED}Error: --top-n must be a positive integer, got {top_n}{Style.RESET_ALL}")
+        sys.exit(1)
+
+    if sample_files is not None and sample_files <= 0:
+        print(f"{Fore.RED}Error: --sample-files must be a positive integer, got {sample_files}{Style.RESET_ALL}")
+        sys.exit(1)
 
     # Parse dates
     try:
@@ -138,6 +153,11 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
                 end_dt = datetime.now()
     except ValueError:
         print(f"{Fore.RED}Error: Invalid date format. Use YYYY-MM-DD{Style.RESET_ALL}")
+        sys.exit(1)
+
+    # Validate date range
+    if start_dt > end_dt:
+        print(f"{Fore.RED}Error: Start date ({start_dt.date()}) cannot be after end date ({end_dt.date()}){Style.RESET_ALL}")
         sys.exit(1)
 
     print(f"{Fore.CYAN}Configuration:{Style.RESET_ALL}")

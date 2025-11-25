@@ -1,14 +1,24 @@
 """S3 CUR Data Reader - Handles downloading and reading AWS Cost and Usage Reports from S3."""
 
 import logging
-from datetime import datetime, timedelta
-from typing import List, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
 import boto3
 import polars as pl
 from botocore.exceptions import ClientError, NoCredentialsError
 
 logger = logging.getLogger(__name__)
+
+# Check for s3fs availability at import time
+try:
+    import s3fs  # noqa: F401
+
+    S3FS_AVAILABLE = True
+except ImportError:
+    S3FS_AVAILABLE = False
+    logger.warning("s3fs not installed. S3 file operations may fail.")
 
 
 class CURReader:
@@ -93,28 +103,32 @@ class CURReader:
             logger.error(f"Error initializing AWS session: {e}")
             raise
 
-        # Initialize s3fs for Polars
-        # We pass credentials explicitly if available, otherwise s3fs uses default chain
-        s3_kwargs = {}
+        # Validate s3fs is available
+        if not S3FS_AVAILABLE:
+            raise ImportError(
+                "s3fs is required for reading files from S3. " "Install it with: pip install s3fs"
+            )
 
-        # If using specific credentials from session (e.g. assumed role), pass them
-        creds = self.session.get_credentials()
-        if creds:
-            s3_kwargs["aws_access_key_id"] = creds.access_key
-            s3_kwargs["aws_secret_access_key"] = creds.secret_key
-            if creds.token:
-                s3_kwargs["aws_session_token"] = creds.token
-        elif aws_profile:
-            # Only use profile if we don't have explicit credentials
-            s3_kwargs["aws_profile"] = aws_profile
+        # Initialize s3fs storage options for Polars
+        # IMPORTANT: We do NOT pass static credentials here because they can expire
+        # (especially with IAM roles, assumed roles, or MFA).
+        # Instead, we let s3fs use the boto3 credential chain which auto-refreshes.
+        s3_kwargs: Dict[str, Any] = {}
 
         if not aws_region:
             aws_region = self.session.region_name
 
-        if aws_region:
-            s3_kwargs["aws_region"] = aws_region
+        # Note: s3fs doesn't allow combining 'profile' with 'client_kwargs'
+        # So we need to choose one approach or the other
+        if aws_profile:
+            # When using a profile, pass it directly - region comes from profile config
+            s3_kwargs["profile"] = aws_profile
+        elif aws_region:
+            # When not using a profile, we can pass region via client_kwargs
+            s3_kwargs["client_kwargs"] = {"region_name": aws_region}
 
         self.storage_options = s3_kwargs
+        self._schema_cache: Dict[str, pl.Schema] = {}  # Cache for schema lookups
 
     def list_report_files(
         self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
@@ -145,12 +159,30 @@ class CURReader:
                     # CUR files are typically .csv.gz or .parquet
                     if key.endswith((".csv.gz", ".parquet", ".csv")):
                         # Filter by date if specified
+                        # S3 LastModified is always UTC, so we normalize comparison dates to UTC
                         if start_date or end_date:
-                            last_modified = obj["LastModified"].replace(tzinfo=None)
-                            if start_date and last_modified < start_date:
-                                continue
-                            if end_date and last_modified > end_date:
-                                continue
+                            last_modified = obj["LastModified"]
+                            # Ensure last_modified is timezone-aware (UTC)
+                            if last_modified.tzinfo is None:
+                                last_modified = last_modified.replace(tzinfo=timezone.utc)
+
+                            # Convert filter dates to UTC for comparison
+                            if start_date:
+                                start_utc = (
+                                    start_date.replace(tzinfo=timezone.utc)
+                                    if start_date.tzinfo is None
+                                    else start_date
+                                )
+                                if last_modified < start_utc:
+                                    continue
+                            if end_date:
+                                end_utc = (
+                                    end_date.replace(tzinfo=timezone.utc)
+                                    if end_date.tzinfo is None
+                                    else end_date
+                                )
+                                if last_modified > end_utc:
+                                    continue
                         report_files.append(key)
 
             logger.info(f"Found {len(report_files)} CUR report files")
@@ -182,6 +214,13 @@ class CURReader:
             end_date = datetime.now()
         if not start_date:
             start_date = end_date - timedelta(days=90)
+
+        # Validate date range
+        if start_date > end_date:
+            raise ValueError(
+                f"Invalid date range: start_date ({start_date.date()}) "
+                f"is after end_date ({end_date.date()})"
+            )
 
         logger.info(f"Loading CUR data from {start_date.date()} to {end_date.date()}")
 
@@ -215,15 +254,24 @@ class CURReader:
                 # Apply optimizations
                 lf = self._optimize_lazyframe(lf, start_date, end_date)
                 lazy_frames.append(lf)
+            except (ClientError, NoCredentialsError) as e:
+                logger.error(f"AWS error scanning Parquet files: {e}")
+                raise
+            except pl.exceptions.ComputeError as e:
+                logger.error(f"Polars error scanning Parquet files: {e}")
+                raise
             except Exception as e:
-                logger.error(f"Error scanning Parquet files: {e}")
+                logger.error(f"Unexpected error scanning Parquet files: {e}")
+                # Re-raise to avoid processing partial data silently
+                raise
 
-        # Process CSV files
+        # Process CSV files in parallel for better performance
         if csv_files:
             logger.info(f"Processing {len(csv_files)} CSV files...")
-            # Polars scan_csv doesn't support list of S3 files as natively as scan_parquet in all versions,
-            # but we can scan them individually and concat
-            for file_path in csv_files:
+            csv_errors: List[Tuple[str, str]] = []
+
+            def scan_csv_file(file_path: str) -> Optional[pl.LazyFrame]:
+                """Scan a single CSV file and apply optimizations."""
                 try:
                     lf = pl.scan_csv(
                         file_path,
@@ -231,10 +279,29 @@ class CURReader:
                         ignore_errors=True,
                         infer_schema_length=10000,
                     )
-                    lf = self._optimize_lazyframe(lf, start_date, end_date)
-                    lazy_frames.append(lf)
+                    return self._optimize_lazyframe(lf, start_date, end_date)
+                except (ClientError, NoCredentialsError) as e:
+                    csv_errors.append((file_path, str(e)))
+                    return None
                 except Exception as e:
-                    logger.warning(f"Error scanning CSV file {file_path}: {e}")
+                    csv_errors.append((file_path, str(e)))
+                    return None
+
+            # Use ThreadPoolExecutor for parallel CSV scanning
+            max_workers = min(4, len(csv_files))  # Limit concurrent S3 connections
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {executor.submit(scan_csv_file, fp): fp for fp in csv_files}
+                for future in as_completed(futures):
+                    result = future.result()
+                    if result is not None:
+                        lazy_frames.append(result)
+
+            # Log any errors that occurred
+            for file_path, error in csv_errors:
+                logger.warning(f"Error scanning CSV file {file_path}: {error}")
+
+            if csv_errors and not lazy_frames:
+                raise RuntimeError(f"Failed to load any CSV files. Last error: {csv_errors[-1][1]}")
 
         if not lazy_frames:
             logger.error("No data could be loaded")
@@ -247,7 +314,7 @@ class CURReader:
             combined_lf = pl.concat(lazy_frames, how="vertical_relaxed")
 
         # Deduplicate
-        # Find deduplication column
+        # Find deduplication column - cache schema to avoid multiple network calls
         try:
             schema = combined_lf.collect_schema()
             dedup_col = None
@@ -259,8 +326,15 @@ class CURReader:
             if dedup_col:
                 logger.info(f"Deduplicating based on {dedup_col}")
                 combined_lf = combined_lf.unique(subset=[dedup_col], keep="last")
-        except Exception as e:
+            else:
+                logger.warning(
+                    "No deduplication column found (identity_line_item_id, identity/LineItemId, "
+                    "lineItem/LineItemId). Data may contain duplicates which could inflate costs."
+                )
+        except pl.exceptions.ComputeError as e:
             logger.warning(f"Could not determine schema for deduplication: {e}")
+        except Exception as e:
+            logger.warning(f"Unexpected error during deduplication check: {e}")
 
         # Collect results
         logger.info("Executing query plan (downloading and processing)...")
@@ -278,14 +352,22 @@ class CURReader:
     ) -> pl.LazyFrame:
         """
         Apply filters and column selection to LazyFrame.
+
+        This method applies:
+        - Column selection (only required columns)
+        - Cost filtering (> 0)
+        - Date range filtering
         """
         # Get available columns in this LazyFrame
-        # Note: collect_schema() fetches metadata
+        # Note: collect_schema() fetches metadata - we cache results
         try:
             schema = lf.collect_schema()
             available_cols = schema.names()
-        except Exception:
-            # If schema fetch fails (e.g. empty file), return as is
+        except pl.exceptions.ComputeError as e:
+            logger.debug(f"Schema fetch failed (possibly empty file): {e}")
+            return lf
+        except Exception as e:
+            logger.debug(f"Unexpected error fetching schema: {e}")
             return lf
 
         # Select only required columns that exist

@@ -1,7 +1,7 @@
 """Data Processor - Handles processing and aggregation of AWS CUR data using Polars."""
 
 import logging
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import pandas as pd
 import polars as pl
@@ -22,6 +22,8 @@ class CURDataProcessor:
         # No copy needed for Polars (immutable/CoW)
         self.df = df
         self.normalized_columns = self._normalize_column_names()
+        # Cache for aggregation results to avoid recomputation
+        self._cache: Dict[str, pd.DataFrame] = {}
         logger.info(f"Initialized processor with {len(self.df)} records")
 
     def _normalize_column_names(self) -> Dict[str, Optional[str]]:
@@ -182,8 +184,18 @@ class CURDataProcessor:
         Returns:
             Pandas DataFrame with service costs (for visualization compatibility)
         """
-        if not hasattr(self, "prepared_df"):
+        if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
             self.prepare_data()
+
+        # Check cache first
+        cache_key = f"cost_by_service_{top_n}"
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        # Return empty DataFrame if no data
+        if self.prepared_df.is_empty() or "service" not in self.prepared_df.columns:
+            logger.warning("No data available for cost by service aggregation")
+            return pd.DataFrame(columns=["service", "total_cost"])
 
         logger.info("Calculating cost by service...")
         result = (
@@ -195,7 +207,9 @@ class CURDataProcessor:
         if top_n:
             result = result.head(top_n)
 
-        return result.to_pandas()
+        result_df = result.to_pandas()
+        self._cache[cache_key] = result_df
+        return result_df
 
     def get_cost_by_account(self, top_n: Optional[int] = None) -> pd.DataFrame:
         """
@@ -207,8 +221,18 @@ class CURDataProcessor:
         Returns:
             Pandas DataFrame with account costs
         """
-        if not hasattr(self, "prepared_df"):
+        if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
             self.prepare_data()
+
+        # Check cache first
+        cache_key = f"cost_by_account_{top_n}"
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        # Return empty DataFrame if no data
+        if self.prepared_df.is_empty() or "account_id" not in self.prepared_df.columns:
+            logger.warning("No data available for cost by account aggregation")
+            return pd.DataFrame(columns=["account_id", "total_cost"])
 
         logger.info("Calculating cost by account...")
         result = (
@@ -220,7 +244,9 @@ class CURDataProcessor:
         if top_n:
             result = result.head(top_n)
 
-        return result.to_pandas()
+        result_df = result.to_pandas()
+        self._cache[cache_key] = result_df
+        return result_df
 
     def get_cost_by_account_and_service(
         self, top_accounts: int = 10, top_services: int = 10
@@ -353,23 +379,40 @@ class CURDataProcessor:
         Detect months with anomalous costs by service (statistical outliers).
 
         Args:
-            threshold_std: Number of standard deviations for anomaly detection
+            threshold_std: Number of standard deviations for anomaly detection (must be > 0)
             top_services: Number of top services to analyze for anomalies
 
         Returns:
             Pandas DataFrame with anomalous service costs by month
         """
-        if not hasattr(self, "prepared_df"):
+        # Validate parameters
+        if threshold_std <= 0:
+            raise ValueError(f"threshold_std must be positive, got {threshold_std}")
+
+        if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
             self.prepare_data()
+
+        # Return empty DataFrame if no data
+        if self.prepared_df.is_empty():
+            logger.warning("No data available for anomaly detection")
+            return pd.DataFrame(
+                columns=["month", "service", "total_cost", "mean_cost", "z_score", "pct_change"]
+            )
 
         logger.info("Detecting cost anomalies by service and month...")
 
         # Get top services
         top_service_df = self.get_cost_by_service(top_services)
+        if top_service_df.empty:
+            return pd.DataFrame(
+                columns=["month", "service", "total_cost", "mean_cost", "z_score", "pct_change"]
+            )
+
         top_services_list = top_service_df["service"].tolist()
 
         # Calculate monthly costs and stats using window functions
         # Polars makes this much cleaner than Pandas self-joins
+        # IMPORTANT: Filter std_cost > 0 BEFORE division to avoid division by zero
         result = (
             self.prepared_df.filter(pl.col("service").is_in(top_services_list))
             .group_by(["year_month", "service"])
@@ -380,18 +423,23 @@ class CURDataProcessor:
                     pl.col("total_cost").std().over("service").alias("std_cost"),
                 ]
             )
+            # Filter BEFORE division to prevent division by zero
+            .filter(pl.col("std_cost") > 0.01)
+            .filter(pl.col("mean_cost").abs() > 0.01)  # Also prevent pct_change division by zero
             .with_columns(
                 [
+                    # Safe division - std_cost > 0.01 guaranteed by filter above
                     ((pl.col("total_cost") - pl.col("mean_cost")) / pl.col("std_cost")).alias(
                         "z_score"
                     ),
+                    # Safe division - mean_cost > 0.01 guaranteed by filter above
                     (
                         (pl.col("total_cost") - pl.col("mean_cost")) / pl.col("mean_cost") * 100
                     ).alias("pct_change"),
                     pl.col("year_month").cast(pl.String).alias("month"),
                 ]
             )
-            .filter((pl.col("z_score").abs() > threshold_std) & (pl.col("std_cost") > 0.01))
+            .filter(pl.col("z_score").abs() > threshold_std)
             .sort(pl.col("z_score").abs(), descending=True)
             .drop(["std_cost"])
         )
@@ -428,24 +476,57 @@ class CURDataProcessor:
 
         return result.to_pandas()
 
-    def get_summary_statistics(self) -> Dict:
+    def get_summary_statistics(self) -> Dict[str, Any]:
         """
         Get overall summary statistics.
 
         Returns:
             Dictionary with summary statistics
         """
-        if not hasattr(self, "prepared_df"):
+        if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
             self.prepare_data()
 
         df = self.prepared_df
 
-        summary = {
-            "total_cost": float(df["cost"].sum()),
-            "num_accounts": int(df["account_id"].n_unique()),
-            "num_services": int(df["service"].n_unique()),
-            "date_range_start": str(df["usage_date"].min().date()),  # type: ignore
-            "date_range_end": str(df["usage_date"].max().date()),  # type: ignore
+        # Handle empty DataFrame case
+        if df.is_empty():
+            return {
+                "total_cost": 0.0,
+                "num_accounts": 0,
+                "num_services": 0,
+                "date_range_start": "N/A",
+                "date_range_end": "N/A",
+                "total_records": 0,
+            }
+
+        # Safely get date range - handle null values
+        date_start = "N/A"
+        date_end = "N/A"
+
+        if "usage_date" in df.columns:
+            min_date = df["usage_date"].min()
+            max_date = df["usage_date"].max()
+
+            if min_date is not None:
+                date_method = getattr(min_date, "date", None)
+                if date_method is not None and callable(date_method):
+                    date_start = str(date_method())
+                else:
+                    date_start = str(min_date)
+
+            if max_date is not None:
+                date_method = getattr(max_date, "date", None)
+                if date_method is not None and callable(date_method):
+                    date_end = str(date_method())
+                else:
+                    date_end = str(max_date)
+
+        summary: Dict[str, Any] = {
+            "total_cost": float(df["cost"].sum()) if "cost" in df.columns else 0.0,
+            "num_accounts": int(df["account_id"].n_unique()) if "account_id" in df.columns else 0,
+            "num_services": int(df["service"].n_unique()) if "service" in df.columns else 0,
+            "date_range_start": date_start,
+            "date_range_end": date_end,
             "total_records": len(df),
         }
 

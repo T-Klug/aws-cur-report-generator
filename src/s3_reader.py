@@ -398,7 +398,13 @@ class CURReader:
             col_type = schema.get(date_col)
             if col_type in (pl.String, pl.Utf8):
                 # Ensure date column is datetime
-                lf = lf.with_columns(pl.col(date_col).str.to_datetime(strict=False))
+                # AWS CUR uses ISO 8601 format with timezone (e.g., 2024-01-15T00:00:00Z)
+                # Use %+ format which handles RFC 3339/ISO 8601 with timezone
+                lf = lf.with_columns(
+                    pl.col(date_col)
+                    .str.to_datetime(format="%+", strict=False)
+                    .dt.replace_time_zone(None)  # Remove timezone for comparison with naive datetimes
+                )
 
             if start_date:
                 lf = lf.filter(pl.col(date_col) >= start_date)

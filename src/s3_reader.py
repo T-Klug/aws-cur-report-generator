@@ -130,15 +130,13 @@ class CURReader:
         self.storage_options = s3_kwargs
         self._schema_cache: Dict[str, pl.Schema] = {}  # Cache for schema lookups
 
-    def list_report_files(
-        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
-    ) -> List[str]:
+    def list_report_files(self) -> List[str]:
         """
         List available CUR report files in S3.
 
-        Args:
-            start_date: Start date for filtering reports
-            end_date: End date for filtering reports
+        Note: Date filtering is not done here because S3 LastModified represents
+        when files were uploaded, not the billing period. Date filtering is applied
+        later when reading the actual data in _optimize_lazyframe.
 
         Returns:
             List of S3 keys for CUR report files
@@ -157,32 +155,10 @@ class CURReader:
                 for obj in page["Contents"]:
                     key = obj["Key"]
                     # CUR files are typically .csv.gz or .parquet
+                    # Note: We don't filter by S3 LastModified here because it represents
+                    # when the file was uploaded, not the billing period it contains.
+                    # Date filtering is done later in _optimize_lazyframe based on actual data.
                     if key.endswith((".csv.gz", ".parquet", ".csv")):
-                        # Filter by date if specified
-                        # S3 LastModified is always UTC, so we normalize comparison dates to UTC
-                        if start_date or end_date:
-                            last_modified = obj["LastModified"]
-                            # Ensure last_modified is timezone-aware (UTC)
-                            if last_modified.tzinfo is None:
-                                last_modified = last_modified.replace(tzinfo=timezone.utc)
-
-                            # Convert filter dates to UTC for comparison
-                            if start_date:
-                                start_utc = (
-                                    start_date.replace(tzinfo=timezone.utc)
-                                    if start_date.tzinfo is None
-                                    else start_date
-                                )
-                                if last_modified < start_utc:
-                                    continue
-                            if end_date:
-                                end_utc = (
-                                    end_date.replace(tzinfo=timezone.utc)
-                                    if end_date.tzinfo is None
-                                    else end_date
-                                )
-                                if last_modified > end_utc:
-                                    continue
                         report_files.append(key)
 
             logger.info(f"Found {len(report_files)} CUR report files")
@@ -224,8 +200,8 @@ class CURReader:
 
         logger.info(f"Loading CUR data from {start_date.date()} to {end_date.date()}")
 
-        # List available files
-        report_files = self.list_report_files(start_date, end_date)
+        # List available files (date filtering happens in _optimize_lazyframe)
+        report_files = self.list_report_files()
 
         if not report_files:
             logger.warning("No CUR files found matching the criteria")

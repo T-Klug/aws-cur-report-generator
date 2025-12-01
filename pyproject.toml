@@ -67,6 +67,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"cur_report_generator.py" = "cur_report_generator.py"
+
 [tool.ruff]
 line-length = 100
 target-version = "py39"

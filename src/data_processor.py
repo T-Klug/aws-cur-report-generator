@@ -139,9 +139,14 @@ class CURDataProcessor:
             if original_col in self.df.columns:
                 dtype = self.df.schema[original_col]
                 if dtype == pl.Utf8 or dtype == pl.String:
+                    # AWS CUR uses ISO 8601 format with timezone (e.g., 2024-01-15T00:00:00Z)
+                    # Use %+ format which handles RFC 3339/ISO 8601 with timezone
                     lf = lf.with_columns(
                         [
-                            pl.col("usage_date").str.to_datetime(strict=False).alias("usage_date"),
+                            pl.col("usage_date")
+                            .str.to_datetime(format="%+", strict=False)
+                            .dt.replace_time_zone(None)  # Remove timezone for consistent handling
+                            .alias("usage_date"),
                         ]
                     )
 

@@ -178,8 +178,8 @@ class TestCURReader:
                 start_date=datetime(2024, 1, 1), end_date=datetime(2024, 7, 31), sample_files=2
             )
 
-            # Should only process 2 files
-            assert mock_scan_csv.call_count == 2
+            # Should process 2 files + 1 for schema inference = 3 calls
+            assert mock_scan_csv.call_count == 3
 
     def test_load_cur_data_no_files(self):
         """Test loading CUR data when no files are found."""

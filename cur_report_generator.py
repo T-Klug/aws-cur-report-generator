@@ -79,10 +79,9 @@ def validate_env_vars():
 @click.option('--generate-csv/--no-csv', default=False, help='Generate CSV exports. Default: False')
 @click.option('--sample-files', type=int, help='Limit number of CUR files to process (for testing)')
 @click.option('--max-workers', '-w', type=int, help='Max parallel workers for S3 downloads. Default: auto (2x CPU cores)')
-@click.option('--batch-size', '-b', type=int, default=20, help='Files per batch for memory control. Default: 20')
 @click.option('--debug', is_flag=True, help='Enable debug logging')
 def generate_report(start_date, end_date, output_dir, top_n, generate_html,
-                   generate_csv, sample_files, max_workers, batch_size, debug):
+                   generate_csv, sample_files, max_workers, debug):
     """
     Generate comprehensive AWS Cost and Usage Reports.
 
@@ -134,10 +133,6 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         print(f"{Fore.RED}Error: --sample-files must be a positive integer, got {sample_files}{Style.RESET_ALL}")
         sys.exit(1)
 
-    if batch_size is not None and batch_size <= 0:
-        print(f"{Fore.RED}Error: --batch-size must be a positive integer, got {batch_size}{Style.RESET_ALL}")
-        sys.exit(1)
-
     if max_workers is not None and max_workers <= 0:
         print(f"{Fore.RED}Error: --max-workers must be a positive integer, got {max_workers}{Style.RESET_ALL}")
         sys.exit(1)
@@ -176,7 +171,6 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
     print(f"  Date Range: {start_dt.date()} to {end_dt.date()}")
     print(f"  Output Directory: {output_dir}")
     print(f"  Top N Items: {top_n}")
-    print(f"  Batch Size: {batch_size}")
     if max_workers:
         print(f"  Max Workers: {max_workers}")
     else:
@@ -194,11 +188,13 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
             aws_profile=aws_profile,
             aws_region=aws_region,
             max_workers=max_workers,
-            batch_size=batch_size,
         )
 
-        cur_data = reader.load_cur_data(start_date=start_dt, end_date=end_dt,
-                                       sample_files=sample_files)
+        cur_data = reader.load_cur_data(
+            start_date=start_dt,
+            end_date=end_dt,
+            sample_files=sample_files,
+        )
 
         if cur_data.is_empty():
             print(f"{Fore.RED}Error: No CUR data found for the specified date range{Style.RESET_ALL}")

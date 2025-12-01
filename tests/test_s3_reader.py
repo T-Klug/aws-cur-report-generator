@@ -144,7 +144,6 @@ class TestCURReader:
         with (
             patch("s3_reader.boto3.Session") as mock_session,
             patch("s3_reader.pl.scan_csv") as mock_scan_csv,
-            patch("s3_reader.pl.concat") as mock_concat,
         ):
 
             mock_client = Mock()
@@ -154,7 +153,7 @@ class TestCURReader:
             mock_client.get_paginator.return_value = mock_paginator
             mock_session.return_value.client.return_value = mock_client
 
-            # Setup Polars mock
+            # Setup Polars mock - LazyFrame that returns real DataFrame on collect
             mock_lf = Mock()
             mock_lf.collect_schema.return_value = pl.Schema(
                 {col: pl.Utf8 for col in sample_cur_data.columns}
@@ -163,23 +162,17 @@ class TestCURReader:
             mock_lf.filter.return_value = mock_lf
             mock_lf.with_columns.return_value = mock_lf
             mock_lf.unique.return_value = mock_lf
-            # mock_lf.collect.return_value = sample_cur_data # Not needed if concat is mocked
+            mock_lf.collect.return_value = sample_cur_data  # Return real DataFrame
 
             mock_scan_csv.return_value = mock_lf
-
-            # Mock concat result
-            mock_combined_lf = Mock()
-            mock_combined_lf.unique.return_value = mock_combined_lf
-            mock_combined_lf.collect.return_value = sample_cur_data
-            mock_concat.return_value = mock_combined_lf
 
             reader = CURReader(bucket="test-bucket", prefix="test-prefix")
             reader.load_cur_data(
                 start_date=datetime(2024, 1, 1), end_date=datetime(2024, 7, 31), sample_files=2
             )
 
-            # Should process 2 files + 1 for schema inference = 3 calls
-            assert mock_scan_csv.call_count == 3
+            # Should be 2 calls: 1 for schema inference + 1 bulk scan for all files
+            assert mock_scan_csv.call_count == 2
 
     def test_load_cur_data_no_files(self):
         """Test loading CUR data when no files are found."""

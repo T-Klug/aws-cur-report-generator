@@ -13,10 +13,6 @@ from botocore.exceptions import ClientError, NoCredentialsError
 
 logger = logging.getLogger(__name__)
 
-# Default batch size for processing files
-DEFAULT_BATCH_SIZE = 20
-# Default max workers (will use cpu_count if not specified)
-DEFAULT_MAX_WORKERS = None
 
 # Check for s3fs availability at import time
 try:
@@ -73,7 +69,6 @@ class CURReader:
         aws_region: Optional[str] = None,
         required_columns: Optional[List[str]] = None,
         max_workers: Optional[int] = None,
-        batch_size: int = DEFAULT_BATCH_SIZE,
     ) -> None:
         """
         Initialize the CUR Reader.
@@ -85,7 +80,6 @@ class CURReader:
             aws_region: AWS region (optional)
             required_columns: List of column names to read (None = use defaults)
             max_workers: Max parallel workers for file processing (None = auto-detect from CPU count)
-            batch_size: Number of files to process per batch (default: 20)
         """
         self.bucket = bucket
         self.prefix = prefix.rstrip("/")
@@ -93,7 +87,6 @@ class CURReader:
         self.aws_profile = aws_profile
         self.aws_region = aws_region
         self.max_workers = max_workers or self._get_optimal_workers()
-        self.batch_size = batch_size
 
         # Initialize S3 session parameters
         self._session_params = {}
@@ -129,14 +122,19 @@ class CURReader:
         if not aws_region:
             aws_region = self.session.region_name
 
-        # Note: s3fs doesn't allow combining 'profile' with 'client_kwargs'
-        # So we need to choose one approach or the other
+        # Note: s3fs/Polars doesn't allow combining 'profile' with certain options
+        # like 'max_concurrency' or 'client_kwargs'. So we need to choose one approach.
         if aws_profile:
             # When using a profile, pass it directly - region comes from profile config
+            # Cannot combine with max_concurrency or client_kwargs
             s3_kwargs["profile"] = aws_profile
-        elif aws_region:
-            # When not using a profile, we can pass region via client_kwargs
-            s3_kwargs["client_kwargs"] = {"region_name": aws_region}
+        else:
+            # When not using a profile, we can use additional performance options
+            s3_kwargs["default_block_size"] = 5 * 1024 * 1024  # 5MB blocks
+            s3_kwargs["default_fill_cache"] = False  # Don't cache (one-time processing)
+            s3_kwargs["max_concurrency"] = self.max_workers  # Parallel downloads
+            if aws_region:
+                s3_kwargs["client_kwargs"] = {"region_name": aws_region}
 
         self.storage_options = s3_kwargs
         self._schema_cache: Dict[str, pl.Schema] = {}  # Cache for schema lookups
@@ -313,101 +311,6 @@ class CURReader:
             logger.warning(f"Failed to infer CSV schema: {e}")
             return None
 
-    def _process_batch(
-        self,
-        files: List[str],
-        start_date: Optional[datetime],
-        end_date: Optional[datetime],
-        file_type: str,
-    ) -> Optional[pl.DataFrame]:
-        """
-        Process a batch of files and return collected DataFrame.
-
-        Args:
-            files: List of S3 file paths
-            start_date: Start date filter
-            end_date: End date filter
-            file_type: Either 'parquet' or 'csv'
-
-        Returns:
-            Collected DataFrame for this batch, or None if no data
-        """
-        if not files:
-            return None
-
-        lazy_frames: List[pl.LazyFrame] = []
-
-        if file_type == "parquet":
-            try:
-                lf = pl.scan_parquet(files, storage_options=self.storage_options, retries=3)
-                lf = self._optimize_lazyframe(lf, start_date, end_date)
-                lazy_frames.append(lf)
-            except Exception as e:
-                logger.warning(f"Error scanning parquet batch: {e}")
-                # Try files individually as fallback
-                for fp in files:
-                    try:
-                        lf = pl.scan_parquet(fp, storage_options=self.storage_options, retries=3)
-                        lf = self._optimize_lazyframe(lf, start_date, end_date)
-                        lazy_frames.append(lf)
-                    except Exception as e2:
-                        logger.warning(f"Error scanning {fp}: {e2}")
-
-        elif file_type == "csv":
-            csv_errors: List[Tuple[str, str]] = []
-
-            def scan_csv_file(file_path: str) -> Optional[pl.LazyFrame]:
-                """Scan a single CSV file using cached schema if available."""
-                try:
-                    scan_kwargs: Dict[str, Any] = {
-                        "storage_options": self.storage_options,
-                        "ignore_errors": True,
-                    }
-
-                    # Use cached schema if available (much faster)
-                    if self._csv_schema_cache is not None:
-                        scan_kwargs["schema"] = self._csv_schema_cache
-                    else:
-                        scan_kwargs["infer_schema_length"] = 10000
-
-                    lf = pl.scan_csv(file_path, **scan_kwargs)
-                    return self._optimize_lazyframe(lf, start_date, end_date)
-                except Exception as e:
-                    csv_errors.append((file_path, str(e)))
-                    return None
-
-            # Use configured max_workers
-            num_workers = min(self.max_workers, len(files))
-            with ThreadPoolExecutor(max_workers=num_workers) as executor:
-                futures = {executor.submit(scan_csv_file, fp): fp for fp in files}
-                for future in as_completed(futures):
-                    result = future.result()
-                    if result is not None:
-                        lazy_frames.append(result)
-
-            for file_path, error in csv_errors:
-                logger.debug(f"Error scanning CSV file {file_path}: {error}")
-
-        if not lazy_frames:
-            return None
-
-        # Concatenate and collect this batch
-        if len(lazy_frames) == 1:
-            combined_lf = lazy_frames[0]
-        else:
-            combined_lf = pl.concat(lazy_frames, how="vertical_relaxed")
-
-        try:
-            return combined_lf.collect()
-        except Exception as e:
-            logger.warning(f"Error collecting batch: {e}")
-            return None
-
-    def _batches(self, items: List[str], batch_size: int):
-        """Yield successive batches from a list."""
-        for i in range(0, len(items), batch_size):
-            yield items[i : i + batch_size]
-
     def load_cur_data(
         self,
         start_date: Optional[datetime] = None,
@@ -419,8 +322,8 @@ class CURReader:
 
         Optimized for hundreds of files with:
         - Partition-aware filtering (skips folders outside date range)
-        - Batch processing (controls memory usage)
-        - Dynamic worker scaling (uses available CPU cores)
+        - Polars native multi-file scanning (handles parallelism internally)
+        - Streaming execution for memory efficiency
         - Schema caching (faster CSV scanning)
 
         Args:
@@ -445,7 +348,7 @@ class CURReader:
             )
 
         logger.info(f"Loading CUR data from {start_date.date()} to {end_date.date()}")
-        logger.info(f"Using {self.max_workers} workers, batch size {self.batch_size}")
+        logger.info(f"Using {self.max_workers} workers")
 
         # List available files
         report_files = self.list_report_files()
@@ -476,102 +379,156 @@ class CURReader:
 
         logger.info(f"Files to process: {len(parquet_files)} Parquet, {len(csv_files)} CSV")
 
-        # Infer and cache CSV schema from first file (if CSV files exist)
+        lazy_frames: List[pl.LazyFrame] = []
+
+        # Process ALL Parquet files at once - Polars handles parallelism internally
+        if parquet_files:
+            logger.info(f"Scanning {len(parquet_files)} Parquet files...")
+            try:
+                # Polars can scan all parquet files in one call - much more efficient
+                lf = pl.scan_parquet(
+                    parquet_files,
+                    storage_options=self.storage_options,
+                    retries=3,
+                    parallel="auto",  # Let Polars decide parallelism
+                )
+                lf = self._optimize_lazyframe(lf, start_date, end_date)
+                lazy_frames.append(lf)
+                logger.info("Parquet files scanned successfully")
+            except Exception as e:
+                logger.error(f"Error scanning Parquet files: {e}")
+                raise
+
+        # Process ALL CSV files at once - Polars handles parallelism internally
         if csv_files:
+            logger.info(f"Scanning {len(csv_files)} CSV files...")
+
+            # Infer schema from first file for consistent typing
             self._infer_csv_schema(csv_files[0])
 
-        # Process files in batches to control memory usage
-        all_dataframes: List[pl.DataFrame] = []
-        total_records = 0
+            try:
+                scan_kwargs: Dict[str, Any] = {
+                    "storage_options": self.storage_options,
+                    "ignore_errors": True,
+                    "glob": False,  # We're passing explicit file list, not glob pattern
+                    "retries": 3,
+                }
+                if self._csv_schema_cache is not None:
+                    scan_kwargs["schema"] = self._csv_schema_cache
+                else:
+                    scan_kwargs["infer_schema_length"] = 10000
 
-        # Process Parquet batches
-        if parquet_files:
-            num_batches = (len(parquet_files) + self.batch_size - 1) // self.batch_size
-            logger.info(
-                f"Processing {len(parquet_files)} Parquet files in {num_batches} batches..."
-            )
+                # Polars can scan all CSV files in one call
+                lf = pl.scan_csv(csv_files, **scan_kwargs)
+                lf = self._optimize_lazyframe(lf, start_date, end_date)
+                lazy_frames.append(lf)
+                logger.info("CSV files scanned successfully")
+            except Exception as e:
+                # Fall back to parallel individual scanning if bulk scan fails
+                logger.warning(f"Bulk CSV scan failed ({e}), falling back to individual scanning")
+                csv_lazy_frames = self._scan_csv_files_parallel(csv_files, start_date, end_date)
+                lazy_frames.extend(csv_lazy_frames)
+                logger.info(f"CSV files scanned individually: {len(csv_lazy_frames)} successful")
 
-            for batch_idx, batch in enumerate(self._batches(parquet_files, self.batch_size)):
-                logger.debug(
-                    f"Processing Parquet batch {batch_idx + 1}/{num_batches} ({len(batch)} files)"
-                )
-                df = self._process_batch(batch, start_date, end_date, "parquet")
-                if df is not None and len(df) > 0:
-                    all_dataframes.append(df)
-                    total_records += len(df)
-                    logger.debug(
-                        f"Batch {batch_idx + 1}: {len(df)} records (total: {total_records})"
-                    )
-
-        # Process CSV batches
-        if csv_files:
-            num_batches = (len(csv_files) + self.batch_size - 1) // self.batch_size
-            logger.info(f"Processing {len(csv_files)} CSV files in {num_batches} batches...")
-
-            for batch_idx, batch in enumerate(self._batches(csv_files, self.batch_size)):
-                logger.debug(
-                    f"Processing CSV batch {batch_idx + 1}/{num_batches} ({len(batch)} files)"
-                )
-                df = self._process_batch(batch, start_date, end_date, "csv")
-                if df is not None and len(df) > 0:
-                    all_dataframes.append(df)
-                    total_records += len(df)
-                    logger.debug(
-                        f"Batch {batch_idx + 1}: {len(df)} records (total: {total_records})"
-                    )
-
-        if not all_dataframes:
-            logger.error("No data could be loaded from any batch")
+        if not lazy_frames:
+            logger.error("No data could be loaded")
             return pl.DataFrame()
 
-        # Combine all batch results
-        logger.info(f"Combining {len(all_dataframes)} batch results...")
-        if len(all_dataframes) == 1:
-            combined_df = all_dataframes[0]
+        # Combine all lazy frames
+        logger.info("Building query plan...")
+        if len(lazy_frames) == 1:
+            combined_lf = lazy_frames[0]
         else:
-            combined_df = pl.concat(all_dataframes, how="vertical_relaxed")
+            combined_lf = pl.concat(lazy_frames, how="vertical_relaxed")
 
-        # Deduplicate the combined result
-        combined_df = self._deduplicate(combined_df)
+        # Apply deduplication in the lazy plan
+        combined_lf = self._lazy_deduplicate(combined_lf)
 
-        logger.info(
-            f"Successfully loaded {len(combined_df)} records from {len(report_files)} files"
-        )
-        return combined_df
-
-    def _deduplicate(self, df: pl.DataFrame) -> pl.DataFrame:
-        """
-        Deduplicate DataFrame based on identity column.
-
-        Args:
-            df: DataFrame to deduplicate
-
-        Returns:
-            Deduplicated DataFrame
-        """
-        if df.is_empty():
+        # Execute the query with streaming for memory efficiency
+        logger.info("Executing query (downloading and processing)...")
+        try:
+            df = combined_lf.collect(streaming=True)
+            logger.info(f"Successfully loaded {len(df)} records from {len(report_files)} files")
             return df
+        except Exception as e:
+            logger.error(f"Error executing query with streaming: {e}")
+            # Try non-streaming as fallback
+            logger.info("Retrying without streaming...")
+            try:
+                df = combined_lf.collect(streaming=False)
+                logger.info(f"Successfully loaded {len(df)} records (non-streaming fallback)")
+                return df
+            except Exception as e2:
+                logger.error(f"Non-streaming also failed: {e2}")
+                raise
 
-        # Find deduplication column
-        dedup_col = None
-        for col in ["identity_line_item_id", "identity/LineItemId", "lineItem/LineItemId"]:
-            if col in df.columns:
-                dedup_col = col
-                break
+    def _scan_csv_files_parallel(
+        self,
+        csv_files: List[str],
+        start_date: Optional[datetime],
+        end_date: Optional[datetime],
+    ) -> List[pl.LazyFrame]:
+        """
+        Scan CSV files in parallel using ThreadPoolExecutor.
 
-        if dedup_col:
-            original_len = len(df)
-            df = df.unique(subset=[dedup_col], keep="last")
-            removed = original_len - len(df)
-            if removed > 0:
-                logger.info(f"Deduplication removed {removed} duplicate records")
-        else:
-            logger.warning(
-                "No deduplication column found (identity_line_item_id, identity/LineItemId, "
-                "lineItem/LineItemId). Data may contain duplicates which could inflate costs."
-            )
+        Returns list of LazyFrames (not collected yet).
+        """
+        lazy_frames: List[pl.LazyFrame] = []
+        errors: List[Tuple[str, str]] = []
 
-        return df
+        def scan_single_csv(file_path: str) -> Optional[pl.LazyFrame]:
+            try:
+                scan_kwargs: Dict[str, Any] = {
+                    "storage_options": self.storage_options,
+                    "ignore_errors": True,
+                }
+                if self._csv_schema_cache is not None:
+                    scan_kwargs["schema"] = self._csv_schema_cache
+                else:
+                    scan_kwargs["infer_schema_length"] = 10000
+
+                lf = pl.scan_csv(file_path, **scan_kwargs)
+                return self._optimize_lazyframe(lf, start_date, end_date)
+            except Exception as e:
+                errors.append((file_path, str(e)))
+                return None
+
+        num_workers = min(self.max_workers, len(csv_files))
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            futures = {executor.submit(scan_single_csv, fp): fp for fp in csv_files}
+            for future in as_completed(futures):
+                result = future.result()
+                if result is not None:
+                    lazy_frames.append(result)
+
+        if errors:
+            logger.warning(f"Failed to scan {len(errors)} CSV files")
+            for fp, err in errors[:5]:  # Log first 5 errors
+                logger.debug(f"  {fp}: {err}")
+
+        return lazy_frames
+
+    def _lazy_deduplicate(self, lf: pl.LazyFrame) -> pl.LazyFrame:
+        """
+        Add deduplication to the lazy query plan.
+        """
+        try:
+            schema = lf.collect_schema()
+            dedup_col = None
+            for col in ["identity_line_item_id", "identity/LineItemId", "lineItem/LineItemId"]:
+                if col in schema.names():
+                    dedup_col = col
+                    break
+
+            if dedup_col:
+                logger.info(f"Adding deduplication on {dedup_col} to query plan")
+                return lf.unique(subset=[dedup_col], keep="last")
+            else:
+                logger.warning("No deduplication column found in schema")
+                return lf
+        except Exception as e:
+            logger.warning(f"Could not add deduplication to plan: {e}")
+            return lf
 
     def _optimize_lazyframe(
         self, lf: pl.LazyFrame, start_date: Optional[datetime], end_date: Optional[datetime]

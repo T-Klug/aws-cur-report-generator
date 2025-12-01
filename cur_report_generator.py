@@ -79,9 +79,12 @@ def validate_env_vars():
 @click.option('--generate-csv/--no-csv', default=False, help='Generate CSV exports. Default: False')
 @click.option('--sample-files', type=int, help='Limit number of CUR files to process (for testing)')
 @click.option('--max-workers', '-w', type=int, help='Max parallel workers for S3 downloads. Default: auto (2x CPU cores)')
+@click.option('--cache-dir', type=str, help='Directory for caching downloaded files. Default: ~/.cache/cur-reports')
+@click.option('--no-cache', is_flag=True, help='Disable local file caching (always download from S3)')
+@click.option('--clear-cache', is_flag=True, help='Clear the cache before running')
 @click.option('--debug', is_flag=True, help='Enable debug logging')
 def generate_report(start_date, end_date, output_dir, top_n, generate_html,
-                   generate_csv, sample_files, max_workers, debug):
+                   generate_csv, sample_files, max_workers, cache_dir, no_cache, clear_cache, debug):
     """
     Generate comprehensive AWS Cost and Usage Reports.
 
@@ -175,6 +178,11 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         print(f"  Max Workers: {max_workers}")
     else:
         print(f"  Max Workers: auto")
+    if no_cache:
+        print(f"  Cache: {Fore.YELLOW}disabled{Style.RESET_ALL}")
+    else:
+        cache_location = cache_dir or "~/.cache/cur-reports"
+        print(f"  Cache: {cache_location}")
     if sample_files:
         print(f"  {Fore.YELLOW}Sample Mode: Processing only {sample_files} files{Style.RESET_ALL}")
     print()
@@ -188,7 +196,14 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
             aws_profile=aws_profile,
             aws_region=aws_region,
             max_workers=max_workers,
+            cache_dir=cache_dir,
+            use_cache=not no_cache,
         )
+
+        # Clear cache if requested
+        if clear_cache:
+            deleted = reader.clear_cache()
+            print(f"{Fore.YELLOW}Cleared {deleted} files from cache{Style.RESET_ALL}")
 
         cur_data = reader.load_cur_data(
             start_date=start_dt,

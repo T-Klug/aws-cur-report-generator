@@ -1,10 +1,14 @@
 """S3 CUR Data Reader - Handles downloading and reading AWS Cost and Usage Reports from S3."""
 
+import hashlib
 import logging
 import os
 import re
+import tempfile
+import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import boto3
@@ -12,6 +16,9 @@ import polars as pl
 from botocore.exceptions import ClientError, NoCredentialsError
 
 logger = logging.getLogger(__name__)
+
+# Default cache directory
+DEFAULT_CACHE_DIR = os.path.expanduser("~/.cache/cur-reports")
 
 
 # Check for s3fs availability at import time
@@ -69,6 +76,8 @@ class CURReader:
         aws_region: Optional[str] = None,
         required_columns: Optional[List[str]] = None,
         max_workers: Optional[int] = None,
+        cache_dir: Optional[str] = None,
+        use_cache: bool = True,
     ) -> None:
         """
         Initialize the CUR Reader.
@@ -80,6 +89,8 @@ class CURReader:
             aws_region: AWS region (optional)
             required_columns: List of column names to read (None = use defaults)
             max_workers: Max parallel workers for file processing (None = auto-detect from CPU count)
+            cache_dir: Directory for caching downloaded files (None = ~/.cache/cur-reports)
+            use_cache: Whether to use local file caching (default: True)
         """
         self.bucket = bucket
         self.prefix = prefix.rstrip("/")
@@ -87,6 +98,13 @@ class CURReader:
         self.aws_profile = aws_profile
         self.aws_region = aws_region
         self.max_workers = max_workers or self._get_optimal_workers()
+        self.use_cache = use_cache
+        self.cache_dir = Path(cache_dir) if cache_dir else Path(DEFAULT_CACHE_DIR)
+
+        # Create cache directory if caching is enabled
+        if self.use_cache:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Cache directory: {self.cache_dir}")
 
         # Initialize S3 session parameters
         self._session_params = {}
@@ -146,6 +164,194 @@ class CURReader:
         # Use 2x CPU count for I/O bound tasks, capped at 32
         return min(cpu_count * 2, 32)
 
+    def _get_cache_path(self, s3_key: str) -> Path:
+        """
+        Get local cache path for an S3 key.
+
+        Uses a hash of bucket+key to create a unique filename while preserving extension.
+        """
+        # Create a hash of the full S3 path for uniqueness
+        full_path = f"{self.bucket}/{s3_key}"
+        path_hash = hashlib.md5(full_path.encode()).hexdigest()[:16]
+
+        # Preserve the original filename and extension
+        original_name = os.path.basename(s3_key)
+        # Prepend hash to avoid collisions
+        cache_name = f"{path_hash}_{original_name}"
+
+        return self.cache_dir / cache_name
+
+    def _is_cached(self, s3_key: str) -> bool:
+        """Check if a file is already cached locally."""
+        if not self.use_cache:
+            return False
+        cache_path = self._get_cache_path(s3_key)
+        return cache_path.exists()
+
+    def _download_to_cache(self, s3_key: str) -> Path:
+        """
+        Download a file from S3 to local cache.
+
+        Returns the local cache path.
+        """
+        cache_path = self._get_cache_path(s3_key)
+
+        if cache_path.exists():
+            logger.debug(f"Cache hit: {s3_key}")
+            return cache_path
+
+        logger.debug(f"Cache miss, downloading: {s3_key}")
+        try:
+            self.s3_client.download_file(self.bucket, s3_key, str(cache_path))
+            return cache_path
+        except ClientError as e:
+            logger.error(f"Failed to download {s3_key}: {e}")
+            raise
+
+    def _download_files_to_cache(self, s3_keys: List[str]) -> Tuple[List[str], int, int, int]:
+        """
+        Download multiple files to cache in parallel.
+
+        Only files from closed months are cached. Current month files are
+        downloaded to a temporary location and not cached.
+
+        Returns:
+            Tuple of (local_paths, cache_hits, cache_misses, fresh_downloads)
+            - cache_hits: Files served from cache
+            - cache_misses: Files downloaded and cached (closed months)
+            - fresh_downloads: Files downloaded but not cached (current month)
+        """
+        local_paths: List[str] = []
+        cache_hits = 0
+        cache_misses = 0
+        fresh_downloads = 0
+        errors: List[Tuple[str, str]] = []
+
+        def download_single(s3_key: str) -> Tuple[str, str]:
+            """
+            Download single file.
+
+            Returns:
+                (local_path, status) where status is 'cache_hit', 'cached', or 'fresh'
+            """
+            is_closed = self._is_closed_month(s3_key)
+            cache_path = self._get_cache_path(s3_key)
+
+            if is_closed and cache_path.exists():
+                # Closed month, already cached
+                return str(cache_path), "cache_hit"
+
+            if is_closed:
+                # Closed month, download and cache
+                try:
+                    self.s3_client.download_file(self.bucket, s3_key, str(cache_path))
+                    return str(cache_path), "cached"
+                except ClientError as e:
+                    errors.append((s3_key, str(e)))
+                    raise
+            else:
+                # Current month - download to temp location, don't cache
+                # Use hash + uuid to ensure unique temp file
+                original_name = os.path.basename(s3_key)
+                temp_name = f"cur_temp_{uuid.uuid4().hex[:8]}_{original_name}"
+                temp_path = Path(tempfile.gettempdir()) / temp_name
+
+                try:
+                    self.s3_client.download_file(self.bucket, s3_key, str(temp_path))
+                    return str(temp_path), "fresh"
+                except ClientError as e:
+                    errors.append((s3_key, str(e)))
+                    raise
+
+        num_workers = min(self.max_workers, len(s3_keys))
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            futures = {executor.submit(download_single, key): key for key in s3_keys}
+            for future in as_completed(futures):
+                try:
+                    local_path, status = future.result()
+                    local_paths.append(local_path)
+                    if status == "cache_hit":
+                        cache_hits += 1
+                    elif status == "cached":
+                        cache_misses += 1
+                    else:  # fresh
+                        fresh_downloads += 1
+                except Exception as e:
+                    s3_key = futures[future]
+                    logger.warning(f"Failed to download {s3_key}: {e}")
+
+        if errors:
+            logger.warning(f"Failed to download {len(errors)} files")
+
+        return local_paths, cache_hits, cache_misses, fresh_downloads
+
+    def clear_cache(self) -> int:
+        """
+        Clear all cached files.
+
+        Returns:
+            Number of files deleted
+        """
+        if not self.cache_dir.exists():
+            return 0
+
+        count = 0
+        for file in self.cache_dir.iterdir():
+            if file.is_file():
+                file.unlink()
+                count += 1
+
+        logger.info(f"Cleared {count} files from cache")
+        return count
+
+    def get_cache_size(self) -> Tuple[int, int]:
+        """
+        Get cache statistics.
+
+        Returns:
+            Tuple of (file_count, total_size_bytes)
+        """
+        if not self.cache_dir.exists():
+            return 0, 0
+
+        file_count = 0
+        total_size = 0
+        for file in self.cache_dir.iterdir():
+            if file.is_file():
+                file_count += 1
+                total_size += file.stat().st_size
+
+        return file_count, total_size
+
+    def _is_closed_month(self, s3_key: str) -> bool:
+        """
+        Check if a file belongs to a closed (historical) billing period.
+
+        A month is "closed" if the billing period end date is before the current month.
+        This means the data is finalized and safe to cache indefinitely.
+
+        Args:
+            s3_key: S3 key path
+
+        Returns:
+            True if the file is from a closed month, False otherwise
+        """
+        date_range = self._parse_cur_date_range(s3_key)
+        if date_range is None:
+            # Can't determine date - don't cache (conservative)
+            return False
+
+        _, folder_end = date_range
+
+        # Get first day of current month
+        now = datetime.now()
+        current_month_start = datetime(now.year, now.month, 1)
+
+        # Month is closed if its end date is on or before the current month start
+        # The folder end date is the first day of the NEXT month (e.g., Nov folder ends 20251201)
+        # So if folder_end <= current_month_start, the billing period is complete
+        return folder_end <= current_month_start
+
     def _parse_cur_date_range(self, path: str) -> Optional[Tuple[datetime, datetime]]:
         """
         Parse date range from CUR folder path.
@@ -153,6 +359,7 @@ class CURReader:
         AWS CUR files are organized in folders like:
         - prefix/report-name/20241101-20241201/file.parquet
         - prefix/report-name/year=2024/month=11/file.parquet
+        - prefix/report-name/data/BILLING_PERIOD=2025-11/file.parquet
 
         Args:
             path: S3 key path
@@ -160,7 +367,7 @@ class CURReader:
         Returns:
             Tuple of (start_date, end_date) if parseable, None otherwise
         """
-        # Pattern 1: YYYYMMDD-YYYYMMDD format (most common)
+        # Pattern 1: YYYYMMDD-YYYYMMDD format
         date_range_pattern = r"/(\d{8})-(\d{8})/"
         match = re.search(date_range_pattern, path)
         if match:
@@ -171,7 +378,24 @@ class CURReader:
             except ValueError:
                 pass
 
-        # Pattern 2: year=YYYY/month=MM format (Hive-style partitioning)
+        # Pattern 2: BILLING_PERIOD=YYYY-MM format (CUR 2.0 style)
+        billing_period_pattern = r"BILLING_PERIOD[=:](\d{4})-(\d{1,2})"
+        match = re.search(billing_period_pattern, path)
+        if match:
+            try:
+                year = int(match.group(1))
+                month = int(match.group(2))
+                start = datetime(year, month, 1)
+                # End is first day of next month
+                if month == 12:
+                    end = datetime(year + 1, 1, 1)
+                else:
+                    end = datetime(year, month + 1, 1)
+                return (start, end)
+            except ValueError:
+                pass
+
+        # Pattern 3: year=YYYY/month=MM format (Hive-style partitioning)
         hive_pattern = r"/year=(\d{4})/month=(\d{1,2})/"
         match = re.search(hive_pattern, path)
         if match:
@@ -371,64 +595,130 @@ class CURReader:
             report_files = report_files[:sample_files]
             logger.info(f"Sampling {sample_files} files for testing")
 
-        # Group files by extension
-        parquet_files = [f"s3://{self.bucket}/{f}" for f in report_files if f.endswith(".parquet")]
-        csv_files = [
-            f"s3://{self.bucket}/{f}" for f in report_files if f.endswith((".csv", ".csv.gz"))
-        ]
+        # Group files by extension (keep S3 keys for caching)
+        parquet_keys = [f for f in report_files if f.endswith(".parquet")]
+        csv_keys = [f for f in report_files if f.endswith((".csv", ".csv.gz"))]
 
-        logger.info(f"Files to process: {len(parquet_files)} Parquet, {len(csv_files)} CSV")
+        logger.info(f"Files to process: {len(parquet_keys)} Parquet, {len(csv_keys)} CSV")
 
         lazy_frames: List[pl.LazyFrame] = []
 
-        # Process ALL Parquet files at once - Polars handles parallelism internally
-        if parquet_files:
-            logger.info(f"Scanning {len(parquet_files)} Parquet files...")
-            try:
-                # Polars can scan all parquet files in one call - much more efficient
-                lf = pl.scan_parquet(
-                    parquet_files,
-                    storage_options=self.storage_options,
-                    retries=3,
-                    parallel="auto",  # Let Polars decide parallelism
+        # Process Parquet files - use cache for closed months if enabled
+        if parquet_keys:
+            if self.use_cache:
+                # Download Parquet files to cache (closed months) or temp (current month)
+                logger.info(f"Downloading {len(parquet_keys)} Parquet files...")
+                local_paths, cache_hits, cache_misses, fresh = self._download_files_to_cache(
+                    parquet_keys
                 )
-                lf = self._optimize_lazyframe(lf, start_date, end_date)
-                lazy_frames.append(lf)
-                logger.info("Parquet files scanned successfully")
-            except Exception as e:
-                logger.error(f"Error scanning Parquet files: {e}")
-                raise
+                logger.info(
+                    f"Cache: {cache_hits} hits, {cache_misses} cached, {fresh} fresh downloads"
+                )
 
-        # Process ALL CSV files at once - Polars handles parallelism internally
-        if csv_files:
-            logger.info(f"Scanning {len(csv_files)} CSV files...")
+                if local_paths:
+                    try:
+                        lf = pl.scan_parquet(
+                            local_paths,
+                            parallel="auto",
+                        )
+                        lf = self._optimize_lazyframe(lf, start_date, end_date)
+                        lazy_frames.append(lf)
+                        logger.info("Parquet files scanned from local storage successfully")
+                    except Exception as e:
+                        logger.error(f"Error scanning local Parquet files: {e}")
+                        raise
+            else:
+                # No caching - read directly from S3
+                parquet_files = [f"s3://{self.bucket}/{f}" for f in parquet_keys]
+                logger.info(f"Scanning {len(parquet_files)} Parquet files from S3...")
+                try:
+                    lf = pl.scan_parquet(
+                        parquet_files,
+                        storage_options=self.storage_options,
+                        retries=3,
+                        parallel="auto",
+                    )
+                    lf = self._optimize_lazyframe(lf, start_date, end_date)
+                    lazy_frames.append(lf)
+                    logger.info("Parquet files scanned successfully")
+                except Exception as e:
+                    logger.error(f"Error scanning Parquet files: {e}")
+                    raise
 
-            # Infer schema from first file for consistent typing
-            self._infer_csv_schema(csv_files[0])
+        # Process CSV files - use local cache if enabled
+        if csv_keys:
+            if self.use_cache:
+                # Download CSV files to local cache first
+                logger.info(f"Downloading {len(csv_keys)} CSV files...")
+                local_paths, cache_hits, cache_misses, fresh = self._download_files_to_cache(
+                    csv_keys
+                )
+                logger.info(
+                    f"Cache: {cache_hits} hits, {cache_misses} cached, {fresh} fresh downloads"
+                )
 
-            try:
-                scan_kwargs: Dict[str, Any] = {
-                    "storage_options": self.storage_options,
-                    "ignore_errors": True,
-                    "glob": False,  # We're passing explicit file list, not glob pattern
-                    "retries": 3,
-                }
-                if self._csv_schema_cache is not None:
-                    scan_kwargs["schema"] = self._csv_schema_cache
+                if not local_paths:
+                    logger.warning("No CSV files could be downloaded")
                 else:
-                    scan_kwargs["infer_schema_length"] = 10000
+                    # Infer schema from first local file
+                    self._infer_csv_schema_local(local_paths[0])
 
-                # Polars can scan all CSV files in one call
-                lf = pl.scan_csv(csv_files, **scan_kwargs)
-                lf = self._optimize_lazyframe(lf, start_date, end_date)
-                lazy_frames.append(lf)
-                logger.info("CSV files scanned successfully")
-            except Exception as e:
-                # Fall back to parallel individual scanning if bulk scan fails
-                logger.warning(f"Bulk CSV scan failed ({e}), falling back to individual scanning")
-                csv_lazy_frames = self._scan_csv_files_parallel(csv_files, start_date, end_date)
-                lazy_frames.extend(csv_lazy_frames)
-                logger.info(f"CSV files scanned individually: {len(csv_lazy_frames)} successful")
+                    try:
+                        scan_kwargs: Dict[str, Any] = {
+                            "ignore_errors": True,
+                            "glob": False,
+                        }
+                        if self._csv_schema_cache is not None:
+                            scan_kwargs["schema"] = self._csv_schema_cache
+                        else:
+                            scan_kwargs["infer_schema_length"] = 10000
+
+                        # Read from local cache - much faster than S3
+                        lf = pl.scan_csv(local_paths, **scan_kwargs)
+                        lf = self._optimize_lazyframe(lf, start_date, end_date)
+                        lazy_frames.append(lf)
+                        logger.info("CSV files scanned from cache successfully")
+                    except Exception as e:
+                        logger.warning(
+                            f"Bulk CSV scan from cache failed ({e}), falling back to individual"
+                        )
+                        csv_lazy_frames = self._scan_local_csv_files_parallel(
+                            local_paths, start_date, end_date
+                        )
+                        lazy_frames.extend(csv_lazy_frames)
+            else:
+                # No caching - read directly from S3
+                csv_files = [f"s3://{self.bucket}/{f}" for f in csv_keys]
+                logger.info(f"Scanning {len(csv_files)} CSV files from S3 (no cache)...")
+
+                # Infer schema from first file for consistent typing
+                self._infer_csv_schema(csv_files[0])
+
+                try:
+                    scan_kwargs = {
+                        "storage_options": self.storage_options,
+                        "ignore_errors": True,
+                        "glob": False,
+                        "retries": 3,
+                    }
+                    if self._csv_schema_cache is not None:
+                        scan_kwargs["schema"] = self._csv_schema_cache
+                    else:
+                        scan_kwargs["infer_schema_length"] = 10000
+
+                    lf = pl.scan_csv(csv_files, **scan_kwargs)
+                    lf = self._optimize_lazyframe(lf, start_date, end_date)
+                    lazy_frames.append(lf)
+                    logger.info("CSV files scanned successfully")
+                except Exception as e:
+                    logger.warning(
+                        f"Bulk CSV scan failed ({e}), falling back to individual scanning"
+                    )
+                    csv_lazy_frames = self._scan_csv_files_parallel(csv_files, start_date, end_date)
+                    lazy_frames.extend(csv_lazy_frames)
+                    logger.info(
+                        f"CSV files scanned individually: {len(csv_lazy_frames)} successful"
+                    )
 
         if not lazy_frames:
             logger.error("No data could be loaded")
@@ -504,6 +794,78 @@ class CURReader:
         if errors:
             logger.warning(f"Failed to scan {len(errors)} CSV files")
             for fp, err in errors[:5]:  # Log first 5 errors
+                logger.debug(f"  {fp}: {err}")
+
+        return lazy_frames
+
+    def _infer_csv_schema_local(self, file_path: str) -> Optional[Dict[str, pl.DataType]]:
+        """
+        Infer schema from a local CSV file and cache it for reuse.
+
+        Args:
+            file_path: Local path to CSV file
+
+        Returns:
+            Dictionary mapping column names to Polars data types
+        """
+        if self._csv_schema_cache is not None:
+            return self._csv_schema_cache
+
+        try:
+            lf = pl.scan_csv(
+                file_path,
+                ignore_errors=True,
+                infer_schema_length=10000,
+            )
+            schema = lf.collect_schema()
+            self._csv_schema_cache = {name: dtype for name, dtype in schema.items()}
+            logger.info(f"Cached CSV schema with {len(self._csv_schema_cache)} columns")
+            return self._csv_schema_cache
+        except Exception as e:
+            logger.warning(f"Failed to infer CSV schema from local file: {e}")
+            return None
+
+    def _scan_local_csv_files_parallel(
+        self,
+        local_paths: List[str],
+        start_date: Optional[datetime],
+        end_date: Optional[datetime],
+    ) -> List[pl.LazyFrame]:
+        """
+        Scan local CSV files in parallel using ThreadPoolExecutor.
+
+        Returns list of LazyFrames (not collected yet).
+        """
+        lazy_frames: List[pl.LazyFrame] = []
+        errors: List[Tuple[str, str]] = []
+
+        def scan_single_csv(file_path: str) -> Optional[pl.LazyFrame]:
+            try:
+                scan_kwargs: Dict[str, Any] = {
+                    "ignore_errors": True,
+                }
+                if self._csv_schema_cache is not None:
+                    scan_kwargs["schema"] = self._csv_schema_cache
+                else:
+                    scan_kwargs["infer_schema_length"] = 10000
+
+                lf = pl.scan_csv(file_path, **scan_kwargs)
+                return self._optimize_lazyframe(lf, start_date, end_date)
+            except Exception as e:
+                errors.append((file_path, str(e)))
+                return None
+
+        num_workers = min(self.max_workers, len(local_paths))
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            futures = {executor.submit(scan_single_csv, fp): fp for fp in local_paths}
+            for future in as_completed(futures):
+                result = future.result()
+                if result is not None:
+                    lazy_frames.append(result)
+
+        if errors:
+            logger.warning(f"Failed to scan {len(errors)} local CSV files")
+            for fp, err in errors[:5]:
                 logger.debug(f"  {fp}: {err}")
 
         return lazy_frames

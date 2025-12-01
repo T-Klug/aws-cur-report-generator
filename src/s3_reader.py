@@ -2,7 +2,7 @@
 
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 import boto3
@@ -379,7 +379,9 @@ class CURReader:
                 lf = lf.with_columns(
                     pl.col(date_col)
                     .str.to_datetime(format="%+", strict=False)
-                    .dt.replace_time_zone(None)  # Remove timezone for comparison with naive datetimes
+                    .dt.replace_time_zone(
+                        None
+                    )  # Remove timezone for comparison with naive datetimes
                 )
 
             if start_date:

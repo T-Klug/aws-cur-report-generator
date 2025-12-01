@@ -63,7 +63,7 @@ class TestCURReader:
             assert all(f.endswith(".csv.gz") for f in files)
 
     def test_list_report_files_with_date_filter(self, mock_s3_objects):
-        """Test listing files with date range filter."""
+        """Test listing files returns all files (date filtering is done in load_cur_data)."""
         with patch("s3_reader.boto3.Session") as mock_session:
             mock_client = Mock()
             mock_paginator = Mock()
@@ -74,13 +74,11 @@ class TestCURReader:
 
             reader = CURReader(bucket="test-bucket", prefix="test-prefix")
 
-            # Filter to only January files
-            start_date = datetime(2024, 1, 1)
-            end_date = datetime(2024, 1, 31)
-            files = reader.list_report_files(start_date=start_date, end_date=end_date)
+            # list_report_files returns all files; date filtering is done in load_cur_data
+            files = reader.list_report_files()
 
-            # Should only get the 1 January file
-            assert len(files) == 1
+            # Should get all 6 monthly CUR files (date filtering happens later)
+            assert len(files) == 6
 
     def test_list_report_files_empty(self):
         """Test listing files when bucket is empty."""

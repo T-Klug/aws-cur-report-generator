@@ -156,29 +156,25 @@ class TestCURDataProcessor:
 
     def test_detect_cost_anomalies(self):
         """Test cost anomaly detection by service and month."""
-        # Create data spanning 6 months with an anomaly in month 3 for EC2
+        # Create data spanning 6 months with a clear anomaly in month 3 for EC2
         dates = []
         services = []
         costs = []
 
-        # Normal months for EC2: 1000, 1000, 5000 (anomaly), 1000, 1000, 1000
+        # Normal months for EC2 (months 1,2,4,5,6): 5000 total each
+        # Anomaly month (month 3): 50000 total (10x higher, clearly above z-score threshold)
         for month in range(1, 7):
             for day in range(1, 6):  # 5 days per month
-                dates.append(f"2024-{month:02d}-{day:02d}")
+                # Use ISO 8601 format with timezone like real CUR data
+                dates.append(f"2024-{month:02d}-{day:02d}T00:00:00Z")
                 services.append("AmazonEC2")
-                # Month 3 has unusually high costs
-                costs.append(1000.0 if month != 3 else 1000.0)
-
-        # Add another month with very high cost for EC2 to create anomaly
-        for day in range(1, 6):
-            dates.append(f"2024-03-{day:02d}")
-            services.append("AmazonEC2")
-            costs.append(5000.0)  # This will make March anomalous
+                # Month 3 has very high costs (10x normal)
+                costs.append(1000.0 if month != 3 else 10000.0)
 
         # Add S3 with consistent costs (no anomalies)
         for month in range(1, 7):
             for day in range(1, 6):
-                dates.append(f"2024-{month:02d}-{day:02d}")
+                dates.append(f"2024-{month:02d}-{day:02d}T00:00:00Z")
                 services.append("AmazonS3")
                 costs.append(500.0)
 

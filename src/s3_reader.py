@@ -605,7 +605,7 @@ class CURReader:
 
         logger.info(f"Files to process: {len(parquet_keys)} Parquet, {len(csv_keys)} CSV")
 
-        lazy_frames: List[pl.LazyFrame] = []
+        dataframes: List[pl.DataFrame] = []
 
         # Process Parquet files - use cache for closed months if enabled
         if parquet_keys:
@@ -626,15 +626,15 @@ class CURReader:
                             parallel="auto",
                         )
                         lf = self._optimize_lazyframe(lf, start_date, end_date)
-                        lazy_frames.append(lf)
-                        logger.info("Parquet files scanned from local storage successfully")
+                        dataframes.append(lf.collect())
+                        logger.info("Parquet files read from local storage successfully")
                     except Exception as e:
-                        logger.error(f"Error scanning local Parquet files: {e}")
+                        logger.error(f"Error reading local Parquet files: {e}")
                         raise
             else:
                 # No caching - read directly from S3
                 parquet_files = [f"s3://{self.bucket}/{f}" for f in parquet_keys]
-                logger.info(f"Scanning {len(parquet_files)} Parquet files from S3...")
+                logger.info(f"Reading {len(parquet_files)} Parquet files from S3...")
                 try:
                     lf = pl.scan_parquet(
                         parquet_files,
@@ -643,13 +643,14 @@ class CURReader:
                         parallel="auto",
                     )
                     lf = self._optimize_lazyframe(lf, start_date, end_date)
-                    lazy_frames.append(lf)
-                    logger.info("Parquet files scanned successfully")
+                    dataframes.append(lf.collect())
+                    logger.info("Parquet files read successfully")
                 except Exception as e:
-                    logger.error(f"Error scanning Parquet files: {e}")
+                    logger.error(f"Error reading Parquet files: {e}")
                     raise
 
-        # Process CSV files - use local cache if enabled
+        # Process CSV files - read each file individually due to varying schemas
+        # AWS CUR files can have different column counts across files (AWS adds columns over time)
         if csv_keys:
             if self.use_cache:
                 # Download CSV files to local cache first
@@ -664,103 +665,84 @@ class CURReader:
                 if not local_paths:
                     logger.warning("No CSV files could be downloaded")
                 else:
-                    # AWS CUR files can have varying column counts across files
-                    # (AWS adds columns over time), so scan each file individually
-                    # and use diagonal concat to handle schema differences
-                    csv_lazy_frames = self._scan_local_csv_files_parallel(
+                    logger.info(f"Reading {len(local_paths)} CSV files from cache...")
+                    csv_dataframes = self._read_local_csv_files_parallel(
                         local_paths, start_date, end_date
                     )
-                    lazy_frames.extend(csv_lazy_frames)
-                    logger.info(f"CSV files scanned from cache: {len(csv_lazy_frames)} successful")
+                    dataframes.extend(csv_dataframes)
+                    logger.info(f"CSV files read from cache: {len(csv_dataframes)} successful")
             else:
                 # No caching - read directly from S3
                 csv_files = [f"s3://{self.bucket}/{f}" for f in csv_keys]
-                logger.info(f"Scanning {len(csv_files)} CSV files from S3 (no cache)...")
+                logger.info(f"Reading {len(csv_files)} CSV files from S3 (no cache)...")
 
-                # AWS CUR files can have varying column counts across files
-                # (AWS adds columns over time), so scan each file individually
-                # and use diagonal concat to handle schema differences
-                csv_lazy_frames = self._scan_csv_files_parallel(csv_files, start_date, end_date)
-                lazy_frames.extend(csv_lazy_frames)
-                logger.info(f"CSV files scanned: {len(csv_lazy_frames)} successful")
+                csv_dataframes = self._read_csv_files_parallel(csv_files, start_date, end_date)
+                dataframes.extend(csv_dataframes)
+                logger.info(f"CSV files read: {len(csv_dataframes)} successful")
 
-        if not lazy_frames:
+        if not dataframes:
             logger.error("No data could be loaded")
             return pl.DataFrame()
 
-        # Combine all lazy frames
+        # Combine all dataframes
         # Use diagonal concat to handle files with different schemas (AWS adds columns over time)
-        logger.info("Building query plan...")
-        if len(lazy_frames) == 1:
-            combined_lf = lazy_frames[0]
+        logger.info("Combining data...")
+        if len(dataframes) == 1:
+            df = dataframes[0]
         else:
-            combined_lf = pl.concat(lazy_frames, how="diagonal_relaxed")
+            df = pl.concat(dataframes, how="diagonal_relaxed")
 
-        # Apply deduplication in the lazy plan
-        combined_lf = self._lazy_deduplicate(combined_lf)
+        # Apply deduplication
+        df = self._deduplicate(df)
 
-        # Execute the query with streaming for memory efficiency
-        logger.info("Executing query (downloading and processing)...")
-        try:
-            df = combined_lf.collect(engine="streaming")
-            logger.info(f"Successfully loaded {len(df)} records from {len(report_files)} files")
-            return df
-        except Exception as e:
-            logger.error(f"Error executing query with streaming: {e}")
-            # Try non-streaming as fallback
-            logger.info("Retrying without streaming...")
-            try:
-                df = combined_lf.collect()
-                logger.info(f"Successfully loaded {len(df)} records (non-streaming fallback)")
-                return df
-            except Exception as e2:
-                logger.error(f"Non-streaming also failed: {e2}")
-                raise
+        logger.info(f"Successfully loaded {len(df)} records from {len(report_files)} files")
+        return df
 
-    def _scan_csv_files_parallel(
+    def _read_csv_files_parallel(
         self,
         csv_files: List[str],
         start_date: Optional[datetime],
         end_date: Optional[datetime],
-    ) -> List[pl.LazyFrame]:
+    ) -> List[pl.DataFrame]:
         """
-        Scan CSV files in parallel using ThreadPoolExecutor.
+        Read CSV files from S3 in parallel using ThreadPoolExecutor.
 
-        Returns list of LazyFrames (not collected yet).
+        Collects each file eagerly to handle schema differences between files.
+        Returns list of DataFrames.
         """
-        lazy_frames: List[pl.LazyFrame] = []
+        dataframes: List[pl.DataFrame] = []
         errors: List[Tuple[str, str]] = []
 
-        def scan_single_csv(file_path: str) -> Optional[pl.LazyFrame]:
+        def read_single_csv(file_path: str) -> Optional[pl.DataFrame]:
             try:
                 scan_kwargs: Dict[str, Any] = {
                     "storage_options": self.storage_options,
                     "ignore_errors": True,
                     "infer_schema_length": 10000,
                 }
-                if self._csv_schema_cache is not None:
-                    scan_kwargs["schema_overrides"] = self._csv_schema_cache
 
                 lf = pl.scan_csv(file_path, **scan_kwargs)
-                return self._optimize_lazyframe(lf, start_date, end_date)
+                lf = self._optimize_lazyframe(lf, start_date, end_date)
+                # Collect eagerly to get DataFrame with this file's schema
+                return lf.collect()
             except Exception as e:
                 errors.append((file_path, str(e)))
                 return None
 
         num_workers = min(self.max_workers, len(csv_files))
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
-            futures = {executor.submit(scan_single_csv, fp): fp for fp in csv_files}
+            futures = {executor.submit(read_single_csv, fp): fp for fp in csv_files}
             for future in as_completed(futures):
                 result = future.result()
                 if result is not None:
-                    lazy_frames.append(result)
+                    dataframes.append(result)
 
         if errors:
-            logger.warning(f"Failed to scan {len(errors)} CSV files")
+            logger.warning(f"Failed to read {len(errors)} CSV files")
             for fp, err in errors[:5]:  # Log first 5 errors
                 logger.debug(f"  {fp}: {err}")
 
-        return lazy_frames
+        return dataframes
 
     def _infer_csv_schema_local(self, file_path: str) -> Optional[Dict[str, pl.DataType]]:
         """
@@ -789,71 +771,75 @@ class CURReader:
             logger.warning(f"Failed to infer CSV schema from local file: {e}")
             return None
 
-    def _scan_local_csv_files_parallel(
+    def _read_local_csv_files_parallel(
         self,
         local_paths: List[str],
         start_date: Optional[datetime],
         end_date: Optional[datetime],
-    ) -> List[pl.LazyFrame]:
+    ) -> List[pl.DataFrame]:
         """
-        Scan local CSV files in parallel using ThreadPoolExecutor.
+        Read local CSV files in parallel using ThreadPoolExecutor.
 
-        Returns list of LazyFrames (not collected yet).
+        Collects each file eagerly to handle schema differences between files.
+        Returns list of DataFrames.
         """
-        lazy_frames: List[pl.LazyFrame] = []
+        dataframes: List[pl.DataFrame] = []
         errors: List[Tuple[str, str]] = []
 
-        def scan_single_csv(file_path: str) -> Optional[pl.LazyFrame]:
+        def read_single_csv(file_path: str) -> Optional[pl.DataFrame]:
             try:
                 scan_kwargs: Dict[str, Any] = {
                     "ignore_errors": True,
                     "infer_schema_length": 10000,
                 }
-                if self._csv_schema_cache is not None:
-                    scan_kwargs["schema_overrides"] = self._csv_schema_cache
 
                 lf = pl.scan_csv(file_path, **scan_kwargs)
-                return self._optimize_lazyframe(lf, start_date, end_date)
+                lf = self._optimize_lazyframe(lf, start_date, end_date)
+                # Collect eagerly to get DataFrame with this file's schema
+                return lf.collect()
             except Exception as e:
                 errors.append((file_path, str(e)))
                 return None
 
         num_workers = min(self.max_workers, len(local_paths))
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
-            futures = {executor.submit(scan_single_csv, fp): fp for fp in local_paths}
+            futures = {executor.submit(read_single_csv, fp): fp for fp in local_paths}
             for future in as_completed(futures):
                 result = future.result()
                 if result is not None:
-                    lazy_frames.append(result)
+                    dataframes.append(result)
 
         if errors:
-            logger.warning(f"Failed to scan {len(errors)} local CSV files")
+            logger.warning(f"Failed to read {len(errors)} local CSV files")
             for fp, err in errors[:5]:
                 logger.debug(f"  {fp}: {err}")
 
-        return lazy_frames
+        return dataframes
 
-    def _lazy_deduplicate(self, lf: pl.LazyFrame) -> pl.LazyFrame:
+    def _deduplicate(self, df: pl.DataFrame) -> pl.DataFrame:
         """
-        Add deduplication to the lazy query plan.
+        Deduplicate DataFrame based on line item ID.
         """
         try:
-            schema = lf.collect_schema()
             dedup_col = None
             for col in ["identity_line_item_id", "identity/LineItemId", "lineItem/LineItemId"]:
-                if col in schema.names():
+                if col in df.columns:
                     dedup_col = col
                     break
 
             if dedup_col:
-                logger.info(f"Adding deduplication on {dedup_col} to query plan")
-                return lf.unique(subset=[dedup_col], keep="last")
+                original_count = len(df)
+                df = df.unique(subset=[dedup_col], keep="last")
+                removed = original_count - len(df)
+                if removed > 0:
+                    logger.info(f"Deduplication removed {removed} duplicate records")
+                return df
             else:
                 logger.warning("No deduplication column found in schema")
-                return lf
+                return df
         except Exception as e:
-            logger.warning(f"Could not add deduplication to plan: {e}")
-            return lf
+            logger.warning(f"Could not deduplicate: {e}")
+            return df
 
     def _optimize_lazyframe(
         self, lf: pl.LazyFrame, start_date: Optional[datetime], end_date: Optional[datetime]

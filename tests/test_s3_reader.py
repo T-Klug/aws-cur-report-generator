@@ -167,8 +167,8 @@ class TestCURReader:
 
             mock_scan_csv.return_value = mock_lf
 
-            # Mock concat to return a lazyframe that collects to sample_data
-            mock_concat.return_value = mock_lf
+            # Mock concat to return real DataFrame (not Mock) for proper len() call
+            mock_concat.return_value = sample_cur_data
 
             reader = CURReader(bucket="test-bucket", prefix="test-prefix")
             reader.load_cur_data(

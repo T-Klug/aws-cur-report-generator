@@ -241,10 +241,14 @@ class CURReader:
                 # Closed month, already cached
                 return str(cache_path), "cache_hit"
 
+            # Create a new S3 client per thread - boto3 clients are not thread-safe
+            thread_session = boto3.Session(**self._session_params)
+            thread_client = thread_session.client("s3")
+
             if is_closed:
                 # Closed month, download and cache
                 try:
-                    self.s3_client.download_file(self.bucket, s3_key, str(cache_path))
+                    thread_client.download_file(self.bucket, s3_key, str(cache_path))
                     return str(cache_path), "cached"
                 except ClientError as e:
                     errors.append((s3_key, str(e)))
@@ -257,7 +261,7 @@ class CURReader:
                 temp_path = Path(tempfile.gettempdir()) / temp_name
 
                 try:
-                    self.s3_client.download_file(self.bucket, s3_key, str(temp_path))
+                    thread_client.download_file(self.bucket, s3_key, str(temp_path))
                     return str(temp_path), "fresh"
                 except ClientError as e:
                     errors.append((s3_key, str(e)))
@@ -664,14 +668,16 @@ class CURReader:
                     self._infer_csv_schema_local(local_paths[0])
 
                     try:
+                        # Don't pass schema= as AWS CUR files can have varying column counts
+                        # across files (AWS adds columns over time). Use schema_overrides
+                        # for type hints while allowing flexible column counts.
                         scan_kwargs: Dict[str, Any] = {
                             "ignore_errors": True,
                             "glob": False,
+                            "infer_schema_length": 10000,
                         }
                         if self._csv_schema_cache is not None:
-                            scan_kwargs["schema"] = self._csv_schema_cache
-                        else:
-                            scan_kwargs["infer_schema_length"] = 10000
+                            scan_kwargs["schema_overrides"] = self._csv_schema_cache
 
                         # Read from local cache - much faster than S3
                         lf = pl.scan_csv(local_paths, **scan_kwargs)
@@ -695,16 +701,18 @@ class CURReader:
                 self._infer_csv_schema(csv_files[0])
 
                 try:
+                    # Don't pass schema= as AWS CUR files can have varying column counts
+                    # across files (AWS adds columns over time). Use schema_overrides
+                    # for type hints while allowing flexible column counts.
                     scan_kwargs = {
                         "storage_options": self.storage_options,
                         "ignore_errors": True,
                         "glob": False,
                         "retries": 3,
+                        "infer_schema_length": 10000,
                     }
                     if self._csv_schema_cache is not None:
-                        scan_kwargs["schema"] = self._csv_schema_cache
-                    else:
-                        scan_kwargs["infer_schema_length"] = 10000
+                        scan_kwargs["schema_overrides"] = self._csv_schema_cache
 
                     lf = pl.scan_csv(csv_files, **scan_kwargs)
                     lf = self._optimize_lazyframe(lf, start_date, end_date)
@@ -737,7 +745,7 @@ class CURReader:
         # Execute the query with streaming for memory efficiency
         logger.info("Executing query (downloading and processing)...")
         try:
-            df = combined_lf.collect(streaming=True)
+            df = combined_lf.collect(engine="streaming")
             logger.info(f"Successfully loaded {len(df)} records from {len(report_files)} files")
             return df
         except Exception as e:
@@ -745,7 +753,7 @@ class CURReader:
             # Try non-streaming as fallback
             logger.info("Retrying without streaming...")
             try:
-                df = combined_lf.collect(streaming=False)
+                df = combined_lf.collect()
                 logger.info(f"Successfully loaded {len(df)} records (non-streaming fallback)")
                 return df
             except Exception as e2:
@@ -771,11 +779,10 @@ class CURReader:
                 scan_kwargs: Dict[str, Any] = {
                     "storage_options": self.storage_options,
                     "ignore_errors": True,
+                    "infer_schema_length": 10000,
                 }
                 if self._csv_schema_cache is not None:
-                    scan_kwargs["schema"] = self._csv_schema_cache
-                else:
-                    scan_kwargs["infer_schema_length"] = 10000
+                    scan_kwargs["schema_overrides"] = self._csv_schema_cache
 
                 lf = pl.scan_csv(file_path, **scan_kwargs)
                 return self._optimize_lazyframe(lf, start_date, end_date)
@@ -843,11 +850,10 @@ class CURReader:
             try:
                 scan_kwargs: Dict[str, Any] = {
                     "ignore_errors": True,
+                    "infer_schema_length": 10000,
                 }
                 if self._csv_schema_cache is not None:
-                    scan_kwargs["schema"] = self._csv_schema_cache
-                else:
-                    scan_kwargs["infer_schema_length"] = 10000
+                    scan_kwargs["schema_overrides"] = self._csv_schema_cache
 
                 lf = pl.scan_csv(file_path, **scan_kwargs)
                 return self._optimize_lazyframe(lf, start_date, end_date)

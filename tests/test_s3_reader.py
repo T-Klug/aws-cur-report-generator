@@ -144,6 +144,7 @@ class TestCURReader:
         with (
             patch("s3_reader.boto3.Session") as mock_session,
             patch("s3_reader.pl.scan_csv") as mock_scan_csv,
+            patch("s3_reader.pl.concat") as mock_concat,
         ):
 
             mock_client = Mock()
@@ -166,12 +167,15 @@ class TestCURReader:
 
             mock_scan_csv.return_value = mock_lf
 
+            # Mock concat to return a lazyframe that collects to sample_data
+            mock_concat.return_value = mock_lf
+
             reader = CURReader(bucket="test-bucket", prefix="test-prefix")
             reader.load_cur_data(
                 start_date=datetime(2024, 1, 1), end_date=datetime(2024, 7, 31), sample_files=2
             )
 
-            # Should be 2 calls: 1 for schema inference + 1 bulk scan for all files
+            # With sample_files=2, we scan each file individually (2 files)
             assert mock_scan_csv.call_count == 2
 
     def test_load_cur_data_no_files(self):

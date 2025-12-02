@@ -664,80 +664,37 @@ class CURReader:
                 if not local_paths:
                     logger.warning("No CSV files could be downloaded")
                 else:
-                    # Infer schema from first local file
-                    self._infer_csv_schema_local(local_paths[0])
-
-                    try:
-                        # Don't pass schema= as AWS CUR files can have varying column counts
-                        # across files (AWS adds columns over time). Use schema_overrides
-                        # for type hints while allowing flexible column counts.
-                        scan_kwargs: Dict[str, Any] = {
-                            "ignore_errors": True,
-                            "glob": False,
-                            "infer_schema_length": 10000,
-                        }
-                        if self._csv_schema_cache is not None:
-                            scan_kwargs["schema_overrides"] = self._csv_schema_cache
-
-                        # Read from local cache - much faster than S3
-                        lf = pl.scan_csv(local_paths, **scan_kwargs)
-                        lf = self._optimize_lazyframe(lf, start_date, end_date)
-                        lazy_frames.append(lf)
-                        logger.info("CSV files scanned from cache successfully")
-                    except Exception as e:
-                        logger.warning(
-                            f"Bulk CSV scan from cache failed ({e}), falling back to individual"
-                        )
-                        csv_lazy_frames = self._scan_local_csv_files_parallel(
-                            local_paths, start_date, end_date
-                        )
-                        lazy_frames.extend(csv_lazy_frames)
+                    # AWS CUR files can have varying column counts across files
+                    # (AWS adds columns over time), so scan each file individually
+                    # and use diagonal concat to handle schema differences
+                    csv_lazy_frames = self._scan_local_csv_files_parallel(
+                        local_paths, start_date, end_date
+                    )
+                    lazy_frames.extend(csv_lazy_frames)
+                    logger.info(f"CSV files scanned from cache: {len(csv_lazy_frames)} successful")
             else:
                 # No caching - read directly from S3
                 csv_files = [f"s3://{self.bucket}/{f}" for f in csv_keys]
                 logger.info(f"Scanning {len(csv_files)} CSV files from S3 (no cache)...")
 
-                # Infer schema from first file for consistent typing
-                self._infer_csv_schema(csv_files[0])
-
-                try:
-                    # Don't pass schema= as AWS CUR files can have varying column counts
-                    # across files (AWS adds columns over time). Use schema_overrides
-                    # for type hints while allowing flexible column counts.
-                    scan_kwargs = {
-                        "storage_options": self.storage_options,
-                        "ignore_errors": True,
-                        "glob": False,
-                        "retries": 3,
-                        "infer_schema_length": 10000,
-                    }
-                    if self._csv_schema_cache is not None:
-                        scan_kwargs["schema_overrides"] = self._csv_schema_cache
-
-                    lf = pl.scan_csv(csv_files, **scan_kwargs)
-                    lf = self._optimize_lazyframe(lf, start_date, end_date)
-                    lazy_frames.append(lf)
-                    logger.info("CSV files scanned successfully")
-                except Exception as e:
-                    logger.warning(
-                        f"Bulk CSV scan failed ({e}), falling back to individual scanning"
-                    )
-                    csv_lazy_frames = self._scan_csv_files_parallel(csv_files, start_date, end_date)
-                    lazy_frames.extend(csv_lazy_frames)
-                    logger.info(
-                        f"CSV files scanned individually: {len(csv_lazy_frames)} successful"
-                    )
+                # AWS CUR files can have varying column counts across files
+                # (AWS adds columns over time), so scan each file individually
+                # and use diagonal concat to handle schema differences
+                csv_lazy_frames = self._scan_csv_files_parallel(csv_files, start_date, end_date)
+                lazy_frames.extend(csv_lazy_frames)
+                logger.info(f"CSV files scanned: {len(csv_lazy_frames)} successful")
 
         if not lazy_frames:
             logger.error("No data could be loaded")
             return pl.DataFrame()
 
         # Combine all lazy frames
+        # Use diagonal concat to handle files with different schemas (AWS adds columns over time)
         logger.info("Building query plan...")
         if len(lazy_frames) == 1:
             combined_lf = lazy_frames[0]
         else:
-            combined_lf = pl.concat(lazy_frames, how="vertical_relaxed")
+            combined_lf = pl.concat(lazy_frames, how="diagonal_relaxed")
 
         # Apply deduplication in the lazy plan
         combined_lf = self._lazy_deduplicate(combined_lf)

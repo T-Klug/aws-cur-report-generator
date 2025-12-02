@@ -66,6 +66,12 @@ class CURReader:
         "identity_line_item_id",
         "identity/LineItemId",
         "lineItem/LineItemId",
+        # Resource ID (needed for split cost allocation filtering)
+        "lineItem/ResourceId",
+        "line_item_resource_id",
+        # Split Cost Allocation columns (to detect and handle split line items)
+        "splitLineItem/ParentResourceId",
+        "split_line_item_parent_resource_id",
     ]
 
     def __init__(
@@ -695,6 +701,9 @@ class CURReader:
         # Apply deduplication
         df = self._deduplicate(df)
 
+        # Filter split cost allocation duplicates (must happen after combining all files)
+        df = self._filter_split_cost_duplicates(df)
+
         logger.info(f"Successfully loaded {len(df)} records from {len(report_files)} files")
         return df
 
@@ -841,6 +850,68 @@ class CURReader:
             logger.warning(f"Could not deduplicate: {e}")
             return df
 
+    def _filter_split_cost_duplicates(self, df: pl.DataFrame) -> pl.DataFrame:
+        """
+        Filter out parent rows when Split Cost Allocation is enabled to avoid double-counting.
+
+        When Split Cost Allocation is enabled, AWS CUR contains both:
+        1. Parent line items (e.g., EC2 instance with full cost in lineItem/UnblendedCost)
+        2. Split line items (EKS pods with allocated cost, also in lineItem/UnblendedCost)
+
+        If we sum both, we double-count. This method filters out the parent rows whose
+        cost is already captured in the split children.
+
+        Data patterns:
+        - Split child rows (EKS pods): ParentResourceId = EC2 instance ID (e.g., i-xxx)
+        - Parent EC2 rows (that were split): ParentResourceId = empty, ResourceId = i-xxx
+        - Non-splittable rows (S3, Lambda): ParentResourceId = empty, ResourceId != any parent ID
+        """
+        try:
+            # Find the split parent column
+            split_parent_col = None
+            for col in ["splitLineItem/ParentResourceId", "split_line_item_parent_resource_id"]:
+                if col in df.columns:
+                    split_parent_col = col
+                    break
+
+            # Find the resource ID column
+            resource_id_col = None
+            for col in ["lineItem/ResourceId", "line_item_resource_id"]:
+                if col in df.columns:
+                    resource_id_col = col
+                    break
+
+            if not split_parent_col or not resource_id_col:
+                # Split cost allocation columns not present - no filtering needed
+                return df
+
+            # Collect all unique ParentResourceIds (these are the EC2 instances that were split)
+            parent_ids = set(df[split_parent_col].drop_nulls().unique().to_list())
+
+            if not parent_ids:
+                # No split allocations found - no filtering needed
+                logger.debug("No split cost allocations detected")
+                return df
+
+            logger.info(
+                f"Split Cost Allocation detected - filtering {len(parent_ids)} parent resources to avoid double-counting"
+            )
+
+            # Filter out rows where ResourceId is in parent_ids
+            # These are the parent EC2 rows whose cost is already in the split children
+            original_count = len(df)
+            df = df.filter(~pl.col(resource_id_col).is_in(list(parent_ids)))
+            removed = original_count - len(df)
+
+            if removed > 0:
+                logger.info(f"Removed {removed} parent rows (cost captured in split allocations)")
+
+            return df
+
+        except Exception as e:
+            logger.warning(f"Could not filter split cost duplicates: {e}")
+            return df
+
     def _optimize_lazyframe(
         self, lf: pl.LazyFrame, start_date: Optional[datetime], end_date: Optional[datetime]
     ) -> pl.LazyFrame:
@@ -868,6 +939,10 @@ class CURReader:
         cols_to_select = [c for c in self.required_columns if c in available_cols]
         if cols_to_select:
             lf = lf.select(cols_to_select)
+
+        # NOTE: Split Cost Allocation filtering is handled in _filter_split_cost_duplicates()
+        # after all files are combined. This ensures we can identify parent resources across
+        # all files (parent EC2 row might be in a different file than the EKS pod split rows).
 
         # Filter by cost > 0
         cost_col = None

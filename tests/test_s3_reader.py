@@ -192,3 +192,104 @@ class TestCURReader:
             df = reader.load_cur_data()
 
             assert df.is_empty()
+
+    def test_filter_split_cost_duplicates(self):
+        """Test that split cost allocation filtering removes parent EC2 rows correctly."""
+        with patch("s3_reader.boto3.Session") as mock_session:
+            mock_client = Mock()
+            mock_session.return_value.client.return_value = mock_client
+
+            reader = CURReader(bucket="test-bucket", prefix="test-prefix")
+
+            # Create test data simulating split cost allocation
+            # - Parent EC2 row (should be filtered out): ResourceId = i-xxx, ParentResourceId = null
+            # - Split child rows (EKS pods): ResourceId = pod-arn, ParentResourceId = i-xxx
+            # - Non-split row (S3): ResourceId = bucket-name, ParentResourceId = null
+            test_df = pl.DataFrame(
+                {
+                    "lineItem/ResourceId": [
+                        "i-093f9f99b20291789",  # Parent EC2 (should be removed)
+                        "arn:aws:eks:pod/task1",  # Split child 1
+                        "arn:aws:eks:pod/task2",  # Split child 2
+                        "my-s3-bucket",  # Non-split (should stay)
+                        "arn:aws:lambda:func",  # Non-split (should stay)
+                    ],
+                    "splitLineItem/ParentResourceId": [
+                        None,  # Parent has no parent
+                        "i-093f9f99b20291789",  # Points to parent EC2
+                        "i-093f9f99b20291789",  # Points to parent EC2
+                        None,  # S3 has no parent
+                        None,  # Lambda has no parent
+                    ],
+                    "lineItem/UnblendedCost": [
+                        100.0,  # Full EC2 cost (duplicate)
+                        60.0,  # Split allocation 1
+                        40.0,  # Split allocation 2
+                        25.0,  # S3 cost
+                        15.0,  # Lambda cost
+                    ],
+                }
+            )
+
+            # Apply the filter
+            result_df = reader._filter_split_cost_duplicates(test_df)
+
+            # Should have 4 rows (parent EC2 filtered out)
+            assert len(result_df) == 4
+
+            # Parent EC2 should be gone
+            resource_ids = result_df["lineItem/ResourceId"].to_list()
+            assert "i-093f9f99b20291789" not in resource_ids
+
+            # Split children and non-split items should remain
+            assert "arn:aws:eks:pod/task1" in resource_ids
+            assert "arn:aws:eks:pod/task2" in resource_ids
+            assert "my-s3-bucket" in resource_ids
+            assert "arn:aws:lambda:func" in resource_ids
+
+            # Total cost should be 60 + 40 + 25 + 15 = 140 (not 240 with parent)
+            assert result_df["lineItem/UnblendedCost"].sum() == 140.0
+
+    def test_filter_split_cost_no_splits(self):
+        """Test that filtering does nothing when no split allocations exist."""
+        with patch("s3_reader.boto3.Session") as mock_session:
+            mock_client = Mock()
+            mock_session.return_value.client.return_value = mock_client
+
+            reader = CURReader(bucket="test-bucket", prefix="test-prefix")
+
+            # Create test data with no split allocations
+            test_df = pl.DataFrame(
+                {
+                    "lineItem/ResourceId": ["i-xxx", "bucket-1", "func-1"],
+                    "splitLineItem/ParentResourceId": [None, None, None],
+                    "lineItem/UnblendedCost": [100.0, 50.0, 25.0],
+                }
+            )
+
+            result_df = reader._filter_split_cost_duplicates(test_df)
+
+            # All rows should remain
+            assert len(result_df) == 3
+            assert result_df["lineItem/UnblendedCost"].sum() == 175.0
+
+    def test_filter_split_cost_missing_columns(self):
+        """Test that filtering handles missing columns gracefully."""
+        with patch("s3_reader.boto3.Session") as mock_session:
+            mock_client = Mock()
+            mock_session.return_value.client.return_value = mock_client
+
+            reader = CURReader(bucket="test-bucket", prefix="test-prefix")
+
+            # Create test data without split columns
+            test_df = pl.DataFrame(
+                {
+                    "lineItem/UnblendedCost": [100.0, 50.0, 25.0],
+                }
+            )
+
+            result_df = reader._filter_split_cost_duplicates(test_df)
+
+            # All rows should remain unchanged
+            assert len(result_df) == 3
+            assert result_df["lineItem/UnblendedCost"].sum() == 175.0

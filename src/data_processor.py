@@ -193,48 +193,35 @@ class CURDataProcessor:
             self.prepare_data()
         return float(self.prepared_df["cost"].sum())
 
-    def _get_usage_cost_df(self) -> pl.DataFrame:
+    def _get_net_cost_df(self) -> pl.DataFrame:
         """
-        Get DataFrame for calculating USAGE costs (charges only, no credits/discounts).
+        Get DataFrame for calculating NET costs (actual bill amount after all discounts).
 
-        This is used for main cost charts (by service, account, region) to show
-        what you're being charged before credits and discounts are applied.
-        Credits and discounts are shown separately in the discounts charts.
+        Returns ALL line items - the sum equals what you actually pay (matches AWS billing).
 
-        INCLUDED (actual charges):
+        Positive charges:
         - Usage: On-demand usage charges
         - DiscountedUsage: RI-covered usage charges
-        - Tax: Tax charges
-        - Fee: Various fees
-        - RIFee: Reserved Instance fees
-        - SavingsPlanRecurringFee: Actual SP commitment cost
+        - SavingsPlanCoveredUsage: On-demand equivalent for SP-covered usage
+        - Tax, Fee, RIFee: Other charges
+        - SavingsPlanRecurringFee: SP commitment cost
 
-        EXCLUDED (shown in discounts/credits charts):
-        - Credit: AWS credits (shown in discounts chart)
-        - EdpDiscount: Enterprise Discount Program (shown in discounts chart)
-        - PrivateRateDiscount: Private pricing (shown in discounts chart)
-        - BundledDiscount: Bundled discounts (shown in discounts chart)
-        - SavingsPlanCoveredUsage: On-demand equivalent (informational only)
-        - SavingsPlanNegation: Offset for SP (shown in discounts chart)
-        - Refund: Refunds (shown in discounts chart)
+        Negative offsets (reduce your bill):
+        - SavingsPlanNegation: SP savings (offsets SavingsPlanCoveredUsage)
+        - EdpDiscount: Enterprise Discount Program
+        - PrivateRateDiscount: Private pricing discounts
+        - BundledDiscount: Bundled service discounts
+        - Credit: AWS credits
+        - Refund: Service refunds
+
+        The sum of all line items = your actual bill (matches AWS Cost Explorer).
         """
-        if "line_item_type" not in self.prepared_df.columns:
-            return self.prepared_df
-
-        # Include only actual charge types
-        charge_types = [
-            "Usage",
-            "DiscountedUsage",
-            "Tax",
-            "Fee",
-            "RIFee",
-            "SavingsPlanRecurringFee",
-        ]
-        return self.prepared_df.filter(pl.col("line_item_type").is_in(charge_types))
+        # Return all data - sum of all line items = net cost (matches AWS billing)
+        return self.prepared_df
 
     def get_cost_by_service(self, top_n: Optional[int] = None) -> pd.DataFrame:
         """
-        Aggregate USAGE costs by service (excludes credits/discounts shown separately).
+        Aggregate NET costs by service (matches AWS billing after all discounts).
 
         Args:
             top_n: Return only top N services by cost
@@ -257,8 +244,8 @@ class CURDataProcessor:
 
         logger.info("Calculating cost by service...")
 
-        # Get usage costs only (excludes credits/discounts - shown in separate charts)
-        usage_df = self._get_usage_cost_df()
+        # Get net costs (all line items - matches AWS billing)
+        usage_df = self._get_net_cost_df()
 
         result = (
             usage_df.group_by("service")
@@ -275,7 +262,7 @@ class CURDataProcessor:
 
     def get_cost_by_account(self, top_n: Optional[int] = None) -> pd.DataFrame:
         """
-        Aggregate USAGE costs by AWS account (excludes credits/discounts shown separately).
+        Aggregate NET costs by AWS account (matches AWS billing after all discounts).
 
         Args:
             top_n: Return only top N accounts by cost
@@ -298,8 +285,8 @@ class CURDataProcessor:
 
         logger.info("Calculating cost by account...")
 
-        # Get usage costs only (excludes credits/discounts - shown in separate charts)
-        usage_df = self._get_usage_cost_df()
+        # Get net costs (all line items - matches AWS billing)
+        usage_df = self._get_net_cost_df()
 
         result = (
             usage_df.group_by("account_id")
@@ -336,9 +323,9 @@ class CURDataProcessor:
 
         logger.info("Calculating discounts summary...")
 
-        # Discount-related line item types
+        # Discount-related line item types (negative values that reduce your bill)
         discount_types = [
-            "SavingsPlanNegation",
+            "SavingsPlanNegation",  # SP savings (paired with SavingsPlanCoveredUsage in charges)
             "EdpDiscount",
             "PrivateRateDiscount",
             "BundledDiscount",
@@ -391,9 +378,9 @@ class CURDataProcessor:
 
         logger.info("Calculating discounts by service...")
 
-        # Discount-related line item types
+        # Discount-related line item types (negative values that reduce your bill)
         discount_types = [
-            "SavingsPlanNegation",
+            "SavingsPlanNegation",  # SP savings (paired with SavingsPlanCoveredUsage in charges)
             "EdpDiscount",
             "PrivateRateDiscount",
             "BundledDiscount",
@@ -566,7 +553,7 @@ class CURDataProcessor:
         top_services_list = top_service_df["service"].tolist()
 
         # Get net costs and aggregate
-        net_df = self._get_usage_cost_df()
+        net_df = self._get_net_cost_df()
         result = (
             net_df.filter(
                 pl.col("account_id").is_in(top_accounts_list)
@@ -599,7 +586,7 @@ class CURDataProcessor:
         top_services_list = top_service_df["service"].tolist()
 
         # Get net costs and aggregate
-        net_df = self._get_usage_cost_df()
+        net_df = self._get_net_cost_df()
         result = (
             net_df.filter(pl.col("service").is_in(top_services_list))
             .group_by(["year_month", "service"])
@@ -630,7 +617,7 @@ class CURDataProcessor:
         top_accounts_list = top_account_df["account_id"].tolist()
 
         # Get net costs and aggregate
-        net_df = self._get_usage_cost_df()
+        net_df = self._get_net_cost_df()
         result = (
             net_df.filter(pl.col("account_id").is_in(top_accounts_list))
             .group_by(["year_month", "account_id"])
@@ -643,7 +630,7 @@ class CURDataProcessor:
 
     def get_monthly_summary(self) -> pd.DataFrame:
         """
-        Get monthly USAGE cost summary (excludes credits/discounts shown separately).
+        Get monthly NET cost summary (matches AWS billing after all discounts).
 
         Returns:
             Pandas DataFrame with monthly aggregated costs
@@ -654,7 +641,7 @@ class CURDataProcessor:
         logger.info("Calculating monthly summary...")
 
         # Get net costs
-        net_df = self._get_usage_cost_df()
+        net_df = self._get_net_cost_df()
 
         result = (
             net_df.group_by("year_month")
@@ -748,7 +735,7 @@ class CURDataProcessor:
 
     def get_cost_by_region(self, top_n: Optional[int] = None) -> pd.DataFrame:
         """
-        Aggregate USAGE costs by region (excludes credits/discounts shown separately).
+        Aggregate NET costs by region (matches AWS billing after all discounts).
 
         Args:
             top_n: Return only top N regions by cost
@@ -766,7 +753,7 @@ class CURDataProcessor:
         logger.info("Calculating cost by region...")
 
         # Get net costs
-        net_df = self._get_usage_cost_df()
+        net_df = self._get_net_cost_df()
 
         result = (
             net_df.group_by("region")
@@ -806,7 +793,7 @@ class CURDataProcessor:
         top_regions_list = top_region_df["region"].tolist()
 
         # Get net costs and aggregate
-        net_df = self._get_usage_cost_df()
+        net_df = self._get_net_cost_df()
         result = (
             net_df.filter(pl.col("region").is_in(top_regions_list))
             .group_by(["year_month", "region"])
@@ -833,9 +820,9 @@ class CURDataProcessor:
 
         logger.info("Calculating monthly discounts trend...")
 
-        # Discount-related line item types
+        # Discount-related line item types (negative values that reduce your bill)
         discount_types = [
-            "SavingsPlanNegation",
+            "SavingsPlanNegation",  # SP savings (paired with SavingsPlanCoveredUsage in charges)
             "EdpDiscount",
             "PrivateRateDiscount",
             "BundledDiscount",
@@ -889,9 +876,9 @@ class CURDataProcessor:
 
         top_services_list = top_service_df["service"].tolist()
 
-        # Discount-related line item types
+        # Discount-related line item types (negative values that reduce your bill)
         discount_types = [
-            "SavingsPlanNegation",
+            "SavingsPlanNegation",  # SP savings (paired with SavingsPlanCoveredUsage in charges)
             "EdpDiscount",
             "PrivateRateDiscount",
             "BundledDiscount",
@@ -1031,23 +1018,19 @@ class CURDataProcessor:
                 else:
                     date_end = str(max_date)
 
-        # Calculate usage cost (charges only, excludes credits/discounts)
-        usage_df = self._get_usage_cost_df()
-        usage_total = float(usage_df["cost"].sum()) if "cost" in usage_df.columns else 0.0
-
-        # Calculate actual net cost (all line items - what you actually pay)
+        # Calculate net cost (all line items - matches AWS billing)
         net_total = float(df["cost"].sum()) if "cost" in df.columns else 0.0
 
-        # Calculate total discounts from the discounts summary
+        # Calculate total discounts from the discounts summary (for informational display)
         discounts_df = self.get_discounts_summary()
         total_discounts = (
             float(discounts_df["total_discount"].sum()) if not discounts_df.empty else 0.0
         )
 
         summary: Dict[str, Any] = {
-            "total_cost": usage_total,  # Usage charges (shown in main charts)
-            "net_cost": net_total,  # Actual bill after credits/discounts
-            "total_discounts": total_discounts,  # Sum of all credits/discounts (positive value)
+            "total_cost": net_total,  # Net cost (matches AWS billing)
+            "net_cost": net_total,  # Same as total_cost (for compatibility)
+            "total_discounts": total_discounts,  # Discounts/credits received (positive value)
             "num_accounts": int(df["account_id"].n_unique()) if "account_id" in df.columns else 0,
             "num_services": int(df["service"].n_unique()) if "service" in df.columns else 0,
             "date_range_start": date_start,

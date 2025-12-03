@@ -175,7 +175,7 @@ class CURVisualizer:
                     trigger="axis",
                     is_confine=True,
                     background_color="transparent",
-                    border_color="transparent", 
+                    border_color="transparent",
                     border_width=0,
                     extra_css_text="box-shadow: none;",
                     formatter=JsCode(
@@ -279,31 +279,31 @@ class CURVisualizer:
                     trigger="axis",
                     is_confine=True,
                     background_color="transparent",
-                    border_color="transparent", 
+                    border_color="transparent",
                     border_width=0,
                     extra_css_text="box-shadow: none;",
                     formatter=JsCode(
-                            """function(params) {
+                        """function(params) {
                                 return '<div style="' + `"""
-                            + self._get_tooltip_style()
-                            + """` + '">' +
+                        + self._get_tooltip_style()
+                        + """` + '">' +
                                     '<strong style="font-size: 12px;">Account ID</strong><br/>' +
                                     '<span style="font-size: 11px; opacity: 0.9;">' + params[0].name + '</span><br/><br/>' +
                                     '<span style="opacity: 0.9;">Total Cost: </span>' +
                                     '<strong style="font-size: 13px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
                                     '</div>';
                             }"""
-                        ),
-                        textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
                     ),
-                    toolbox_opts=opts.ToolboxOpts(
-                        is_show=True,
-                        feature=opts.ToolBoxFeatureOpts(
-                            save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
-                            restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                            data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                        ),
+                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
+                ),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
                     ),
+                ),
             )
         )
 
@@ -386,7 +386,7 @@ class CURVisualizer:
                 trigger="axis",
                 is_confine=True,
                 background_color="transparent",
-                border_color="transparent", 
+                border_color="transparent",
                 border_width=0,
                 extra_css_text="box-shadow: none;",
                 formatter=JsCode(
@@ -514,7 +514,7 @@ class CURVisualizer:
                 trigger="axis",
                 is_confine=True,
                 background_color="transparent",
-                border_color="transparent", 
+                border_color="transparent",
                 border_width=0,
                 extra_css_text="box-shadow: none;",
                 formatter=JsCode(
@@ -641,7 +641,7 @@ class CURVisualizer:
                     trigger="item",
                     is_confine=True,
                     background_color="transparent",
-                    border_color="transparent", 
+                    border_color="transparent",
                     border_width=0,
                     extra_css_text="box-shadow: none;",
                     formatter=JsCode(
@@ -739,7 +739,7 @@ class CURVisualizer:
                     trigger="item",
                     is_confine=True,
                     background_color="transparent",
-                    border_color="transparent", 
+                    border_color="transparent",
                     border_width=0,
                     extra_css_text="box-shadow: none;",
                     formatter=JsCode(
@@ -845,7 +845,7 @@ class CURVisualizer:
                 trigger="axis",
                 is_confine=True,
                 background_color="transparent",
-                border_color="transparent", 
+                border_color="transparent",
                 border_width=0,
                 extra_css_text="box-shadow: none;",
                 formatter=JsCode(
@@ -986,7 +986,7 @@ class CURVisualizer:
                 trigger="axis",
                 is_confine=True,
                 background_color="transparent",
-                border_color="transparent", 
+                border_color="transparent",
                 border_width=0,
                 extra_css_text="box-shadow: none;",
                 formatter=JsCode(
@@ -1090,7 +1090,7 @@ class CURVisualizer:
                     trigger="axis",
                     is_confine=True,
                     background_color="transparent",
-                    border_color="transparent", 
+                    border_color="transparent",
                     border_width=0,
                     extra_css_text="box-shadow: none;",
                     formatter=JsCode(
@@ -1209,7 +1209,7 @@ class CURVisualizer:
                     trigger="axis",
                     is_confine=True,
                     background_color="transparent",
-                    border_color="transparent", 
+                    border_color="transparent",
                     border_width=0,
                     extra_css_text="box-shadow: none;",
                     formatter=JsCode(
@@ -1304,7 +1304,7 @@ class CURVisualizer:
                     trigger="axis",
                     is_confine=True,
                     background_color="transparent",
-                    border_color="transparent", 
+                    border_color="transparent",
                     border_width=0,
                     extra_css_text="box-shadow: none;",
                     formatter=JsCode(

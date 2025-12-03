@@ -177,11 +177,11 @@
         
     <style>.box { justify-content:center; display:flex; flex-wrap:wrap;  } </style>
     <div class="box">
-                <div id="a6d3bd75b8884a7c97f17cbba36093c8" class="chart-container" style="width:100%; height:500px; "></div>
+                <div id="1a40eb62107d4c7a9718249425cbc111" class="chart-container" style="width:100%; height:500px; "></div>
     <script>
-        var chart_a6d3bd75b8884a7c97f17cbba36093c8 = echarts.init(
-            document.getElementById('a6d3bd75b8884a7c97f17cbba36093c8'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_a6d3bd75b8884a7c97f17cbba36093c8 = {
+        var chart_1a40eb62107d4c7a9718249425cbc111 = echarts.init(
+            document.getElementById('1a40eb62107d4c7a9718249425cbc111'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_1a40eb62107d4c7a9718249425cbc111 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -269,22 +269,25 @@
         "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
-            "type": "shadow"
+            "type": "line"
         },
         "showContent": true,
         "alwaysShowContent": false,
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                '<strong style=\"font-size: 15px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                '<strong style=\"font-size: 13px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "xAxis": [
@@ -442,16 +445,16 @@
         }
     }
 };
-        chart_a6d3bd75b8884a7c97f17cbba36093c8.setOption(option_a6d3bd75b8884a7c97f17cbba36093c8);
+        chart_1a40eb62107d4c7a9718249425cbc111.setOption(option_1a40eb62107d4c7a9718249425cbc111);
             window.addEventListener('resize', function(){
-                chart_a6d3bd75b8884a7c97f17cbba36093c8.resize();
+                chart_1a40eb62107d4c7a9718249425cbc111.resize();
             })
     </script>
-<br/>                <div id="ca71adf0e9234edfb8420aa0a865714f" class="chart-container" style="width:100%; height:500px; "></div>
+<br/>                <div id="3eef6598f4f44353a94a310ea711726f" class="chart-container" style="width:100%; height:500px; "></div>
     <script>
-        var chart_ca71adf0e9234edfb8420aa0a865714f = echarts.init(
-            document.getElementById('ca71adf0e9234edfb8420aa0a865714f'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_ca71adf0e9234edfb8420aa0a865714f = {
+        var chart_3eef6598f4f44353a94a310ea711726f = echarts.init(
+            document.getElementById('3eef6598f4f44353a94a310ea711726f'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_3eef6598f4f44353a94a310ea711726f = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -534,22 +537,25 @@
         "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
-            "type": "shadow"
+            "type": "line"
         },
         "showContent": true,
         "alwaysShowContent": false,
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">Account ID</strong><br/>' +                                '<span style=\"font-size: 13px; opacity: 0.9;\">' + params[0].name + '</span><br/><br/>' +                                '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                '<strong style=\"font-size: 15px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
+        "formatter": function(params) {                                return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                    '<strong style=\"font-size: 12px;\">Account ID</strong><br/>' +                                    '<span style=\"font-size: 11px; opacity: 0.9;\">' + params[0].name + '</span><br/><br/>' +                                    '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                    '<strong style=\"font-size: 13px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                    '</div>';                            },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "xAxis": [
@@ -701,16 +707,16 @@
         }
     }
 };
-        chart_ca71adf0e9234edfb8420aa0a865714f.setOption(option_ca71adf0e9234edfb8420aa0a865714f);
+        chart_3eef6598f4f44353a94a310ea711726f.setOption(option_3eef6598f4f44353a94a310ea711726f);
             window.addEventListener('resize', function(){
-                chart_ca71adf0e9234edfb8420aa0a865714f.resize();
+                chart_3eef6598f4f44353a94a310ea711726f.resize();
             })
     </script>
-<br/>                <div id="93ffe73b151f4816ac5327530a1e37e8" class="chart-container" style="width:100%; height:650px; "></div>
+<br/>                <div id="0e38886445d748a18254af79936c569b" class="chart-container" style="width:100%; height:650px; "></div>
     <script>
-        var chart_93ffe73b151f4816ac5327530a1e37e8 = echarts.init(
-            document.getElementById('93ffe73b151f4816ac5327530a1e37e8'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_93ffe73b151f4816ac5327530a1e37e8 = {
+        var chart_0e38886445d748a18254af79936c569b = echarts.init(
+            document.getElementById('0e38886445d748a18254af79936c569b'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_0e38886445d748a18254af79936c569b = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -1007,22 +1013,25 @@
         "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
-            "type": "cross"
+            "type": "line"
         },
         "showContent": true,
         "alwaysShowContent": false,
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 4px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">' + item.seriesName + ':</span> ';                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
+        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 2px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">' + item.seriesName + ':</span> ';                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "xAxis": [
@@ -1216,16 +1225,16 @@
         }
     ]
 };
-        chart_93ffe73b151f4816ac5327530a1e37e8.setOption(option_93ffe73b151f4816ac5327530a1e37e8);
+        chart_0e38886445d748a18254af79936c569b.setOption(option_0e38886445d748a18254af79936c569b);
             window.addEventListener('resize', function(){
-                chart_93ffe73b151f4816ac5327530a1e37e8.resize();
+                chart_0e38886445d748a18254af79936c569b.resize();
             })
     </script>
-<br/>                <div id="c204729f47134a35b65f84b9aafd23cc" class="chart-container" style="width:100%; height:650px; "></div>
+<br/>                <div id="566ea2a446be4808b8367c95fe5cffd8" class="chart-container" style="width:100%; height:650px; "></div>
     <script>
-        var chart_c204729f47134a35b65f84b9aafd23cc = echarts.init(
-            document.getElementById('c204729f47134a35b65f84b9aafd23cc'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_c204729f47134a35b65f84b9aafd23cc = {
+        var chart_566ea2a446be4808b8367c95fe5cffd8 = echarts.init(
+            document.getElementById('566ea2a446be4808b8367c95fe5cffd8'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_566ea2a446be4808b8367c95fe5cffd8 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -1398,22 +1407,25 @@
         "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
-            "type": "cross"
+            "type": "line"
         },
         "showContent": true,
         "alwaysShowContent": false,
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 4px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">Account ' + item.seriesName + ':</span> ';                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
+        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 2px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">Account ' + item.seriesName + ':</span> ';                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "xAxis": [
@@ -1607,16 +1619,16 @@
         }
     ]
 };
-        chart_c204729f47134a35b65f84b9aafd23cc.setOption(option_c204729f47134a35b65f84b9aafd23cc);
+        chart_566ea2a446be4808b8367c95fe5cffd8.setOption(option_566ea2a446be4808b8367c95fe5cffd8);
             window.addEventListener('resize', function(){
-                chart_c204729f47134a35b65f84b9aafd23cc.resize();
+                chart_566ea2a446be4808b8367c95fe5cffd8.resize();
             })
     </script>
-<br/>                <div id="2a4bb6158c754618bac6240306e09bd3" class="chart-container" style="width:100%; height:600px; "></div>
+<br/>                <div id="9946ea349d804dd781fea9b986681e34" class="chart-container" style="width:100%; height:600px; "></div>
     <script>
-        var chart_2a4bb6158c754618bac6240306e09bd3 = echarts.init(
-            document.getElementById('2a4bb6158c754618bac6240306e09bd3'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_2a4bb6158c754618bac6240306e09bd3 = {
+        var chart_9946ea349d804dd781fea9b986681e34 = echarts.init(
+            document.getElementById('9946ea349d804dd781fea9b986681e34'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_9946ea349d804dd781fea9b986681e34 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -1727,15 +1739,18 @@
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                            var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        `;                            return '<div style=\"' + style + '\">' +                                '<strong style=\"font-size: 14px;\">Cost Breakdown</strong><br/><br/>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Account: </span><strong>' + params.name + '</strong></div>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Service: </span><strong>' + params.value[0] + '</strong></div>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value[2].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '</div>';                        },
+        "formatter": function(params) {                            var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        `;                            return '<div style=\"' + style + '\">' +                                '<strong style=\"font-size: 12px;\">Cost Breakdown</strong><br/><br/>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Account: </span><strong>' + params.name + '</strong></div>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Service: </span><strong>' + params.value[0] + '</strong></div>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value[2].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '</div>';                        },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "xAxis": [
@@ -1911,16 +1926,16 @@
         "borderWidth": 0
     }
 };
-        chart_2a4bb6158c754618bac6240306e09bd3.setOption(option_2a4bb6158c754618bac6240306e09bd3);
+        chart_9946ea349d804dd781fea9b986681e34.setOption(option_9946ea349d804dd781fea9b986681e34);
             window.addEventListener('resize', function(){
-                chart_2a4bb6158c754618bac6240306e09bd3.resize();
+                chart_9946ea349d804dd781fea9b986681e34.resize();
             })
     </script>
-<br/>                <div id="78f649c0e34a4ed2946cf3df56dd9a1d" class="chart-container" style="width:100%; height:600px; "></div>
+<br/>                <div id="c7ae8da46c1642908d5d979bf65121db" class="chart-container" style="width:100%; height:600px; "></div>
     <script>
-        var chart_78f649c0e34a4ed2946cf3df56dd9a1d = echarts.init(
-            document.getElementById('78f649c0e34a4ed2946cf3df56dd9a1d'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_78f649c0e34a4ed2946cf3df56dd9a1d = {
+        var chart_c7ae8da46c1642908d5d979bf65121db = echarts.init(
+            document.getElementById('c7ae8da46c1642908d5d979bf65121db'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_c7ae8da46c1642908d5d979bf65121db = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -2078,15 +2093,18 @@
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">' + params.name + '</strong><br/><br/>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +                                '</div>';                        },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params.name + '</strong><br/><br/>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +                                '</div>';                        },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "title": [
@@ -2157,16 +2175,16 @@
         }
     }
 };
-        chart_78f649c0e34a4ed2946cf3df56dd9a1d.setOption(option_78f649c0e34a4ed2946cf3df56dd9a1d);
+        chart_c7ae8da46c1642908d5d979bf65121db.setOption(option_c7ae8da46c1642908d5d979bf65121db);
             window.addEventListener('resize', function(){
-                chart_78f649c0e34a4ed2946cf3df56dd9a1d.resize();
+                chart_c7ae8da46c1642908d5d979bf65121db.resize();
             })
     </script>
-<br/>                <div id="a2589fe5a234428ab2f2421c3eb2dc8c" class="chart-container" style="width:100%; height:600px; "></div>
+<br/>                <div id="b43d220fe7f24aff9d3a056346e81da3" class="chart-container" style="width:100%; height:600px; "></div>
     <script>
-        var chart_a2589fe5a234428ab2f2421c3eb2dc8c = echarts.init(
-            document.getElementById('a2589fe5a234428ab2f2421c3eb2dc8c'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_a2589fe5a234428ab2f2421c3eb2dc8c = {
+        var chart_b43d220fe7f24aff9d3a056346e81da3 = echarts.init(
+            document.getElementById('b43d220fe7f24aff9d3a056346e81da3'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_b43d220fe7f24aff9d3a056346e81da3 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -2304,15 +2322,18 @@
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">' + params.name + '</strong><br/><br/>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +                                '</div>';                        },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params.name + '</strong><br/><br/>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +                                '</div>';                        },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "title": [
@@ -2383,16 +2404,16 @@
         }
     }
 };
-        chart_a2589fe5a234428ab2f2421c3eb2dc8c.setOption(option_a2589fe5a234428ab2f2421c3eb2dc8c);
+        chart_b43d220fe7f24aff9d3a056346e81da3.setOption(option_b43d220fe7f24aff9d3a056346e81da3);
             window.addEventListener('resize', function(){
-                chart_a2589fe5a234428ab2f2421c3eb2dc8c.resize();
+                chart_b43d220fe7f24aff9d3a056346e81da3.resize();
             })
     </script>
-<br/>                <div id="ae5a19e90d80483ca6e0d1a394e30b2b" class="chart-container" style="width:100%; height:600px; "></div>
+<br/>                <div id="a743d3540ec94655ab154ac6d69cf98b" class="chart-container" style="width:100%; height:600px; "></div>
     <script>
-        var chart_ae5a19e90d80483ca6e0d1a394e30b2b = echarts.init(
-            document.getElementById('ae5a19e90d80483ca6e0d1a394e30b2b'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_ae5a19e90d80483ca6e0d1a394e30b2b = {
+        var chart_a743d3540ec94655ab154ac6d69cf98b = echarts.init(
+            document.getElementById('a743d3540ec94655ab154ac6d69cf98b'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_a743d3540ec94655ab154ac6d69cf98b = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -2539,22 +2560,25 @@
         "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
-            "type": "shadow"
+            "type": "line"
         },
         "showContent": true,
         "alwaysShowContent": false,
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 4px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">' + item.seriesName + ':</span> ';                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
+        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 2px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">' + item.seriesName + ':</span> ';                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "xAxis": [
@@ -2707,16 +2731,16 @@
         }
     }
 };
-        chart_ae5a19e90d80483ca6e0d1a394e30b2b.setOption(option_ae5a19e90d80483ca6e0d1a394e30b2b);
+        chart_a743d3540ec94655ab154ac6d69cf98b.setOption(option_a743d3540ec94655ab154ac6d69cf98b);
             window.addEventListener('resize', function(){
-                chart_ae5a19e90d80483ca6e0d1a394e30b2b.resize();
+                chart_a743d3540ec94655ab154ac6d69cf98b.resize();
             })
     </script>
-<br/>                <div id="0bfced75004141c89050b8fb900420b6" class="chart-container" style="width:100%; height:650px; "></div>
+<br/>                <div id="d6692e71347740e1876a7b5f5c36f055" class="chart-container" style="width:100%; height:650px; "></div>
     <script>
-        var chart_0bfced75004141c89050b8fb900420b6 = echarts.init(
-            document.getElementById('0bfced75004141c89050b8fb900420b6'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_0bfced75004141c89050b8fb900420b6 = {
+        var chart_d6692e71347740e1876a7b5f5c36f055 = echarts.init(
+            document.getElementById('d6692e71347740e1876a7b5f5c36f055'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_d6692e71347740e1876a7b5f5c36f055 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -2816,7 +2840,7 @@
     ],
     "tooltip": {
         "show": true,
-        "trigger": "item",
+        "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
             "type": "line"
@@ -2826,15 +2850,18 @@
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                        var value = params.value;                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 14px;\">' + params.seriesName + '</strong><br/><br/>';                        result += '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Month: </span><strong>' + value[0] + '</strong></div>';                        result += '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Cost: </span><strong>$' + value[1].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';                        result += '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Average: </span><strong>$' + value[3].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';                        result += '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Change: </span><strong style=\"color: ' + (value[4] > 0 ? '#ff6b6b' : '#51cf66') + ';\">' + (value[4] > 0 ? '+' : '') + value[4].toFixed(1) + '%</strong></div>';                        result += '<div style=\"margin: 4px 0;\"><span style=\"opacity: 0.9;\">Z-Score: </span><strong>' + value[2].toFixed(2) + '</strong></div>';                        result += '</div>';                        return result;                    },
+        "formatter": function(params) {                        var value = params.value;                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 12px;\">' + params.seriesName + '</strong><br/><br/>';                        result += '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Month: </span><strong>' + value[0] + '</strong></div>';                        result += '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Cost: </span><strong>$' + value[1].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';                        result += '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Average: </span><strong>$' + value[3].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';                        result += '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Change: </span><strong style=\"color: ' + (value[4] > 0 ? '#ff6b6b' : '#51cf66') + ';\">' + (value[4] > 0 ? '+' : '') + value[4].toFixed(1) + '%</strong></div>';                        result += '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Z-Score: </span><strong>' + value[2].toFixed(2) + '</strong></div>';                        result += '</div>';                        return result;                    },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "xAxis": [
@@ -3019,16 +3046,16 @@
         }
     ]
 };
-        chart_0bfced75004141c89050b8fb900420b6.setOption(option_0bfced75004141c89050b8fb900420b6);
+        chart_d6692e71347740e1876a7b5f5c36f055.setOption(option_d6692e71347740e1876a7b5f5c36f055);
             window.addEventListener('resize', function(){
-                chart_0bfced75004141c89050b8fb900420b6.resize();
+                chart_d6692e71347740e1876a7b5f5c36f055.resize();
             })
     </script>
-<br/>                <div id="5dbbe51c9b544ae4ab5c8fe570d41065" class="chart-container" style="width:100%; height:500px; "></div>
+<br/>                <div id="675abc07f848469f98c7f983dc55f7fd" class="chart-container" style="width:100%; height:500px; "></div>
     <script>
-        var chart_5dbbe51c9b544ae4ab5c8fe570d41065 = echarts.init(
-            document.getElementById('5dbbe51c9b544ae4ab5c8fe570d41065'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_5dbbe51c9b544ae4ab5c8fe570d41065 = {
+        var chart_675abc07f848469f98c7f983dc55f7fd = echarts.init(
+            document.getElementById('675abc07f848469f98c7f983dc55f7fd'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_675abc07f848469f98c7f983dc55f7fd = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -3111,22 +3138,25 @@
         "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
-            "type": "shadow"
+            "type": "line"
         },
         "showContent": true,
         "alwaysShowContent": false,
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                '<strong style=\"font-size: 15px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                '<strong style=\"font-size: 13px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "xAxis": [
@@ -3279,16 +3309,16 @@
         }
     }
 };
-        chart_5dbbe51c9b544ae4ab5c8fe570d41065.setOption(option_5dbbe51c9b544ae4ab5c8fe570d41065);
+        chart_675abc07f848469f98c7f983dc55f7fd.setOption(option_675abc07f848469f98c7f983dc55f7fd);
             window.addEventListener('resize', function(){
-                chart_5dbbe51c9b544ae4ab5c8fe570d41065.resize();
+                chart_675abc07f848469f98c7f983dc55f7fd.resize();
             })
     </script>
-<br/>                <div id="831ede3805914ed9bbe54b2a53212ed4" class="chart-container" style="width:100%; height:400px; "></div>
+<br/>                <div id="713c02655b2b4c51a9364d0e2f918927" class="chart-container" style="width:100%; height:400px; "></div>
     <script>
-        var chart_831ede3805914ed9bbe54b2a53212ed4 = echarts.init(
-            document.getElementById('831ede3805914ed9bbe54b2a53212ed4'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_831ede3805914ed9bbe54b2a53212ed4 = {
+        var chart_713c02655b2b4c51a9364d0e2f918927 = echarts.init(
+            document.getElementById('713c02655b2b4c51a9364d0e2f918927'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_713c02655b2b4c51a9364d0e2f918927 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -3332,12 +3362,7 @@
             },
             "itemStyle": {
                 "color": function(params) {                            var colors = {                                'Savings Plans': '#91cc75',                                'Enterprise Discount (EDP)': '#5470c6',                                'Private Rate Discount': '#ee6666',                                'Bundled Discount': '#fac858',                                'Credits': '#73c0de'                            };                            return colors[params.name] || '#91cc75';                        },
-                "borderRadius": [
-                    0,
-                    8,
-                    8,
-                    0
-                ]
+                "borderRadius": 8
             }
         }
     ],
@@ -3373,22 +3398,25 @@
         "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
-            "type": "shadow"
+            "type": "line"
         },
         "showContent": true,
         "alwaysShowContent": false,
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Discount: </span>' +                                '<strong style=\"font-size: 15px; color: #91cc75;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Discount: </span>' +                                '<strong style=\"font-size: 13px; color: #91cc75;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "xAxis": [
@@ -3536,16 +3564,16 @@
         }
     }
 };
-        chart_831ede3805914ed9bbe54b2a53212ed4.setOption(option_831ede3805914ed9bbe54b2a53212ed4);
+        chart_713c02655b2b4c51a9364d0e2f918927.setOption(option_713c02655b2b4c51a9364d0e2f918927);
             window.addEventListener('resize', function(){
-                chart_831ede3805914ed9bbe54b2a53212ed4.resize();
+                chart_713c02655b2b4c51a9364d0e2f918927.resize();
             })
     </script>
-<br/>                <div id="e4f7c134eff44022b9337c7ef471ecd0" class="chart-container" style="width:100%; height:500px; "></div>
+<br/>                <div id="6d45d46c9f5343ea922520401eb07fe8" class="chart-container" style="width:100%; height:500px; "></div>
     <script>
-        var chart_e4f7c134eff44022b9337c7ef471ecd0 = echarts.init(
-            document.getElementById('e4f7c134eff44022b9337c7ef471ecd0'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_e4f7c134eff44022b9337c7ef471ecd0 = {
+        var chart_6d45d46c9f5343ea922520401eb07fe8 = echarts.init(
+            document.getElementById('6d45d46c9f5343ea922520401eb07fe8'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_6d45d46c9f5343ea922520401eb07fe8 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -3628,22 +3656,25 @@
         "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
-            "type": "shadow"
+            "type": "line"
         },
         "showContent": true,
         "alwaysShowContent": false,
         "showDelay": 0,
         "hideDelay": 100,
         "enterable": false,
-        "confine": false,
+        "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 8px;            padding: 12px 16px;            box-shadow: 0 4px 12px rgba(0,0,0,0.15);            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 13px;            line-height: 1.6;        ` + '\">' +                                '<strong style=\"font-size: 14px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Discount: </span>' +                                '<strong style=\"font-size: 15px; color: #91cc75;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
+        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Discount: </span>' +                                '<strong style=\"font-size: 13px; color: #91cc75;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
         "textStyle": {
             "color": "#ffffff"
         },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
         "borderWidth": 0,
         "padding": 5,
+        "extraCssText": "box-shadow: none;",
         "order": "seriesAsc"
     },
     "xAxis": [
@@ -3796,9 +3827,9 @@
         }
     }
 };
-        chart_e4f7c134eff44022b9337c7ef471ecd0.setOption(option_e4f7c134eff44022b9337c7ef471ecd0);
+        chart_6d45d46c9f5343ea922520401eb07fe8.setOption(option_6d45d46c9f5343ea922520401eb07fe8);
             window.addEventListener('resize', function(){
-                chart_e4f7c134eff44022b9337c7ef471ecd0.resize();
+                chart_6d45d46c9f5343ea922520401eb07fe8.resize();
             })
     </script>
 <br/>    </div>
@@ -3810,7 +3841,7 @@
                     </div>
                 </div>
                 <div class="footer">
-                    <strong>Report generated on 2025-12-03 10:02:17</strong><br>
+                    <strong>Report generated on 2025-12-03 10:51:26</strong><br>
                     Powered by Apache ECharts | AWS Cost and Usage Report Generator
                 </div>
             </div>

@@ -55,7 +55,7 @@ These skills provide domain knowledge:
 
 ## Project Overview
 
-**What it does:** Generates comprehensive, interactive HTML reports from AWS Cost and Usage Reports (CUR) data stored in S3. Provides 13 different visualizations, statistical anomaly detection, and trend analysis.
+**What it does:** Generates comprehensive, interactive HTML reports from AWS Cost and Usage Reports (CUR) data stored in S3. Provides 9 different visualizations with monthly trend analysis, statistical anomaly detection, and savings plan effectiveness tracking.
 
 **Key requirements:**
 - Easy CLI interface for end users
@@ -145,30 +145,29 @@ processor = CURDataProcessor(df)
 processor.prepare_data()                    # Clean and normalize
 processor.get_cost_by_service(top_n=10)     # Service aggregation
 processor.get_cost_by_account()             # Account aggregation
-processor.get_daily_cost_trend()            # Daily trends with moving avg
+processor.get_cost_trend_by_service()       # Monthly trends by service
+processor.get_cost_trend_by_account()       # Monthly trends by account
+processor.get_cost_trend_by_region()        # Monthly trends by region
 processor.detect_cost_anomalies()           # Statistical outliers
-processor.get_discounts_summary()           # Discount analysis
-processor.get_savings_plan_analysis()       # Savings plan effectiveness
+processor.get_discounts_trend()             # Monthly discounts by type
+processor.get_discounts_by_service_trend()  # Monthly discounts by service
+processor.get_savings_plan_trend()          # Monthly savings plan effectiveness
 ```
 
 ### 3. Visualizer (`src/visualizer.py`)
 
 **Class:** `CURVisualizer`
 
-**13 chart types:**
-1. Cost by Service (bar)
-2. Cost by Account (bar)
-3. Daily Cost Trends with Moving Averages (line)
-4. Service Cost Trends (multi-line)
-5. Account Cost Trends (multi-line)
-6. Account vs Service Heatmap
-7. Service Cost Distribution (pie)
-8. Account Cost Distribution (pie)
-9. Monthly Summary (bar with trend)
-10. Cost Anomalies (scatter with z-scores)
-11. Cost by Region (bar)
-12. Discounts/Credits Analysis (bar)
-13. Savings Plan Effectiveness (bar)
+**9 chart types (all with monthly context as bar charts):**
+1. Service Cost Trends (bar) - Monthly breakdown by service
+2. Account Cost Trends (bar) - Monthly breakdown by account
+3. Account vs Service Heatmap - Cross-dimensional view
+4. Monthly Summary (bar) - Total costs per month
+5. Cost Anomalies (scatter with z-scores) - Monthly anomaly detection
+6. Region Cost Trends (bar) - Monthly breakdown by region
+7. Discounts Trend by Type (stacked bar) - Monthly discount analysis
+8. Discounts Trend by Service (bar) - Monthly discounts per service
+9. Savings Plan Effectiveness (bar) - Monthly SP savings with percentage
 
 **Key method:**
 ```python

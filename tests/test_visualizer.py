@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from pyecharts.charts import Bar, HeatMap, Line, Pie, Scatter
+from pyecharts.charts import Bar, HeatMap, Scatter
 from pyecharts.globals import ThemeType
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -29,29 +29,6 @@ class TestCURVisualizer:
 
         assert visualizer.theme == ThemeType.SHINE
 
-    def test_create_cost_by_service_chart(self, sample_aggregated_data):
-        """Test creation of cost by service chart."""
-        visualizer = CURVisualizer()
-        chart = visualizer.create_cost_by_service_chart(
-            sample_aggregated_data["cost_by_service"], top_n=3
-        )
-
-        assert chart is not None
-        assert isinstance(chart, Bar)
-        assert len(visualizer.charts) == 1
-        assert visualizer.charts[0][0] == "cost_by_service"
-
-    def test_create_cost_by_account_chart(self, sample_aggregated_data):
-        """Test creation of cost by account chart."""
-        visualizer = CURVisualizer()
-        chart = visualizer.create_cost_by_account_chart(
-            sample_aggregated_data["cost_by_account"], top_n=2
-        )
-
-        assert chart is not None
-        assert isinstance(chart, Bar)
-        assert len(visualizer.charts) == 1
-
     def test_create_service_trend_chart(self):
         """Test creation of service trend chart."""
         df = pd.DataFrame(
@@ -66,7 +43,7 @@ class TestCURVisualizer:
         chart = visualizer.create_service_trend_chart(df)
 
         assert chart is not None
-        assert isinstance(chart, Line)
+        assert isinstance(chart, Bar)
 
     def test_create_account_trend_chart(self):
         """Test creation of account trend chart."""
@@ -82,7 +59,7 @@ class TestCURVisualizer:
         chart = visualizer.create_account_trend_chart(df)
 
         assert chart is not None
-        assert isinstance(chart, Line)
+        assert isinstance(chart, Bar)
 
     def test_create_account_service_heatmap(self):
         """Test creation of account-service heatmap."""
@@ -99,29 +76,6 @@ class TestCURVisualizer:
 
         assert chart is not None
         assert isinstance(chart, HeatMap)
-
-    def test_create_cost_distribution_pie(self, sample_aggregated_data):
-        """Test creation of pie chart."""
-        visualizer = CURVisualizer()
-        chart = visualizer.create_cost_distribution_pie(
-            sample_aggregated_data["cost_by_service"], category="service", top_n=3
-        )
-
-        assert chart is not None
-        assert isinstance(chart, Pie)
-
-    def test_create_cost_distribution_pie_with_other(self):
-        """Test pie chart with 'Other' category."""
-        df = pd.DataFrame(
-            {"service": [f"Service{i}" for i in range(15)], "total_cost": [100.0] * 15}
-        )
-
-        visualizer = CURVisualizer()
-        chart = visualizer.create_cost_distribution_pie(df, category="service", top_n=5)
-
-        assert chart is not None
-        assert isinstance(chart, Pie)
-        # The chart has been created with grouped data
 
     def test_create_monthly_summary_chart(self):
         """Test creation of monthly summary chart."""
@@ -164,28 +118,24 @@ class TestCURVisualizer:
         assert chart is not None
         assert isinstance(chart, Scatter)
 
-    def test_create_region_chart(self):
-        """Test creation of region chart."""
-        df = pd.DataFrame(
-            {
-                "region": ["us-east-1", "us-west-2", "eu-west-1"],
-                "total_cost": [1000.0, 800.0, 600.0],
-            }
-        )
-
-        visualizer = CURVisualizer()
-        chart = visualizer.create_region_chart(df, top_n=3)
-
-        assert chart is not None
-        assert isinstance(chart, Bar)
-
-    def test_generate_html_report(self, sample_aggregated_data, temp_output_dir):
+    def test_generate_html_report(self, temp_output_dir):
         """Test HTML report generation."""
         visualizer = CURVisualizer()
 
-        # Create some charts
-        visualizer.create_cost_by_service_chart(sample_aggregated_data["cost_by_service"])
-        visualizer.create_cost_by_account_chart(sample_aggregated_data["cost_by_account"])
+        # Create some charts using trend methods
+        service_trend = pd.DataFrame(
+            {
+                "month": ["2024-01", "2024-02"] * 2,
+                "service": ["AmazonEC2"] * 2 + ["AmazonS3"] * 2,
+                "total_cost": [100.0, 120.0, 50.0, 60.0],
+            }
+        )
+        visualizer.create_service_trend_chart(service_trend)
+
+        monthly_summary = pd.DataFrame(
+            {"month": ["2024-01", "2024-02"], "total_cost": [150.0, 180.0]}
+        )
+        visualizer.create_monthly_summary_chart(monthly_summary)
 
         summary_stats = {
             "total_cost": 10000.0,
@@ -231,12 +181,27 @@ class TestCURVisualizer:
 
         assert Path(output_path).exists()
 
-    def test_multiple_charts_accumulation(self, sample_aggregated_data):
+    def test_multiple_charts_accumulation(self):
         """Test that multiple charts are accumulated correctly."""
         visualizer = CURVisualizer()
 
-        visualizer.create_cost_by_service_chart(sample_aggregated_data["cost_by_service"])
-        visualizer.create_cost_by_account_chart(sample_aggregated_data["cost_by_account"])
+        service_trend = pd.DataFrame(
+            {
+                "month": ["2024-01", "2024-02"] * 2,
+                "service": ["AmazonEC2"] * 2 + ["AmazonS3"] * 2,
+                "total_cost": [100.0, 120.0, 50.0, 60.0],
+            }
+        )
+        visualizer.create_service_trend_chart(service_trend)
+
+        account_trend = pd.DataFrame(
+            {
+                "month": ["2024-01", "2024-02"] * 2,
+                "account_id": ["111111111111"] * 2 + ["222222222222"] * 2,
+                "total_cost": [100.0, 120.0, 50.0, 60.0],
+            }
+        )
+        visualizer.create_account_trend_chart(account_trend)
 
         assert len(visualizer.charts) == 2
 
@@ -244,15 +209,134 @@ class TestCURVisualizer:
         chart_names = [name for name, _ in visualizer.charts]
         assert len(chart_names) == len(set(chart_names))
 
-    def test_chart_customization(self, sample_aggregated_data):
+    def test_chart_customization(self):
         """Test chart customization with different parameters."""
         visualizer = CURVisualizer(theme="dark")
 
-        chart = visualizer.create_cost_by_service_chart(
-            sample_aggregated_data["cost_by_service"], top_n=5, title="Custom Title"
+        service_trend = pd.DataFrame(
+            {
+                "month": ["2024-01", "2024-02"] * 2,
+                "service": ["AmazonEC2"] * 2 + ["AmazonS3"] * 2,
+                "total_cost": [100.0, 120.0, 50.0, 60.0],
+            }
         )
+        chart = visualizer.create_service_trend_chart(service_trend, title="Custom Title")
 
         assert chart is not None
         assert isinstance(chart, Bar)
         # Chart has been created with custom parameters
         assert visualizer.theme == ThemeType.DARK
+
+    def test_create_region_trend_chart(self):
+        """Test creation of region trend chart."""
+        df = pd.DataFrame(
+            {
+                "month": ["2024-01", "2024-02", "2024-03", "2024-04", "2024-05"] * 2,
+                "region": ["us-east-1"] * 5 + ["us-west-2"] * 5,
+                "total_cost": [1000.0, 1100.0, 1200.0, 1150.0, 1300.0]
+                + [500.0, 550.0, 600.0, 580.0, 650.0],
+            }
+        )
+
+        visualizer = CURVisualizer()
+        chart = visualizer.create_region_trend_chart(df)
+
+        assert chart is not None
+        assert isinstance(chart, Bar)
+        assert len(visualizer.charts) == 1
+        assert visualizer.charts[0][0] == "region_trend"
+
+    def test_create_region_trend_chart_empty(self):
+        """Test region trend chart with empty data."""
+        df = pd.DataFrame()
+
+        visualizer = CURVisualizer()
+        chart = visualizer.create_region_trend_chart(df)
+
+        assert chart is not None
+        assert isinstance(chart, Bar)
+
+    def test_create_discounts_trend_chart(self):
+        """Test creation of discounts trend chart."""
+        df = pd.DataFrame(
+            {
+                "month": ["2024-01", "2024-02", "2024-03"] * 2,
+                "discount_type": ["SavingsPlanNegation"] * 3 + ["EdpDiscount"] * 3,
+                "total_discount": [5000.0, 5500.0, 6000.0] + [1000.0, 1100.0, 1200.0],
+            }
+        )
+
+        visualizer = CURVisualizer()
+        chart = visualizer.create_discounts_trend_chart(df)
+
+        assert chart is not None
+        assert isinstance(chart, Bar)
+        assert len(visualizer.charts) == 1
+        assert visualizer.charts[0][0] == "discounts_trend"
+
+    def test_create_discounts_trend_chart_empty(self):
+        """Test discounts trend chart with empty data."""
+        df = pd.DataFrame()
+
+        visualizer = CURVisualizer()
+        chart = visualizer.create_discounts_trend_chart(df)
+
+        assert chart is not None
+        assert isinstance(chart, Bar)
+
+    def test_create_discounts_by_service_trend_chart(self):
+        """Test creation of discounts by service trend chart."""
+        df = pd.DataFrame(
+            {
+                "month": ["2024-01", "2024-02", "2024-03"] * 2,
+                "service": ["AmazonEC2"] * 3 + ["AmazonRDS"] * 3,
+                "total_discount": [3000.0, 3200.0, 3500.0] + [1500.0, 1600.0, 1700.0],
+            }
+        )
+
+        visualizer = CURVisualizer()
+        chart = visualizer.create_discounts_by_service_trend_chart(df)
+
+        assert chart is not None
+        assert isinstance(chart, Bar)
+        assert len(visualizer.charts) == 1
+        assert visualizer.charts[0][0] == "discounts_by_service_trend"
+
+    def test_create_discounts_by_service_trend_chart_empty(self):
+        """Test discounts by service trend chart with empty data."""
+        df = pd.DataFrame()
+
+        visualizer = CURVisualizer()
+        chart = visualizer.create_discounts_by_service_trend_chart(df)
+
+        assert chart is not None
+        assert isinstance(chart, Bar)
+
+    def test_create_savings_plan_trend_chart(self):
+        """Test creation of savings plan trend chart."""
+        df = pd.DataFrame(
+            {
+                "month": ["2024-01", "2024-02", "2024-03", "2024-04", "2024-05"],
+                "on_demand_equivalent": [10000.0, 11000.0, 12000.0, 11500.0, 13000.0],
+                "savings": [3000.0, 3300.0, 3600.0, 3450.0, 3900.0],
+                "savings_percentage": [30.0, 30.0, 30.0, 30.0, 30.0],
+            }
+        )
+
+        visualizer = CURVisualizer()
+        chart = visualizer.create_savings_plan_trend_chart(df)
+
+        assert chart is not None
+        assert isinstance(chart, Bar)
+        assert len(visualizer.charts) == 1
+        assert visualizer.charts[0][0] == "savings_plan_trend"
+
+    def test_create_savings_plan_trend_chart_empty(self):
+        """Test savings plan trend chart with empty data."""
+        df = pd.DataFrame()
+
+        visualizer = CURVisualizer()
+        chart = visualizer.create_savings_plan_trend_chart(df)
+
+        assert chart is not None
+        assert isinstance(chart, Bar)

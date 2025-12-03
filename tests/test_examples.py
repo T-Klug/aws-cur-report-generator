@@ -24,34 +24,24 @@ class TestExampleReports:
         processor = CURDataProcessor(sample_cur_data)
         processor.prepare_data()
 
-        # Get all analytics
-        cost_by_service = processor.get_cost_by_service(top_n=10)
-        cost_by_account = processor.get_cost_by_account(top_n=10)
+        # Get all analytics (monthly trends for all charts)
+        service_trend = processor.get_cost_trend_by_service(top_services=6)
+        account_trend = processor.get_cost_trend_by_account(top_accounts=2)
         cost_by_account_service = processor.get_cost_by_account_and_service(
             top_accounts=2, top_services=4
         )
-        service_trend = processor.get_cost_trend_by_service(top_services=4)
-        account_trend = processor.get_cost_trend_by_account(top_accounts=2)
         monthly_summary = processor.get_monthly_summary()
         anomalies = processor.detect_cost_anomalies(threshold_std=1.5)
-        cost_by_region = processor.get_cost_by_region(top_n=5)
-        discounts_summary = processor.get_discounts_summary()
-        discounts_by_service = processor.get_discounts_by_service(top_n=10)
-        savings_plan_analysis = processor.get_savings_plan_analysis()
+        region_trend = processor.get_cost_trend_by_region(top_regions=5)
+        discounts_trend = processor.get_discounts_trend()
+        discounts_by_service_trend = processor.get_discounts_by_service_trend(top_n=5)
+        savings_plan_trend = processor.get_savings_plan_trend()
         summary_stats = processor.get_summary_statistics()
 
-        # Create visualizations
+        # Create visualizations - all with monthly context
         visualizer = CURVisualizer(theme="macarons")
 
-        # Generate all chart types
-        visualizer.create_cost_by_service_chart(
-            cost_by_service, top_n=10, title="Top 10 AWS Services by Cost"
-        )
-
-        visualizer.create_cost_by_account_chart(
-            cost_by_account, top_n=10, title="Cost by AWS Account"
-        )
-
+        # Monthly trend charts (bar charts showing each month)
         if not service_trend.empty:
             visualizer.create_service_trend_chart(
                 service_trend, title="Service Cost Trends (6 Months)"
@@ -67,14 +57,6 @@ class TestExampleReports:
                 cost_by_account_service, title="Cost Heatmap: Account vs Service"
             )
 
-        visualizer.create_cost_distribution_pie(
-            cost_by_service, category="service", top_n=8, title="Service Cost Distribution"
-        )
-
-        visualizer.create_cost_distribution_pie(
-            cost_by_account, category="account", top_n=8, title="Account Cost Distribution"
-        )
-
         visualizer.create_monthly_summary_chart(monthly_summary, title="Monthly Cost Summary")
 
         if not anomalies.empty:
@@ -82,22 +64,22 @@ class TestExampleReports:
                 anomalies, title="Cost Anomalies Detection (Statistical Outliers)"
             )
 
-        if not cost_by_region.empty:
-            visualizer.create_region_chart(cost_by_region, top_n=5, title="Cost by AWS Region")
+        if not region_trend.empty:
+            visualizer.create_region_trend_chart(region_trend, title="Monthly Cost by Region")
 
-        if not discounts_summary.empty:
-            visualizer.create_discounts_chart(
-                discounts_summary, title="Discounts & Rate Reductions by Type"
+        if not discounts_trend.empty:
+            visualizer.create_discounts_trend_chart(
+                discounts_trend, title="Monthly Discounts by Type"
             )
 
-        if not discounts_by_service.empty:
-            visualizer.create_discounts_by_service_chart(
-                discounts_by_service, top_n=10, title="Discounts by Service"
+        if not discounts_by_service_trend.empty:
+            visualizer.create_discounts_by_service_trend_chart(
+                discounts_by_service_trend, title="Monthly Discounts by Service"
             )
 
-        if not savings_plan_analysis.empty:
-            visualizer.create_savings_plan_chart(
-                savings_plan_analysis, title="Savings Plan Effectiveness"
+        if not savings_plan_trend.empty:
+            visualizer.create_savings_plan_trend_chart(
+                savings_plan_trend, title="Monthly Savings Plan Effectiveness"
             )
 
         # Generate HTML report
@@ -123,7 +105,7 @@ class TestExampleReports:
         assert "Executive Summary" in html_content
         assert "Total Cost" in html_content
         assert "echarts" in html_content.lower()
-        assert "Top 10 AWS Services by Cost" in html_content
+        assert "Service Cost Trends" in html_content
 
         # Verify all chart types are included (check for chart titles in HTML)
         assert "var chart_" in html_content  # pyecharts chart initialization

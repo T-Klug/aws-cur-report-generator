@@ -177,11 +177,11 @@
         
     <style>.box { justify-content:center; display:flex; flex-wrap:wrap;  } </style>
     <div class="box">
-                <div id="daf8b8bdde024a6ba81f8b46b43edf37" class="chart-container" style="width:100%; height:500px; "></div>
+                <div id="c1992c1a246f4de9b5c951c5e6ff95fe" class="chart-container" style="width:100%; height:650px; "></div>
     <script>
-        var chart_daf8b8bdde024a6ba81f8b46b43edf37 = echarts.init(
-            document.getElementById('daf8b8bdde024a6ba81f8b46b43edf37'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_daf8b8bdde024a6ba81f8b46b43edf37 = {
+        var chart_c1992c1a246f4de9b5c951c5e6ff95fe = echarts.init(
+            document.getElementById('c1992c1a246f4de9b5c951c5e6ff95fe'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_c1992c1a246f4de9b5c951c5e6ff95fe = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -196,19 +196,15 @@
     "series": [
         {
             "type": "bar",
-            "name": "Total Cost (USD)",
+            "name": "AmazonCloudFront",
             "legendHoverLink": true,
             "data": [
-                4788576.98,
-                3174704.52,
-                2628659.51,
-                2113688.02,
-                1797367.49,
-                1337325.45,
-                1258527.87,
-                1106819.91,
-                1058930.88,
-                761978.91
+                230393.37,
+                223464.2,
+                233422.98,
+                220785.96,
+                225486.89,
+                203772.05
             ],
             "realtimeSort": false,
             "showBackground": false,
@@ -224,762 +220,199 @@
             "clip": true,
             "zlevel": 0,
             "z": 2,
-            "label": {
-                "show": true,
-                "position": "top",
-                "margin": 8,
-                "formatter": function(params) { return '$' + params.value.toLocaleString(); },
-                "valueAnimation": false
-            },
-            "itemStyle": {
-                "color": "#5470c6",
-                "borderRadius": 8
-            }
-        }
-    ],
-    "legend": [
-        {
-            "data": [
-                "Total Cost (USD)"
-            ],
-            "selected": {},
-            "show": true,
-            "padding": 5,
-            "itemGap": 10,
-            "itemWidth": 25,
-            "itemHeight": 14,
-            "backgroundColor": "transparent",
-            "borderColor": "#ccc",
-            "borderRadius": 0,
-            "pageButtonItemGap": 5,
-            "pageButtonPosition": "end",
-            "pageFormatter": "{current}/{total}",
-            "pageIconColor": "#2f4554",
-            "pageIconInactiveColor": "#aaa",
-            "pageIconSize": 15,
-            "animationDurationUpdate": 800,
-            "selector": false,
-            "selectorPosition": "auto",
-            "selectorItemGap": 7,
-            "selectorButtonGap": 10
-        }
-    ],
-    "tooltip": {
-        "show": true,
-        "trigger": "axis",
-        "triggerOn": "mousemove|click",
-        "axisPointer": {
-            "type": "line"
-        },
-        "showContent": true,
-        "alwaysShowContent": false,
-        "showDelay": 0,
-        "hideDelay": 100,
-        "enterable": false,
-        "confine": true,
-        "appendToBody": false,
-        "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                '<strong style=\"font-size: 13px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
-        "textStyle": {
-            "color": "#ffffff"
-        },
-        "backgroundColor": "transparent",
-        "borderColor": "transparent",
-        "borderWidth": 0,
-        "padding": 5,
-        "extraCssText": "box-shadow: none;",
-        "order": "seriesAsc"
-    },
-    "xAxis": [
-        {
-            "name": "Service",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "axisLabel": {
-                "show": true,
-                "rotate": 45,
-                "margin": 8,
-                "interval": 0,
-                "valueAnimation": false
-            },
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-                "show": true,
-                "lineStyle": {
-                    "show": true,
-                    "width": 1,
-                    "opacity": 1,
-                    "curveness": 0,
-                    "type": "solid"
-                }
-            },
-            "animation": true,
-            "animationThreshold": 2000,
-            "animationDuration": 1000,
-            "animationEasing": "cubicOut",
-            "animationDelay": 0,
-            "animationDurationUpdate": 300,
-            "animationEasingUpdate": "cubicOut",
-            "animationDelayUpdate": 0,
-            "data": [
-                "AmazonEC2",
-                "AmazonRDS",
-                "AmazonEKS",
-                "AmazonS3",
-                "AmazonRedshift",
-                "AmazonCloudFront",
-                "AmazonDynamoDB",
-                "AmazonECS",
-                "AWSLambda",
-                "AmazonElastiCache"
-            ]
-        }
-    ],
-    "yAxis": [
-        {
-            "name": "Total Cost (USD)",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "axisLabel": {
-                "show": true,
-                "margin": 8,
-                "formatter": function(value) { return '$' + value.toLocaleString(); },
-                "valueAnimation": false
-            },
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-                "show": true,
-                "lineStyle": {
-                    "show": true,
-                    "width": 1,
-                    "opacity": 1,
-                    "curveness": 0,
-                    "type": "solid"
-                }
-            },
-            "animation": true,
-            "animationThreshold": 2000,
-            "animationDuration": 1000,
-            "animationEasing": "cubicOut",
-            "animationDelay": 0,
-            "animationDurationUpdate": 300,
-            "animationEasingUpdate": "cubicOut",
-            "animationDelayUpdate": 0
-        }
-    ],
-    "title": [
-        {
-            "show": true,
-            "text": "Top 10 AWS Services by Cost",
-            "target": "blank",
-            "subtarget": "blank",
-            "top": "1%",
-            "padding": 5,
-            "itemGap": 10,
-            "textAlign": "auto",
-            "textVerticalAlign": "auto",
-            "triggerEvent": false,
-            "textStyle": {
-                "fontWeight": "bold",
-                "fontSize": 18
-            }
-        }
-    ],
-    "toolbox": {
-        "show": true,
-        "orient": "horizontal",
-        "itemSize": 15,
-        "itemGap": 10,
-        "left": "80%",
-        "feature": {
-            "saveAsImage": {
-                "type": "png",
-                "backgroundColor": "auto",
-                "connectedBackgroundColor": "#fff",
-                "show": true,
-                "title": "Save as Image",
-                "pixelRatio": 1
-            },
-            "restore": {
-                "show": true,
-                "title": "Restore"
-            },
-            "dataView": {
-                "show": true,
-                "title": "Data View",
-                "readOnly": false,
-                "backgroundColor": "#fff",
-                "textareaColor": "#fff",
-                "textareaBorderColor": "#333",
-                "textColor": "#000",
-                "buttonColor": "#c23531",
-                "buttonTextColor": "#fff"
-            },
-            "dataZoom": {
-                "show": true,
-                "title": {},
-                "icon": {},
-                "filterMode": "filter"
-            },
-            "magicType": {
-                "show": true,
-                "type": [
-                    "line",
-                    "bar",
-                    "stack",
-                    "tiled"
-                ],
-                "title": {},
-                "icon": {}
-            }
-        }
-    }
-};
-        chart_daf8b8bdde024a6ba81f8b46b43edf37.setOption(option_daf8b8bdde024a6ba81f8b46b43edf37);
-            window.addEventListener('resize', function(){
-                chart_daf8b8bdde024a6ba81f8b46b43edf37.resize();
-            })
-    </script>
-<br/>                <div id="9bee3f6546d943b0a32ca24b0f39e00d" class="chart-container" style="width:100%; height:500px; "></div>
-    <script>
-        var chart_9bee3f6546d943b0a32ca24b0f39e00d = echarts.init(
-            document.getElementById('9bee3f6546d943b0a32ca24b0f39e00d'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_9bee3f6546d943b0a32ca24b0f39e00d = {
-    "animation": true,
-    "animationThreshold": 2000,
-    "animationDuration": 1000,
-    "animationEasing": "cubicOut",
-    "animationDelay": 0,
-    "animationDurationUpdate": 300,
-    "animationEasingUpdate": "cubicOut",
-    "animationDelayUpdate": 0,
-    "aria": {
-        "enabled": false
-    },
-    "series": [
-        {
-            "type": "bar",
-            "name": "Total Cost (USD)",
-            "legendHoverLink": true,
-            "data": [
-                13823701.47,
-                3520950.67,
-                2482403.7,
-                1453990.96,
-                232162.97
-            ],
-            "realtimeSort": false,
-            "showBackground": false,
-            "stackStrategy": "samesign",
-            "cursor": "pointer",
-            "barMinHeight": 0,
-            "barCategoryGap": "20%",
-            "barGap": "30%",
-            "large": false,
-            "largeThreshold": 400,
-            "seriesLayoutBy": "column",
-            "datasetIndex": 0,
-            "clip": true,
-            "zlevel": 0,
-            "z": 2,
-            "label": {
-                "show": true,
-                "position": "top",
-                "margin": 8,
-                "formatter": function(params) { return '$' + params.value.toLocaleString(); },
-                "valueAnimation": false
-            },
-            "itemStyle": {
-                "color": "#91cc75",
-                "borderRadius": 8
-            }
-        }
-    ],
-    "legend": [
-        {
-            "data": [
-                "Total Cost (USD)"
-            ],
-            "selected": {},
-            "show": true,
-            "padding": 5,
-            "itemGap": 10,
-            "itemWidth": 25,
-            "itemHeight": 14,
-            "backgroundColor": "transparent",
-            "borderColor": "#ccc",
-            "borderRadius": 0,
-            "pageButtonItemGap": 5,
-            "pageButtonPosition": "end",
-            "pageFormatter": "{current}/{total}",
-            "pageIconColor": "#2f4554",
-            "pageIconInactiveColor": "#aaa",
-            "pageIconSize": 15,
-            "animationDurationUpdate": 800,
-            "selector": false,
-            "selectorPosition": "auto",
-            "selectorItemGap": 7,
-            "selectorButtonGap": 10
-        }
-    ],
-    "tooltip": {
-        "show": true,
-        "trigger": "axis",
-        "triggerOn": "mousemove|click",
-        "axisPointer": {
-            "type": "line"
-        },
-        "showContent": true,
-        "alwaysShowContent": false,
-        "showDelay": 0,
-        "hideDelay": 100,
-        "enterable": false,
-        "confine": true,
-        "appendToBody": false,
-        "transitionDuration": 0.4,
-        "formatter": function(params) {                                return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                    '<strong style=\"font-size: 12px;\">Account ID</strong><br/>' +                                    '<span style=\"font-size: 11px; opacity: 0.9;\">' + params[0].name + '</span><br/><br/>' +                                    '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                    '<strong style=\"font-size: 13px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                    '</div>';                            },
-        "textStyle": {
-            "color": "#ffffff"
-        },
-        "backgroundColor": "transparent",
-        "borderColor": "transparent",
-        "borderWidth": 0,
-        "padding": 5,
-        "extraCssText": "box-shadow: none;",
-        "order": "seriesAsc"
-    },
-    "xAxis": [
-        {
-            "name": "Account ID",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "axisLabel": {
-                "show": true,
-                "rotate": 0,
-                "margin": 8,
-                "valueAnimation": false
-            },
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-                "show": true,
-                "lineStyle": {
-                    "show": true,
-                    "width": 1,
-                    "opacity": 1,
-                    "curveness": 0,
-                    "type": "solid"
-                }
-            },
-            "animation": true,
-            "animationThreshold": 2000,
-            "animationDuration": 1000,
-            "animationEasing": "cubicOut",
-            "animationDelay": 0,
-            "animationDurationUpdate": 300,
-            "animationEasingUpdate": "cubicOut",
-            "animationDelayUpdate": 0,
-            "data": [
-                "111111111111",
-                "222222222222",
-                "555555555555",
-                "333333333333",
-                "444444444444"
-            ]
-        }
-    ],
-    "yAxis": [
-        {
-            "name": "Total Cost (USD)",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "axisLabel": {
-                "show": true,
-                "margin": 8,
-                "formatter": function(value) { return '$' + value.toLocaleString(); },
-                "valueAnimation": false
-            },
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-                "show": true,
-                "lineStyle": {
-                    "show": true,
-                    "width": 1,
-                    "opacity": 1,
-                    "curveness": 0,
-                    "type": "solid"
-                }
-            },
-            "animation": true,
-            "animationThreshold": 2000,
-            "animationDuration": 1000,
-            "animationEasing": "cubicOut",
-            "animationDelay": 0,
-            "animationDurationUpdate": 300,
-            "animationEasingUpdate": "cubicOut",
-            "animationDelayUpdate": 0
-        }
-    ],
-    "title": [
-        {
-            "show": true,
-            "text": "Cost by AWS Account",
-            "target": "blank",
-            "subtarget": "blank",
-            "top": "1%",
-            "padding": 5,
-            "itemGap": 10,
-            "textAlign": "auto",
-            "textVerticalAlign": "auto",
-            "triggerEvent": false,
-            "textStyle": {
-                "fontWeight": "bold",
-                "fontSize": 18
-            }
-        }
-    ],
-    "toolbox": {
-        "show": true,
-        "orient": "horizontal",
-        "itemSize": 15,
-        "itemGap": 10,
-        "left": "80%",
-        "feature": {
-            "saveAsImage": {
-                "type": "png",
-                "backgroundColor": "auto",
-                "connectedBackgroundColor": "#fff",
-                "show": true,
-                "title": "Save as Image",
-                "pixelRatio": 1
-            },
-            "restore": {
-                "show": true,
-                "title": "Restore"
-            },
-            "dataView": {
-                "show": true,
-                "title": "Data View",
-                "readOnly": false,
-                "backgroundColor": "#fff",
-                "textareaColor": "#fff",
-                "textareaBorderColor": "#333",
-                "textColor": "#000",
-                "buttonColor": "#c23531",
-                "buttonTextColor": "#fff"
-            },
-            "dataZoom": {
-                "show": true,
-                "title": {},
-                "icon": {},
-                "filterMode": "filter"
-            },
-            "magicType": {
-                "show": true,
-                "type": [
-                    "line",
-                    "bar",
-                    "stack",
-                    "tiled"
-                ],
-                "title": {},
-                "icon": {}
-            }
-        }
-    }
-};
-        chart_9bee3f6546d943b0a32ca24b0f39e00d.setOption(option_9bee3f6546d943b0a32ca24b0f39e00d);
-            window.addEventListener('resize', function(){
-                chart_9bee3f6546d943b0a32ca24b0f39e00d.resize();
-            })
-    </script>
-<br/>                <div id="5ae03e8eb908435490a2f10b225befde" class="chart-container" style="width:100%; height:650px; "></div>
-    <script>
-        var chart_5ae03e8eb908435490a2f10b225befde = echarts.init(
-            document.getElementById('5ae03e8eb908435490a2f10b225befde'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_5ae03e8eb908435490a2f10b225befde = {
-    "animation": true,
-    "animationThreshold": 2000,
-    "animationDuration": 1000,
-    "animationEasing": "cubicOut",
-    "animationDelay": 0,
-    "animationDurationUpdate": 300,
-    "animationEasingUpdate": "cubicOut",
-    "animationDelayUpdate": 0,
-    "aria": {
-        "enabled": false
-    },
-    "series": [
-        {
-            "type": "line",
-            "name": "AmazonEC2",
-            "connectNulls": false,
-            "xAxisIndex": 0,
-            "symbolSize": 8,
-            "showSymbol": true,
-            "smooth": true,
-            "clip": true,
-            "step": false,
-            "stackStrategy": "samesign",
-            "data": [
-                [
-                    "2024-01",
-                    669440.72
-                ],
-                [
-                    "2024-02",
-                    682374.96
-                ],
-                [
-                    "2024-03",
-                    786593.47
-                ],
-                [
-                    "2024-04",
-                    789579.96
-                ],
-                [
-                    "2024-05",
-                    925175.36
-                ],
-                [
-                    "2024-06",
-                    935412.51
-                ]
-            ],
-            "hoverAnimation": true,
             "label": {
                 "show": false,
                 "margin": 8,
                 "valueAnimation": false
-            },
-            "logBase": 10,
-            "seriesLayoutBy": "column",
-            "lineStyle": {
-                "show": true,
-                "width": 3,
-                "opacity": 0.8,
-                "curveness": 0,
-                "type": "solid"
-            },
-            "areaStyle": {
-                "opacity": 0
             },
             "itemStyle": {
                 "color": "#5470c6"
-            },
-            "zlevel": 0,
-            "z": 0
+            }
         },
         {
-            "type": "line",
-            "name": "AmazonEKS",
-            "connectNulls": false,
-            "xAxisIndex": 0,
-            "symbolSize": 8,
-            "showSymbol": true,
-            "smooth": true,
-            "clip": true,
-            "step": false,
-            "stackStrategy": "samesign",
+            "type": "bar",
+            "name": "AmazonEC2",
+            "legendHoverLink": true,
             "data": [
-                [
-                    "2024-01",
-                    362394.24
-                ],
-                [
-                    "2024-02",
-                    350453.03
-                ],
-                [
-                    "2024-03",
-                    460216.16
-                ],
-                [
-                    "2024-04",
-                    429530.69
-                ],
-                [
-                    "2024-05",
-                    512778.01
-                ],
-                [
-                    "2024-06",
-                    513287.38
-                ]
+                669440.72,
+                682374.96,
+                786593.47,
+                789579.96,
+                925175.36,
+                935412.51
             ],
-            "hoverAnimation": true,
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
             "label": {
                 "show": false,
                 "margin": 8,
                 "valueAnimation": false
-            },
-            "logBase": 10,
-            "seriesLayoutBy": "column",
-            "lineStyle": {
-                "show": true,
-                "width": 3,
-                "opacity": 0.8,
-                "curveness": 0,
-                "type": "solid"
-            },
-            "areaStyle": {
-                "opacity": 0
             },
             "itemStyle": {
                 "color": "#91cc75"
-            },
-            "zlevel": 0,
-            "z": 0
+            }
         },
         {
-            "type": "line",
-            "name": "AmazonRDS",
-            "connectNulls": false,
-            "xAxisIndex": 0,
-            "symbolSize": 8,
-            "showSymbol": true,
-            "smooth": true,
-            "clip": true,
-            "step": false,
-            "stackStrategy": "samesign",
+            "type": "bar",
+            "name": "AmazonEKS",
+            "legendHoverLink": true,
             "data": [
-                [
-                    "2024-01",
-                    425394.92
-                ],
-                [
-                    "2024-02",
-                    453458.74
-                ],
-                [
-                    "2024-03",
-                    501451.44
-                ],
-                [
-                    "2024-04",
-                    536004.92
-                ],
-                [
-                    "2024-05",
-                    615847.64
-                ],
-                [
-                    "2024-06",
-                    642546.86
-                ]
+                362394.24,
+                350453.03,
+                460216.16,
+                429530.69,
+                512778.01,
+                513287.38
             ],
-            "hoverAnimation": true,
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
             "label": {
                 "show": false,
                 "margin": 8,
                 "valueAnimation": false
-            },
-            "logBase": 10,
-            "seriesLayoutBy": "column",
-            "lineStyle": {
-                "show": true,
-                "width": 3,
-                "opacity": 0.8,
-                "curveness": 0,
-                "type": "solid"
-            },
-            "areaStyle": {
-                "opacity": 0
             },
             "itemStyle": {
                 "color": "#fac858"
-            },
-            "zlevel": 0,
-            "z": 0
+            }
         },
         {
-            "type": "line",
-            "name": "AmazonS3",
-            "connectNulls": false,
-            "xAxisIndex": 0,
-            "symbolSize": 8,
-            "showSymbol": true,
-            "smooth": true,
-            "clip": true,
-            "step": false,
-            "stackStrategy": "samesign",
+            "type": "bar",
+            "name": "AmazonRDS",
+            "legendHoverLink": true,
             "data": [
-                [
-                    "2024-01",
-                    305980.23
-                ],
-                [
-                    "2024-02",
-                    326937.77
-                ],
-                [
-                    "2024-03",
-                    341015.74
-                ],
-                [
-                    "2024-04",
-                    360682.22
-                ],
-                [
-                    "2024-05",
-                    381743.12
-                ],
-                [
-                    "2024-06",
-                    397328.94
-                ]
+                425394.92,
+                453458.74,
+                501451.44,
+                536004.92,
+                615847.64,
+                642546.86
             ],
-            "hoverAnimation": true,
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
             "label": {
                 "show": false,
                 "margin": 8,
                 "valueAnimation": false
             },
-            "logBase": 10,
-            "seriesLayoutBy": "column",
-            "lineStyle": {
-                "show": true,
-                "width": 3,
-                "opacity": 0.8,
-                "curveness": 0,
-                "type": "solid"
-            },
-            "areaStyle": {
-                "opacity": 0
-            },
             "itemStyle": {
                 "color": "#ee6666"
-            },
+            }
+        },
+        {
+            "type": "bar",
+            "name": "AmazonRedshift",
+            "legendHoverLink": true,
+            "data": [
+                212489.53,
+                249484.33,
+                285121.94,
+                319403.23,
+                346295.7,
+                384572.76
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
             "zlevel": 0,
-            "z": 0
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#73c0de"
+            }
+        },
+        {
+            "type": "bar",
+            "name": "AmazonS3",
+            "legendHoverLink": true,
+            "data": [
+                305980.23,
+                326937.77,
+                341015.74,
+                360682.22,
+                381743.12,
+                397328.94
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#3ba272"
+            }
         }
     ],
     "legend": [
         {
             "data": [
+                "AmazonCloudFront",
                 "AmazonEC2",
                 "AmazonEKS",
                 "AmazonRDS",
+                "AmazonRedshift",
                 "AmazonS3"
             ],
             "selected": {},
@@ -1013,7 +446,7 @@
         "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
-            "type": "line"
+            "type": "shadow"
         },
         "showContent": true,
         "alwaysShowContent": false,
@@ -1052,7 +485,6 @@
             "inverse": false,
             "offset": 0,
             "splitNumber": 5,
-            "boundaryGap": false,
             "minInterval": 0,
             "splitLine": {
                 "show": true,
@@ -1225,16 +657,16 @@
         }
     ]
 };
-        chart_5ae03e8eb908435490a2f10b225befde.setOption(option_5ae03e8eb908435490a2f10b225befde);
+        chart_c1992c1a246f4de9b5c951c5e6ff95fe.setOption(option_c1992c1a246f4de9b5c951c5e6ff95fe);
             window.addEventListener('resize', function(){
-                chart_5ae03e8eb908435490a2f10b225befde.resize();
+                chart_c1992c1a246f4de9b5c951c5e6ff95fe.resize();
             })
     </script>
-<br/>                <div id="f04c7e58c4cc48df8d5e13a46271a779" class="chart-container" style="width:100%; height:650px; "></div>
+<br/>                <div id="47188ece677844ddb37999446a3ab02a" class="chart-container" style="width:100%; height:650px; "></div>
     <script>
-        var chart_f04c7e58c4cc48df8d5e13a46271a779 = echarts.init(
-            document.getElementById('f04c7e58c4cc48df8d5e13a46271a779'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_f04c7e58c4cc48df8d5e13a46271a779 = {
+        var chart_47188ece677844ddb37999446a3ab02a = echarts.init(
+            document.getElementById('47188ece677844ddb37999446a3ab02a'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_47188ece677844ddb37999446a3ab02a = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -1248,126 +680,74 @@
     },
     "series": [
         {
-            "type": "line",
+            "type": "bar",
             "name": "111111111111",
-            "connectNulls": false,
-            "xAxisIndex": 0,
-            "symbolSize": 8,
-            "showSymbol": true,
-            "smooth": true,
-            "clip": true,
-            "step": false,
-            "stackStrategy": "samesign",
+            "legendHoverLink": true,
             "data": [
-                [
-                    "2024-01",
-                    1773340.82
-                ],
-                [
-                    "2024-02",
-                    1997306.05
-                ],
-                [
-                    "2024-03",
-                    2226321.7
-                ],
-                [
-                    "2024-04",
-                    2413038.66
-                ],
-                [
-                    "2024-05",
-                    2610575.77
-                ],
-                [
-                    "2024-06",
-                    2803118.47
-                ]
+                1773340.82,
+                1997306.05,
+                2226321.7,
+                2413038.66,
+                2610575.77,
+                2803118.47
             ],
-            "hoverAnimation": true,
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
             "label": {
                 "show": false,
                 "margin": 8,
                 "valueAnimation": false
-            },
-            "logBase": 10,
-            "seriesLayoutBy": "column",
-            "lineStyle": {
-                "show": true,
-                "width": 3,
-                "opacity": 0.8,
-                "curveness": 0,
-                "type": "solid"
-            },
-            "areaStyle": {
-                "opacity": 0
             },
             "itemStyle": {
                 "color": "#5470c6"
-            },
-            "zlevel": 0,
-            "z": 0
+            }
         },
         {
-            "type": "line",
+            "type": "bar",
             "name": "222222222222",
-            "connectNulls": false,
-            "xAxisIndex": 0,
-            "symbolSize": 8,
-            "showSymbol": true,
-            "smooth": true,
-            "clip": true,
-            "step": false,
-            "stackStrategy": "samesign",
+            "legendHoverLink": true,
             "data": [
-                [
-                    "2024-01",
-                    519064.31
-                ],
-                [
-                    "2024-02",
-                    535260.62
-                ],
-                [
-                    "2024-03",
-                    557975.98
-                ],
-                [
-                    "2024-04",
-                    564538.95
-                ],
-                [
-                    "2024-05",
-                    661787.28
-                ],
-                [
-                    "2024-06",
-                    682323.53
-                ]
+                519064.31,
+                535260.62,
+                557975.98,
+                564538.95,
+                661787.28,
+                682323.53
             ],
-            "hoverAnimation": true,
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
             "label": {
                 "show": false,
                 "margin": 8,
                 "valueAnimation": false
             },
-            "logBase": 10,
-            "seriesLayoutBy": "column",
-            "lineStyle": {
-                "show": true,
-                "width": 3,
-                "opacity": 0.8,
-                "curveness": 0,
-                "type": "solid"
-            },
-            "areaStyle": {
-                "opacity": 0
-            },
             "itemStyle": {
                 "color": "#91cc75"
-            },
-            "zlevel": 0,
-            "z": 0
+            }
         }
     ],
     "legend": [
@@ -1407,7 +787,7 @@
         "trigger": "axis",
         "triggerOn": "mousemove|click",
         "axisPointer": {
-            "type": "line"
+            "type": "shadow"
         },
         "showContent": true,
         "alwaysShowContent": false,
@@ -1446,7 +826,6 @@
             "inverse": false,
             "offset": 0,
             "splitNumber": 5,
-            "boundaryGap": false,
             "minInterval": 0,
             "splitLine": {
                 "show": true,
@@ -1619,16 +998,16 @@
         }
     ]
 };
-        chart_f04c7e58c4cc48df8d5e13a46271a779.setOption(option_f04c7e58c4cc48df8d5e13a46271a779);
+        chart_47188ece677844ddb37999446a3ab02a.setOption(option_47188ece677844ddb37999446a3ab02a);
             window.addEventListener('resize', function(){
-                chart_f04c7e58c4cc48df8d5e13a46271a779.resize();
+                chart_47188ece677844ddb37999446a3ab02a.resize();
             })
     </script>
-<br/>                <div id="a8f3ce858bbd4976a018908afe5e4d95" class="chart-container" style="width:100%; height:600px; "></div>
+<br/>                <div id="a3b3d25eb24447a98a1b94a8686096ad" class="chart-container" style="width:100%; height:600px; "></div>
     <script>
-        var chart_a8f3ce858bbd4976a018908afe5e4d95 = echarts.init(
-            document.getElementById('a8f3ce858bbd4976a018908afe5e4d95'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_a8f3ce858bbd4976a018908afe5e4d95 = {
+        var chart_a3b3d25eb24447a98a1b94a8686096ad = echarts.init(
+            document.getElementById('a3b3d25eb24447a98a1b94a8686096ad'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_a3b3d25eb24447a98a1b94a8686096ad = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -1926,494 +1305,16 @@
         "borderWidth": 0
     }
 };
-        chart_a8f3ce858bbd4976a018908afe5e4d95.setOption(option_a8f3ce858bbd4976a018908afe5e4d95);
+        chart_a3b3d25eb24447a98a1b94a8686096ad.setOption(option_a3b3d25eb24447a98a1b94a8686096ad);
             window.addEventListener('resize', function(){
-                chart_a8f3ce858bbd4976a018908afe5e4d95.resize();
+                chart_a3b3d25eb24447a98a1b94a8686096ad.resize();
             })
     </script>
-<br/>                <div id="318d2c548aa44c6aae85a6dedba8454d" class="chart-container" style="width:100%; height:600px; "></div>
+<br/>                <div id="05da0b5ed72a40eaae24d520eba76920" class="chart-container" style="width:100%; height:600px; "></div>
     <script>
-        var chart_318d2c548aa44c6aae85a6dedba8454d = echarts.init(
-            document.getElementById('318d2c548aa44c6aae85a6dedba8454d'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_318d2c548aa44c6aae85a6dedba8454d = {
-    "animation": true,
-    "animationThreshold": 2000,
-    "animationDuration": 1000,
-    "animationEasing": "cubicOut",
-    "animationDelay": 0,
-    "animationDurationUpdate": 300,
-    "animationEasingUpdate": "cubicOut",
-    "animationDelayUpdate": 0,
-    "aria": {
-        "enabled": false
-    },
-    "series": [
-        {
-            "type": "pie",
-            "name": "Cost",
-            "colorBy": "data",
-            "legendHoverLink": true,
-            "selectedMode": false,
-            "selectedOffset": 10,
-            "clockwise": true,
-            "startAngle": 90,
-            "minAngle": 0,
-            "minShowLabelAngle": 0,
-            "avoidLabelOverlap": true,
-            "stillShowZeroSum": true,
-            "percentPrecision": 2,
-            "showEmptyCircle": true,
-            "emptyCircleStyle": {
-                "color": "lightgray",
-                "borderColor": "#000",
-                "borderWidth": 0,
-                "borderType": "solid",
-                "borderDashOffset": 0,
-                "borderCap": "butt",
-                "borderJoin": "bevel",
-                "borderMiterLimit": 10,
-                "opacity": 1
-            },
-            "data": [
-                {
-                    "name": "AmazonEC2",
-                    "value": 4788576.98
-                },
-                {
-                    "name": "AmazonRDS",
-                    "value": 3174704.52
-                },
-                {
-                    "name": "AmazonEKS",
-                    "value": 2628659.51
-                },
-                {
-                    "name": "AmazonS3",
-                    "value": 2113688.02
-                },
-                {
-                    "name": "AmazonRedshift",
-                    "value": 1797367.49
-                },
-                {
-                    "name": "AmazonCloudFront",
-                    "value": 1337325.45
-                },
-                {
-                    "name": "AmazonDynamoDB",
-                    "value": 1258527.87
-                },
-                {
-                    "name": "AmazonECS",
-                    "value": 1106819.91
-                },
-                {
-                    "name": "Other",
-                    "value": 1820909.79
-                }
-            ],
-            "radius": [
-                "30%",
-                "70%"
-            ],
-            "center": [
-                "50%",
-                "50%"
-            ],
-            "label": {
-                "show": true,
-                "margin": 8,
-                "fontSize": 12,
-                "formatter": "{b}: ${c} ({d}%)",
-                "valueAnimation": false
-            },
-            "labelLine": {
-                "show": true,
-                "showAbove": false,
-                "length": 15,
-                "length2": 15,
-                "smooth": false,
-                "minTurnAngle": 90,
-                "maxSurfaceAngle": 90
-            },
-            "itemStyle": {
-                "borderColor": "#fff",
-                "borderWidth": 2
-            }
-        }
-    ],
-    "legend": [
-        {
-            "data": [
-                "AmazonEC2",
-                "AmazonRDS",
-                "AmazonEKS",
-                "AmazonS3",
-                "AmazonRedshift",
-                "AmazonCloudFront",
-                "AmazonDynamoDB",
-                "AmazonECS",
-                "Other"
-            ],
-            "selected": {},
-            "type": "scroll",
-            "show": true,
-            "right": "5%",
-            "top": "15%",
-            "orient": "vertical",
-            "padding": 5,
-            "itemGap": 10,
-            "itemWidth": 25,
-            "itemHeight": 14,
-            "backgroundColor": "transparent",
-            "borderColor": "#ccc",
-            "borderRadius": 0,
-            "pageButtonItemGap": 5,
-            "pageButtonPosition": "end",
-            "pageFormatter": "{current}/{total}",
-            "pageIconColor": "#2f4554",
-            "pageIconInactiveColor": "#aaa",
-            "pageIconSize": 15,
-            "animationDurationUpdate": 800,
-            "selector": false,
-            "selectorPosition": "auto",
-            "selectorItemGap": 7,
-            "selectorButtonGap": 10
-        }
-    ],
-    "tooltip": {
-        "show": true,
-        "trigger": "item",
-        "triggerOn": "mousemove|click",
-        "axisPointer": {
-            "type": "line"
-        },
-        "showContent": true,
-        "alwaysShowContent": false,
-        "showDelay": 0,
-        "hideDelay": 100,
-        "enterable": false,
-        "confine": true,
-        "appendToBody": false,
-        "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params.name + '</strong><br/><br/>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +                                '</div>';                        },
-        "textStyle": {
-            "color": "#ffffff"
-        },
-        "backgroundColor": "transparent",
-        "borderColor": "transparent",
-        "borderWidth": 0,
-        "padding": 5,
-        "extraCssText": "box-shadow: none;",
-        "order": "seriesAsc"
-    },
-    "title": [
-        {
-            "show": true,
-            "text": "Service Cost Distribution",
-            "target": "blank",
-            "subtarget": "blank",
-            "left": "center",
-            "padding": 5,
-            "itemGap": 10,
-            "textAlign": "auto",
-            "textVerticalAlign": "auto",
-            "triggerEvent": false,
-            "textStyle": {
-                "fontWeight": "bold",
-                "fontSize": 18
-            }
-        }
-    ],
-    "toolbox": {
-        "show": true,
-        "orient": "horizontal",
-        "itemSize": 15,
-        "itemGap": 10,
-        "left": "80%",
-        "feature": {
-            "saveAsImage": {
-                "type": "png",
-                "backgroundColor": "auto",
-                "connectedBackgroundColor": "#fff",
-                "show": true,
-                "title": "Save as Image",
-                "pixelRatio": 1
-            },
-            "restore": {
-                "show": true,
-                "title": "Restore"
-            },
-            "dataView": {
-                "show": true,
-                "title": "Data View",
-                "readOnly": false,
-                "backgroundColor": "#fff",
-                "textareaColor": "#fff",
-                "textareaBorderColor": "#333",
-                "textColor": "#000",
-                "buttonColor": "#c23531",
-                "buttonTextColor": "#fff"
-            },
-            "dataZoom": {
-                "show": true,
-                "title": {},
-                "icon": {},
-                "filterMode": "filter"
-            },
-            "magicType": {
-                "show": true,
-                "type": [
-                    "line",
-                    "bar",
-                    "stack",
-                    "tiled"
-                ],
-                "title": {},
-                "icon": {}
-            }
-        }
-    }
-};
-        chart_318d2c548aa44c6aae85a6dedba8454d.setOption(option_318d2c548aa44c6aae85a6dedba8454d);
-            window.addEventListener('resize', function(){
-                chart_318d2c548aa44c6aae85a6dedba8454d.resize();
-            })
-    </script>
-<br/>                <div id="1d2ca43bc56c45ae8d183765d46ad963" class="chart-container" style="width:100%; height:600px; "></div>
-    <script>
-        var chart_1d2ca43bc56c45ae8d183765d46ad963 = echarts.init(
-            document.getElementById('1d2ca43bc56c45ae8d183765d46ad963'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_1d2ca43bc56c45ae8d183765d46ad963 = {
-    "animation": true,
-    "animationThreshold": 2000,
-    "animationDuration": 1000,
-    "animationEasing": "cubicOut",
-    "animationDelay": 0,
-    "animationDurationUpdate": 300,
-    "animationEasingUpdate": "cubicOut",
-    "animationDelayUpdate": 0,
-    "aria": {
-        "enabled": false
-    },
-    "series": [
-        {
-            "type": "pie",
-            "name": "Cost",
-            "colorBy": "data",
-            "legendHoverLink": true,
-            "selectedMode": false,
-            "selectedOffset": 10,
-            "clockwise": true,
-            "startAngle": 90,
-            "minAngle": 0,
-            "minShowLabelAngle": 0,
-            "avoidLabelOverlap": true,
-            "stillShowZeroSum": true,
-            "percentPrecision": 2,
-            "showEmptyCircle": true,
-            "emptyCircleStyle": {
-                "color": "lightgray",
-                "borderColor": "#000",
-                "borderWidth": 0,
-                "borderType": "solid",
-                "borderDashOffset": 0,
-                "borderCap": "butt",
-                "borderJoin": "bevel",
-                "borderMiterLimit": 10,
-                "opacity": 1
-            },
-            "data": [
-                {
-                    "name": "111111111111",
-                    "value": 13823701.47
-                },
-                {
-                    "name": "222222222222",
-                    "value": 3520950.67
-                },
-                {
-                    "name": "555555555555",
-                    "value": 2482403.7
-                },
-                {
-                    "name": "333333333333",
-                    "value": 1453990.96
-                },
-                {
-                    "name": "444444444444",
-                    "value": 232162.97
-                }
-            ],
-            "radius": [
-                "30%",
-                "70%"
-            ],
-            "center": [
-                "50%",
-                "50%"
-            ],
-            "label": {
-                "show": true,
-                "margin": 8,
-                "fontSize": 12,
-                "formatter": "{b}: ${c} ({d}%)",
-                "valueAnimation": false
-            },
-            "labelLine": {
-                "show": true,
-                "showAbove": false,
-                "length": 15,
-                "length2": 15,
-                "smooth": false,
-                "minTurnAngle": 90,
-                "maxSurfaceAngle": 90
-            },
-            "itemStyle": {
-                "borderColor": "#fff",
-                "borderWidth": 2
-            }
-        }
-    ],
-    "legend": [
-        {
-            "data": [
-                "111111111111",
-                "222222222222",
-                "555555555555",
-                "333333333333",
-                "444444444444"
-            ],
-            "selected": {},
-            "type": "scroll",
-            "show": true,
-            "right": "5%",
-            "top": "15%",
-            "orient": "vertical",
-            "padding": 5,
-            "itemGap": 10,
-            "itemWidth": 25,
-            "itemHeight": 14,
-            "backgroundColor": "transparent",
-            "borderColor": "#ccc",
-            "borderRadius": 0,
-            "pageButtonItemGap": 5,
-            "pageButtonPosition": "end",
-            "pageFormatter": "{current}/{total}",
-            "pageIconColor": "#2f4554",
-            "pageIconInactiveColor": "#aaa",
-            "pageIconSize": 15,
-            "animationDurationUpdate": 800,
-            "selector": false,
-            "selectorPosition": "auto",
-            "selectorItemGap": 7,
-            "selectorButtonGap": 10
-        }
-    ],
-    "tooltip": {
-        "show": true,
-        "trigger": "item",
-        "triggerOn": "mousemove|click",
-        "axisPointer": {
-            "type": "line"
-        },
-        "showContent": true,
-        "alwaysShowContent": false,
-        "showDelay": 0,
-        "hideDelay": 100,
-        "enterable": false,
-        "confine": true,
-        "appendToBody": false,
-        "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params.name + '</strong><br/><br/>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +                                '<div style=\"margin: 2px 0;\"><span style=\"opacity: 0.9;\">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +                                '</div>';                        },
-        "textStyle": {
-            "color": "#ffffff"
-        },
-        "backgroundColor": "transparent",
-        "borderColor": "transparent",
-        "borderWidth": 0,
-        "padding": 5,
-        "extraCssText": "box-shadow: none;",
-        "order": "seriesAsc"
-    },
-    "title": [
-        {
-            "show": true,
-            "text": "Account Cost Distribution",
-            "target": "blank",
-            "subtarget": "blank",
-            "left": "center",
-            "padding": 5,
-            "itemGap": 10,
-            "textAlign": "auto",
-            "textVerticalAlign": "auto",
-            "triggerEvent": false,
-            "textStyle": {
-                "fontWeight": "bold",
-                "fontSize": 18
-            }
-        }
-    ],
-    "toolbox": {
-        "show": true,
-        "orient": "horizontal",
-        "itemSize": 15,
-        "itemGap": 10,
-        "left": "80%",
-        "feature": {
-            "saveAsImage": {
-                "type": "png",
-                "backgroundColor": "auto",
-                "connectedBackgroundColor": "#fff",
-                "show": true,
-                "title": "Save as Image",
-                "pixelRatio": 1
-            },
-            "restore": {
-                "show": true,
-                "title": "Restore"
-            },
-            "dataView": {
-                "show": true,
-                "title": "Data View",
-                "readOnly": false,
-                "backgroundColor": "#fff",
-                "textareaColor": "#fff",
-                "textareaBorderColor": "#333",
-                "textColor": "#000",
-                "buttonColor": "#c23531",
-                "buttonTextColor": "#fff"
-            },
-            "dataZoom": {
-                "show": true,
-                "title": {},
-                "icon": {},
-                "filterMode": "filter"
-            },
-            "magicType": {
-                "show": true,
-                "type": [
-                    "line",
-                    "bar",
-                    "stack",
-                    "tiled"
-                ],
-                "title": {},
-                "icon": {}
-            }
-        }
-    }
-};
-        chart_1d2ca43bc56c45ae8d183765d46ad963.setOption(option_1d2ca43bc56c45ae8d183765d46ad963);
-            window.addEventListener('resize', function(){
-                chart_1d2ca43bc56c45ae8d183765d46ad963.resize();
-            })
-    </script>
-<br/>                <div id="7e86d213ed8a46ae86ec105c72855c1d" class="chart-container" style="width:100%; height:600px; "></div>
-    <script>
-        var chart_7e86d213ed8a46ae86ec105c72855c1d = echarts.init(
-            document.getElementById('7e86d213ed8a46ae86ec105c72855c1d'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_7e86d213ed8a46ae86ec105c72855c1d = {
+        var chart_05da0b5ed72a40eaae24d520eba76920 = echarts.init(
+            document.getElementById('05da0b5ed72a40eaae24d520eba76920'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_05da0b5ed72a40eaae24d520eba76920 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -2731,16 +1632,16 @@
         }
     }
 };
-        chart_7e86d213ed8a46ae86ec105c72855c1d.setOption(option_7e86d213ed8a46ae86ec105c72855c1d);
+        chart_05da0b5ed72a40eaae24d520eba76920.setOption(option_05da0b5ed72a40eaae24d520eba76920);
             window.addEventListener('resize', function(){
-                chart_7e86d213ed8a46ae86ec105c72855c1d.resize();
+                chart_05da0b5ed72a40eaae24d520eba76920.resize();
             })
     </script>
-<br/>                <div id="11a68ecb41b84a9fad414a18efc2753a" class="chart-container" style="width:100%; height:650px; "></div>
+<br/>                <div id="60b58aa53e044eaea890e04b0fcaa66a" class="chart-container" style="width:100%; height:650px; "></div>
     <script>
-        var chart_11a68ecb41b84a9fad414a18efc2753a = echarts.init(
-            document.getElementById('11a68ecb41b84a9fad414a18efc2753a'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_11a68ecb41b84a9fad414a18efc2753a = {
+        var chart_60b58aa53e044eaea890e04b0fcaa66a = echarts.init(
+            document.getElementById('60b58aa53e044eaea890e04b0fcaa66a'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_60b58aa53e044eaea890e04b0fcaa66a = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -3046,16 +1947,16 @@
         }
     ]
 };
-        chart_11a68ecb41b84a9fad414a18efc2753a.setOption(option_11a68ecb41b84a9fad414a18efc2753a);
+        chart_60b58aa53e044eaea890e04b0fcaa66a.setOption(option_60b58aa53e044eaea890e04b0fcaa66a);
             window.addEventListener('resize', function(){
-                chart_11a68ecb41b84a9fad414a18efc2753a.resize();
+                chart_60b58aa53e044eaea890e04b0fcaa66a.resize();
             })
     </script>
-<br/>                <div id="8def1562b2174fe4938a9194eaf2a2dc" class="chart-container" style="width:100%; height:500px; "></div>
+<br/>                <div id="2809d150da484bd7b7e5220fd732f676" class="chart-container" style="width:100%; height:650px; "></div>
     <script>
-        var chart_8def1562b2174fe4938a9194eaf2a2dc = echarts.init(
-            document.getElementById('8def1562b2174fe4938a9194eaf2a2dc'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_8def1562b2174fe4938a9194eaf2a2dc = {
+        var chart_2809d150da484bd7b7e5220fd732f676 = echarts.init(
+            document.getElementById('2809d150da484bd7b7e5220fd732f676'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_2809d150da484bd7b7e5220fd732f676 = {
     "animation": true,
     "animationThreshold": 2000,
     "animationDuration": 1000,
@@ -3070,14 +1971,15 @@
     "series": [
         {
             "type": "bar",
-            "name": "Total Cost (USD)",
+            "name": "ap-northeast-1",
             "legendHoverLink": true,
             "data": [
-                14177613.62,
-                3789667.63,
-                1263052.71,
-                1022448.71,
-                757928.71
+                77321.92,
+                191815.5,
+                57019.47,
+                203105.73,
+                26895.8,
+                201770.29
             ],
             "realtimeSort": false,
             "showBackground": false,
@@ -3094,250 +1996,25 @@
             "zlevel": 0,
             "z": 2,
             "label": {
-                "show": true,
-                "position": "top",
+                "show": false,
                 "margin": 8,
-                "formatter": function(params) { return '$' + params.value.toLocaleString(); },
                 "valueAnimation": false
             },
             "itemStyle": {
-                "color": "#fac858",
-                "borderRadius": 8
+                "color": "#5470c6"
             }
-        }
-    ],
-    "legend": [
-        {
-            "data": [
-                "Total Cost (USD)"
-            ],
-            "selected": {},
-            "show": true,
-            "padding": 5,
-            "itemGap": 10,
-            "itemWidth": 25,
-            "itemHeight": 14,
-            "backgroundColor": "transparent",
-            "borderColor": "#ccc",
-            "borderRadius": 0,
-            "pageButtonItemGap": 5,
-            "pageButtonPosition": "end",
-            "pageFormatter": "{current}/{total}",
-            "pageIconColor": "#2f4554",
-            "pageIconInactiveColor": "#aaa",
-            "pageIconSize": 15,
-            "animationDurationUpdate": 800,
-            "selector": false,
-            "selectorPosition": "auto",
-            "selectorItemGap": 7,
-            "selectorButtonGap": 10
-        }
-    ],
-    "tooltip": {
-        "show": true,
-        "trigger": "axis",
-        "triggerOn": "mousemove|click",
-        "axisPointer": {
-            "type": "line"
         },
-        "showContent": true,
-        "alwaysShowContent": false,
-        "showDelay": 0,
-        "hideDelay": 100,
-        "enterable": false,
-        "confine": true,
-        "appendToBody": false,
-        "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Total Cost: </span>' +                                '<strong style=\"font-size: 13px;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
-        "textStyle": {
-            "color": "#ffffff"
-        },
-        "backgroundColor": "transparent",
-        "borderColor": "transparent",
-        "borderWidth": 0,
-        "padding": 5,
-        "extraCssText": "box-shadow: none;",
-        "order": "seriesAsc"
-    },
-    "xAxis": [
-        {
-            "name": "Region",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "axisLabel": {
-                "show": true,
-                "rotate": 45,
-                "margin": 8,
-                "interval": 0,
-                "valueAnimation": false
-            },
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-                "show": true,
-                "lineStyle": {
-                    "show": true,
-                    "width": 1,
-                    "opacity": 1,
-                    "curveness": 0,
-                    "type": "solid"
-                }
-            },
-            "animation": true,
-            "animationThreshold": 2000,
-            "animationDuration": 1000,
-            "animationEasing": "cubicOut",
-            "animationDelay": 0,
-            "animationDurationUpdate": 300,
-            "animationEasingUpdate": "cubicOut",
-            "animationDelayUpdate": 0,
-            "data": [
-                "us-east-1",
-                "us-west-2",
-                "eu-west-1",
-                "ap-southeast-1",
-                "ap-northeast-1"
-            ]
-        }
-    ],
-    "yAxis": [
-        {
-            "name": "Total Cost (USD)",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "axisLabel": {
-                "show": true,
-                "margin": 8,
-                "formatter": function(value) { return '$' + value.toLocaleString(); },
-                "valueAnimation": false
-            },
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-                "show": true,
-                "lineStyle": {
-                    "show": true,
-                    "width": 1,
-                    "opacity": 1,
-                    "curveness": 0,
-                    "type": "solid"
-                }
-            },
-            "animation": true,
-            "animationThreshold": 2000,
-            "animationDuration": 1000,
-            "animationEasing": "cubicOut",
-            "animationDelay": 0,
-            "animationDurationUpdate": 300,
-            "animationEasingUpdate": "cubicOut",
-            "animationDelayUpdate": 0
-        }
-    ],
-    "title": [
-        {
-            "show": true,
-            "text": "Cost by AWS Region",
-            "target": "blank",
-            "subtarget": "blank",
-            "top": "1%",
-            "padding": 5,
-            "itemGap": 10,
-            "textAlign": "auto",
-            "textVerticalAlign": "auto",
-            "triggerEvent": false,
-            "textStyle": {
-                "fontWeight": "bold",
-                "fontSize": 18
-            }
-        }
-    ],
-    "toolbox": {
-        "show": true,
-        "orient": "horizontal",
-        "itemSize": 15,
-        "itemGap": 10,
-        "left": "80%",
-        "feature": {
-            "saveAsImage": {
-                "type": "png",
-                "backgroundColor": "auto",
-                "connectedBackgroundColor": "#fff",
-                "show": true,
-                "title": "Save as Image",
-                "pixelRatio": 1
-            },
-            "restore": {
-                "show": true,
-                "title": "Restore"
-            },
-            "dataView": {
-                "show": true,
-                "title": "Data View",
-                "readOnly": false,
-                "backgroundColor": "#fff",
-                "textareaColor": "#fff",
-                "textareaBorderColor": "#333",
-                "textColor": "#000",
-                "buttonColor": "#c23531",
-                "buttonTextColor": "#fff"
-            },
-            "dataZoom": {
-                "show": true,
-                "title": {},
-                "icon": {},
-                "filterMode": "filter"
-            },
-            "magicType": {
-                "show": true,
-                "type": [
-                    "line",
-                    "bar",
-                    "stack",
-                    "tiled"
-                ],
-                "title": {},
-                "icon": {}
-            }
-        }
-    }
-};
-        chart_8def1562b2174fe4938a9194eaf2a2dc.setOption(option_8def1562b2174fe4938a9194eaf2a2dc);
-            window.addEventListener('resize', function(){
-                chart_8def1562b2174fe4938a9194eaf2a2dc.resize();
-            })
-    </script>
-<br/>                <div id="277eda2adeed4ec4a85f1e5334b8d5fd" class="chart-container" style="width:100%; height:400px; "></div>
-    <script>
-        var chart_277eda2adeed4ec4a85f1e5334b8d5fd = echarts.init(
-            document.getElementById('277eda2adeed4ec4a85f1e5334b8d5fd'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_277eda2adeed4ec4a85f1e5334b8d5fd = {
-    "animation": true,
-    "animationThreshold": 2000,
-    "animationDuration": 1000,
-    "animationEasing": "cubicOut",
-    "animationDelay": 0,
-    "animationDurationUpdate": 300,
-    "animationEasingUpdate": "cubicOut",
-    "animationDelayUpdate": 0,
-    "aria": {
-        "enabled": false
-    },
-    "series": [
         {
             "type": "bar",
-            "name": "Discount Amount (USD)",
+            "name": "ap-southeast-1",
             "legendHoverLink": true,
             "data": [
-                172550.67,
-                1588791.12
+                0,
+                78909.23,
+                288437.95,
+                307900.85,
+                41809.53,
+                305391.15
             ],
             "realtimeSort": false,
             "showBackground": false,
@@ -3354,248 +2031,25 @@
             "zlevel": 0,
             "z": 2,
             "label": {
-                "show": true,
-                "position": "right",
+                "show": false,
                 "margin": 8,
-                "formatter": function(params) { return '$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
                 "valueAnimation": false
             },
             "itemStyle": {
-                "color": function(params) {                            var colors = {                                'Savings Plans': '#91cc75',                                'Enterprise Discount (EDP)': '#5470c6',                                'Private Rate Discount': '#ee6666',                                'Bundled Discount': '#fac858',                                'Credits': '#73c0de'                            };                            return colors[params.name] || '#91cc75';                        },
-                "borderRadius": 8
+                "color": "#91cc75"
             }
-        }
-    ],
-    "legend": [
-        {
-            "data": [
-                "Discount Amount (USD)"
-            ],
-            "selected": {},
-            "show": true,
-            "padding": 5,
-            "itemGap": 10,
-            "itemWidth": 25,
-            "itemHeight": 14,
-            "backgroundColor": "transparent",
-            "borderColor": "#ccc",
-            "borderRadius": 0,
-            "pageButtonItemGap": 5,
-            "pageButtonPosition": "end",
-            "pageFormatter": "{current}/{total}",
-            "pageIconColor": "#2f4554",
-            "pageIconInactiveColor": "#aaa",
-            "pageIconSize": 15,
-            "animationDurationUpdate": 800,
-            "selector": false,
-            "selectorPosition": "auto",
-            "selectorItemGap": 7,
-            "selectorButtonGap": 10
-        }
-    ],
-    "tooltip": {
-        "show": true,
-        "trigger": "axis",
-        "triggerOn": "mousemove|click",
-        "axisPointer": {
-            "type": "line"
         },
-        "showContent": true,
-        "alwaysShowContent": false,
-        "showDelay": 0,
-        "hideDelay": 100,
-        "enterable": false,
-        "confine": true,
-        "appendToBody": false,
-        "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Discount: </span>' +                                '<strong style=\"font-size: 13px; color: #91cc75;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
-        "textStyle": {
-            "color": "#ffffff"
-        },
-        "backgroundColor": "transparent",
-        "borderColor": "transparent",
-        "borderWidth": 0,
-        "padding": 5,
-        "extraCssText": "box-shadow: none;",
-        "order": "seriesAsc"
-    },
-    "xAxis": [
-        {
-            "name": "Discount Amount (USD)",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "axisLabel": {
-                "show": true,
-                "margin": 8,
-                "formatter": function(value) { return '$' + value.toLocaleString(); },
-                "valueAnimation": false
-            },
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-                "show": true,
-                "lineStyle": {
-                    "show": true,
-                    "width": 1,
-                    "opacity": 1,
-                    "curveness": 0,
-                    "type": "solid"
-                }
-            },
-            "animation": true,
-            "animationThreshold": 2000,
-            "animationDuration": 1000,
-            "animationEasing": "cubicOut",
-            "animationDelay": 0,
-            "animationDurationUpdate": 300,
-            "animationEasingUpdate": "cubicOut",
-            "animationDelayUpdate": 0
-        }
-    ],
-    "yAxis": [
-        {
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "axisLabel": {
-                "show": true,
-                "margin": 8,
-                "interval": 0,
-                "valueAnimation": false
-            },
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-                "show": true,
-                "lineStyle": {
-                    "show": true,
-                    "width": 1,
-                    "opacity": 1,
-                    "curveness": 0,
-                    "type": "solid"
-                }
-            },
-            "animation": true,
-            "animationThreshold": 2000,
-            "animationDuration": 1000,
-            "animationEasing": "cubicOut",
-            "animationDelay": 0,
-            "animationDurationUpdate": 300,
-            "animationEasingUpdate": "cubicOut",
-            "animationDelayUpdate": 0,
-            "data": [
-                "Enterprise Discount (EDP)",
-                "Savings Plans"
-            ]
-        }
-    ],
-    "title": [
-        {
-            "show": true,
-            "text": "Discounts & Rate Reductions by Type",
-            "target": "blank",
-            "subtarget": "blank",
-            "top": "1%",
-            "padding": 5,
-            "itemGap": 10,
-            "textAlign": "auto",
-            "textVerticalAlign": "auto",
-            "triggerEvent": false,
-            "textStyle": {
-                "fontWeight": "bold",
-                "fontSize": 18
-            }
-        }
-    ],
-    "toolbox": {
-        "show": true,
-        "orient": "horizontal",
-        "itemSize": 15,
-        "itemGap": 10,
-        "left": "80%",
-        "feature": {
-            "saveAsImage": {
-                "type": "png",
-                "backgroundColor": "auto",
-                "connectedBackgroundColor": "#fff",
-                "show": true,
-                "title": "Save as Image",
-                "pixelRatio": 1
-            },
-            "restore": {
-                "show": true,
-                "title": "Restore"
-            },
-            "dataView": {
-                "show": true,
-                "title": "Data View",
-                "readOnly": false,
-                "backgroundColor": "#fff",
-                "textareaColor": "#fff",
-                "textareaBorderColor": "#333",
-                "textColor": "#000",
-                "buttonColor": "#c23531",
-                "buttonTextColor": "#fff"
-            },
-            "dataZoom": {
-                "show": true,
-                "title": {},
-                "icon": {},
-                "filterMode": "filter"
-            },
-            "magicType": {
-                "show": true,
-                "type": [
-                    "line",
-                    "bar",
-                    "stack",
-                    "tiled"
-                ],
-                "title": {},
-                "icon": {}
-            }
-        }
-    }
-};
-        chart_277eda2adeed4ec4a85f1e5334b8d5fd.setOption(option_277eda2adeed4ec4a85f1e5334b8d5fd);
-            window.addEventListener('resize', function(){
-                chart_277eda2adeed4ec4a85f1e5334b8d5fd.resize();
-            })
-    </script>
-<br/>                <div id="cc69431289cc4e2a8c3a9ef9aea50bd3" class="chart-container" style="width:100%; height:500px; "></div>
-    <script>
-        var chart_cc69431289cc4e2a8c3a9ef9aea50bd3 = echarts.init(
-            document.getElementById('cc69431289cc4e2a8c3a9ef9aea50bd3'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_cc69431289cc4e2a8c3a9ef9aea50bd3 = {
-    "animation": true,
-    "animationThreshold": 2000,
-    "animationDuration": 1000,
-    "animationEasing": "cubicOut",
-    "animationDelay": 0,
-    "animationDurationUpdate": 300,
-    "animationEasingUpdate": "cubicOut",
-    "animationDelayUpdate": 0,
-    "aria": {
-        "enabled": false
-    },
-    "series": [
         {
             "type": "bar",
-            "name": "Discount Amount (USD)",
+            "name": "eu-west-1",
             "legendHoverLink": true,
             "data": [
-                718286.51,
-                476205.7,
-                394298.91,
-                105684.39,
-                66866.28
+                268318.55,
+                140925.52,
+                239524.01,
+                147508.05,
+                273205.09,
+                193571.49
             ],
             "realtimeSort": false,
             "showBackground": false,
@@ -3612,251 +2066,25 @@
             "zlevel": 0,
             "z": 2,
             "label": {
-                "show": true,
-                "position": "top",
+                "show": false,
                 "margin": 8,
-                "formatter": function(params) { return '$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
                 "valueAnimation": false
             },
             "itemStyle": {
-                "color": "#91cc75",
-                "borderRadius": 8
+                "color": "#fac858"
             }
-        }
-    ],
-    "legend": [
-        {
-            "data": [
-                "Discount Amount (USD)"
-            ],
-            "selected": {},
-            "show": true,
-            "padding": 5,
-            "itemGap": 10,
-            "itemWidth": 25,
-            "itemHeight": 14,
-            "backgroundColor": "transparent",
-            "borderColor": "#ccc",
-            "borderRadius": 0,
-            "pageButtonItemGap": 5,
-            "pageButtonPosition": "end",
-            "pageFormatter": "{current}/{total}",
-            "pageIconColor": "#2f4554",
-            "pageIconInactiveColor": "#aaa",
-            "pageIconSize": 15,
-            "animationDurationUpdate": 800,
-            "selector": false,
-            "selectorPosition": "auto",
-            "selectorItemGap": 7,
-            "selectorButtonGap": 10
-        }
-    ],
-    "tooltip": {
-        "show": true,
-        "trigger": "axis",
-        "triggerOn": "mousemove|click",
-        "axisPointer": {
-            "type": "line"
         },
-        "showContent": true,
-        "alwaysShowContent": false,
-        "showDelay": 0,
-        "hideDelay": 100,
-        "enterable": false,
-        "confine": true,
-        "appendToBody": false,
-        "transitionDuration": 0.4,
-        "formatter": function(params) {                            return '<div style=\"' + `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        ` + '\">' +                                '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/>' +                                '<span style=\"opacity: 0.9;\">Discount: </span>' +                                '<strong style=\"font-size: 13px; color: #91cc75;\">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +                                '</div>';                        },
-        "textStyle": {
-            "color": "#ffffff"
-        },
-        "backgroundColor": "transparent",
-        "borderColor": "transparent",
-        "borderWidth": 0,
-        "padding": 5,
-        "extraCssText": "box-shadow: none;",
-        "order": "seriesAsc"
-    },
-    "xAxis": [
-        {
-            "name": "Service",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "axisLabel": {
-                "show": true,
-                "rotate": 45,
-                "margin": 8,
-                "interval": 0,
-                "valueAnimation": false
-            },
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-                "show": true,
-                "lineStyle": {
-                    "show": true,
-                    "width": 1,
-                    "opacity": 1,
-                    "curveness": 0,
-                    "type": "solid"
-                }
-            },
-            "animation": true,
-            "animationThreshold": 2000,
-            "animationDuration": 1000,
-            "animationEasing": "cubicOut",
-            "animationDelay": 0,
-            "animationDurationUpdate": 300,
-            "animationEasingUpdate": "cubicOut",
-            "animationDelayUpdate": 0,
-            "data": [
-                "AmazonEC2",
-                "AmazonRDS",
-                "AmazonEKS",
-                "AmazonS3",
-                "AmazonCloudFront"
-            ]
-        }
-    ],
-    "yAxis": [
-        {
-            "name": "Discount Amount (USD)",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "axisLabel": {
-                "show": true,
-                "margin": 8,
-                "formatter": function(value) { return '$' + value.toLocaleString(); },
-                "valueAnimation": false
-            },
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-                "show": true,
-                "lineStyle": {
-                    "show": true,
-                    "width": 1,
-                    "opacity": 1,
-                    "curveness": 0,
-                    "type": "solid"
-                }
-            },
-            "animation": true,
-            "animationThreshold": 2000,
-            "animationDuration": 1000,
-            "animationEasing": "cubicOut",
-            "animationDelay": 0,
-            "animationDurationUpdate": 300,
-            "animationEasingUpdate": "cubicOut",
-            "animationDelayUpdate": 0
-        }
-    ],
-    "title": [
-        {
-            "show": true,
-            "text": "Discounts by Service",
-            "target": "blank",
-            "subtarget": "blank",
-            "top": "1%",
-            "padding": 5,
-            "itemGap": 10,
-            "textAlign": "auto",
-            "textVerticalAlign": "auto",
-            "triggerEvent": false,
-            "textStyle": {
-                "fontWeight": "bold",
-                "fontSize": 18
-            }
-        }
-    ],
-    "toolbox": {
-        "show": true,
-        "orient": "horizontal",
-        "itemSize": 15,
-        "itemGap": 10,
-        "left": "80%",
-        "feature": {
-            "saveAsImage": {
-                "type": "png",
-                "backgroundColor": "auto",
-                "connectedBackgroundColor": "#fff",
-                "show": true,
-                "title": "Save as Image",
-                "pixelRatio": 1
-            },
-            "restore": {
-                "show": true,
-                "title": "Restore"
-            },
-            "dataView": {
-                "show": true,
-                "title": "Data View",
-                "readOnly": false,
-                "backgroundColor": "#fff",
-                "textareaColor": "#fff",
-                "textareaBorderColor": "#333",
-                "textColor": "#000",
-                "buttonColor": "#c23531",
-                "buttonTextColor": "#fff"
-            },
-            "dataZoom": {
-                "show": true,
-                "title": {},
-                "icon": {},
-                "filterMode": "filter"
-            },
-            "magicType": {
-                "show": true,
-                "type": [
-                    "line",
-                    "bar",
-                    "stack",
-                    "tiled"
-                ],
-                "title": {},
-                "icon": {}
-            }
-        }
-    }
-};
-        chart_cc69431289cc4e2a8c3a9ef9aea50bd3.setOption(option_cc69431289cc4e2a8c3a9ef9aea50bd3);
-            window.addEventListener('resize', function(){
-                chart_cc69431289cc4e2a8c3a9ef9aea50bd3.resize();
-            })
-    </script>
-<br/>                <div id="bf54696d4cb84f76a1f89fc0ec16045f" class="chart-container" style="width:100%; height:500px; "></div>
-    <script>
-        var chart_bf54696d4cb84f76a1f89fc0ec16045f = echarts.init(
-            document.getElementById('bf54696d4cb84f76a1f89fc0ec16045f'), 'macarons', {renderer: 'canvas', locale: 'EN'});
-        var option_bf54696d4cb84f76a1f89fc0ec16045f = {
-    "animation": true,
-    "animationThreshold": 2000,
-    "animationDuration": 1000,
-    "animationEasing": "cubicOut",
-    "animationDelay": 0,
-    "animationDurationUpdate": 300,
-    "animationEasingUpdate": "cubicOut",
-    "animationDelayUpdate": 0,
-    "aria": {
-        "enabled": false
-    },
-    "series": [
         {
             "type": "bar",
-            "name": "On-Demand Equivalent",
+            "name": "us-east-1",
             "legendHoverLink": true,
             "data": [
-                1436573.08,
-                952411.35,
-                788597.83
+                1908220.04,
+                1933573.33,
+                2413713.81,
+                2491926.71,
+                2676547.06,
+                2753632.67
             ],
             "realtimeSort": false,
             "showBackground": false,
@@ -3883,12 +2111,1139 @@
         },
         {
             "type": "bar",
+            "name": "us-west-2",
+            "legendHoverLink": true,
+            "data": [
+                706033.99,
+                643561.92,
+                466540.49,
+                449665.26,
+                837450.87,
+                686415.1
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#73c0de"
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                "ap-northeast-1",
+                "ap-southeast-1",
+                "eu-west-1",
+                "us-east-1",
+                "us-west-2"
+            ],
+            "selected": {},
+            "type": "scroll",
+            "selectedMode": "multiple",
+            "show": true,
+            "top": "10%",
+            "orient": "horizontal",
+            "padding": 5,
+            "itemGap": 10,
+            "itemWidth": 25,
+            "itemHeight": 14,
+            "backgroundColor": "transparent",
+            "borderColor": "#ccc",
+            "borderRadius": 0,
+            "pageButtonItemGap": 5,
+            "pageButtonPosition": "end",
+            "pageFormatter": "{current}/{total}",
+            "pageIconColor": "#2f4554",
+            "pageIconInactiveColor": "#aaa",
+            "pageIconSize": 15,
+            "animationDurationUpdate": 800,
+            "selector": false,
+            "selectorPosition": "auto",
+            "selectorItemGap": 7,
+            "selectorButtonGap": 10
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "axis",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "shadow"
+        },
+        "showContent": true,
+        "alwaysShowContent": false,
+        "showDelay": 0,
+        "hideDelay": 100,
+        "enterable": false,
+        "confine": true,
+        "appendToBody": false,
+        "transitionDuration": 0.4,
+        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 2px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">' + item.seriesName + ':</span> ';                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
+        "textStyle": {
+            "color": "#ffffff"
+        },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
+        "borderWidth": 0,
+        "padding": 5,
+        "extraCssText": "box-shadow: none;",
+        "order": "seriesAsc"
+    },
+    "xAxis": [
+        {
+            "type": "category",
+            "name": "Month",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "axisLabel": {
+                "show": true,
+                "rotate": 45,
+                "margin": 8,
+                "interval": "auto",
+                "valueAnimation": false
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": true,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "animation": true,
+            "animationThreshold": 2000,
+            "animationDuration": 1000,
+            "animationEasing": "cubicOut",
+            "animationDelay": 0,
+            "animationDurationUpdate": 300,
+            "animationEasingUpdate": "cubicOut",
+            "animationDelayUpdate": 0,
+            "data": [
+                "2024-01",
+                "2024-02",
+                "2024-03",
+                "2024-04",
+                "2024-05",
+                "2024-06"
+            ]
+        }
+    ],
+    "yAxis": [
+        {
+            "name": "Total Cost (USD)",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "axisLabel": {
+                "show": true,
+                "margin": 8,
+                "formatter": function(value) { return '$' + value.toLocaleString(); },
+                "valueAnimation": false
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": true,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "animation": true,
+            "animationThreshold": 2000,
+            "animationDuration": 1000,
+            "animationEasing": "cubicOut",
+            "animationDelay": 0,
+            "animationDurationUpdate": 300,
+            "animationEasingUpdate": "cubicOut",
+            "animationDelayUpdate": 0
+        }
+    ],
+    "title": [
+        {
+            "show": true,
+            "text": "Monthly Cost by Region",
+            "target": "blank",
+            "subtarget": "blank",
+            "top": "1%",
+            "padding": 5,
+            "itemGap": 10,
+            "textAlign": "auto",
+            "textVerticalAlign": "auto",
+            "triggerEvent": false,
+            "textStyle": {
+                "fontWeight": "bold",
+                "fontSize": 18
+            }
+        }
+    ],
+    "toolbox": {
+        "show": true,
+        "orient": "horizontal",
+        "itemSize": 15,
+        "itemGap": 10,
+        "left": "80%",
+        "feature": {
+            "saveAsImage": {
+                "type": "png",
+                "backgroundColor": "auto",
+                "connectedBackgroundColor": "#fff",
+                "show": true,
+                "title": "Save as Image",
+                "pixelRatio": 1
+            },
+            "restore": {
+                "show": true,
+                "title": "Restore"
+            },
+            "dataView": {
+                "show": true,
+                "title": "Data View",
+                "readOnly": false,
+                "backgroundColor": "#fff",
+                "textareaColor": "#fff",
+                "textareaBorderColor": "#333",
+                "textColor": "#000",
+                "buttonColor": "#c23531",
+                "buttonTextColor": "#fff"
+            },
+            "dataZoom": {
+                "show": true,
+                "title": {
+                    "zoom": "Zoom",
+                    "back": "Reset Zoom"
+                },
+                "icon": {},
+                "filterMode": "filter"
+            },
+            "magicType": {
+                "show": true,
+                "type": [
+                    "line",
+                    "bar",
+                    "stack",
+                    "tiled"
+                ],
+                "title": {
+                    "line": "Line",
+                    "bar": "Bar",
+                    "stack": "Stack"
+                },
+                "icon": {}
+            }
+        }
+    },
+    "dataZoom": [
+        {
+            "show": true,
+            "type": "slider",
+            "showDetail": true,
+            "showDataShadow": true,
+            "realtime": true,
+            "start": 0,
+            "end": 100,
+            "orient": "horizontal",
+            "zoomLock": false,
+            "filterMode": "filter"
+        },
+        {
+            "show": true,
+            "type": "inside",
+            "showDetail": true,
+            "showDataShadow": true,
+            "realtime": true,
+            "start": 20,
+            "end": 80,
+            "orient": "horizontal",
+            "zoomLock": false,
+            "filterMode": "filter",
+            "disabled": false,
+            "zoomOnMouseWheel": true,
+            "moveOnMouseMove": true,
+            "moveOnMouseWheel": true,
+            "preventDefaultMouseMove": true
+        }
+    ]
+};
+        chart_2809d150da484bd7b7e5220fd732f676.setOption(option_2809d150da484bd7b7e5220fd732f676);
+            window.addEventListener('resize', function(){
+                chart_2809d150da484bd7b7e5220fd732f676.resize();
+            })
+    </script>
+<br/>                <div id="477d48d213bd468cac65b6e3e99c9ffe" class="chart-container" style="width:100%; height:650px; "></div>
+    <script>
+        var chart_477d48d213bd468cac65b6e3e99c9ffe = echarts.init(
+            document.getElementById('477d48d213bd468cac65b6e3e99c9ffe'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_477d48d213bd468cac65b6e3e99c9ffe = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "aria": {
+        "enabled": false
+    },
+    "series": [
+        {
+            "type": "bar",
+            "name": "Enterprise Discount (EDP)",
+            "legendHoverLink": true,
+            "data": [
+                26818.69,
+                27520.1,
+                28721.93,
+                29073.41,
+                30361.5,
+                30055.04
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stack": "discounts",
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#91cc75"
+            }
+        },
+        {
+            "type": "bar",
+            "name": "Savings Plans",
+            "legendHoverLink": true,
+            "data": [
+                218584.48,
+                222943.0,
+                262239.15,
+                263267.32,
+                308070.14,
+                313687.03
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stack": "discounts",
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#5470c6"
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                "Enterprise Discount (EDP)",
+                "Savings Plans"
+            ],
+            "selected": {},
+            "type": "scroll",
+            "selectedMode": "multiple",
+            "show": true,
+            "top": "12%",
+            "orient": "horizontal",
+            "padding": 5,
+            "itemGap": 10,
+            "itemWidth": 25,
+            "itemHeight": 14,
+            "backgroundColor": "transparent",
+            "borderColor": "#ccc",
+            "borderRadius": 0,
+            "pageButtonItemGap": 5,
+            "pageButtonPosition": "end",
+            "pageFormatter": "{current}/{total}",
+            "pageIconColor": "#2f4554",
+            "pageIconInactiveColor": "#aaa",
+            "pageIconSize": 15,
+            "animationDurationUpdate": 800,
+            "selector": false,
+            "selectorPosition": "auto",
+            "selectorItemGap": 7,
+            "selectorButtonGap": 10
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "axis",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "shadow"
+        },
+        "showContent": true,
+        "alwaysShowContent": false,
+        "showDelay": 0,
+        "hideDelay": 100,
+        "enterable": false,
+        "confine": true,
+        "appendToBody": false,
+        "transitionDuration": 0.4,
+        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/><br/>';                        var total = 0;                        params.forEach(function(item) {                            total += item.value;                            result += '<div style=\"margin: 2px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">' + item.seriesName + ':</span> ';                            result += '<strong style=\"color: #91cc75;\">$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '<hr style=\"margin: 4px 0; border-color: rgba(255,255,255,0.2);\"/>';                        result += '<div><strong>Total: $' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';                        result += '</div>';                        return result;                    },
+        "textStyle": {
+            "color": "#ffffff"
+        },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
+        "borderWidth": 0,
+        "padding": 5,
+        "extraCssText": "box-shadow: none;",
+        "order": "seriesAsc"
+    },
+    "xAxis": [
+        {
+            "type": "category",
+            "name": "Month",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "axisLabel": {
+                "show": true,
+                "rotate": 45,
+                "margin": 8,
+                "interval": "auto",
+                "valueAnimation": false
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": true,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "animation": true,
+            "animationThreshold": 2000,
+            "animationDuration": 1000,
+            "animationEasing": "cubicOut",
+            "animationDelay": 0,
+            "animationDurationUpdate": 300,
+            "animationEasingUpdate": "cubicOut",
+            "animationDelayUpdate": 0,
+            "data": [
+                "2024-01",
+                "2024-02",
+                "2024-03",
+                "2024-04",
+                "2024-05",
+                "2024-06"
+            ]
+        }
+    ],
+    "yAxis": [
+        {
+            "name": "Discount Amount (USD)",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "axisLabel": {
+                "show": true,
+                "margin": 8,
+                "formatter": function(value) { return '$' + value.toLocaleString(); },
+                "valueAnimation": false
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": true,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "animation": true,
+            "animationThreshold": 2000,
+            "animationDuration": 1000,
+            "animationEasing": "cubicOut",
+            "animationDelay": 0,
+            "animationDurationUpdate": 300,
+            "animationEasingUpdate": "cubicOut",
+            "animationDelayUpdate": 0
+        }
+    ],
+    "title": [
+        {
+            "show": true,
+            "text": "Monthly Discounts by Type",
+            "target": "blank",
+            "subtext": "How your discounts and credits trend over time",
+            "subtarget": "blank",
+            "top": "1%",
+            "padding": 5,
+            "itemGap": 10,
+            "textAlign": "auto",
+            "textVerticalAlign": "auto",
+            "triggerEvent": false,
+            "textStyle": {
+                "fontWeight": "bold",
+                "fontSize": 18
+            }
+        }
+    ],
+    "toolbox": {
+        "show": true,
+        "orient": "horizontal",
+        "itemSize": 15,
+        "itemGap": 10,
+        "left": "80%",
+        "feature": {
+            "saveAsImage": {
+                "type": "png",
+                "backgroundColor": "auto",
+                "connectedBackgroundColor": "#fff",
+                "show": true,
+                "title": "Save as Image",
+                "pixelRatio": 1
+            },
+            "restore": {
+                "show": true,
+                "title": "Restore"
+            },
+            "dataView": {
+                "show": true,
+                "title": "Data View",
+                "readOnly": false,
+                "backgroundColor": "#fff",
+                "textareaColor": "#fff",
+                "textareaBorderColor": "#333",
+                "textColor": "#000",
+                "buttonColor": "#c23531",
+                "buttonTextColor": "#fff"
+            },
+            "dataZoom": {
+                "show": true,
+                "title": {},
+                "icon": {},
+                "filterMode": "filter"
+            },
+            "magicType": {
+                "show": true,
+                "type": [
+                    "line",
+                    "bar",
+                    "stack",
+                    "tiled"
+                ],
+                "title": {},
+                "icon": {}
+            }
+        }
+    },
+    "dataZoom": [
+        {
+            "show": true,
+            "type": "slider",
+            "showDetail": true,
+            "showDataShadow": true,
+            "realtime": true,
+            "start": 0,
+            "end": 100,
+            "orient": "horizontal",
+            "zoomLock": false,
+            "filterMode": "filter"
+        },
+        {
+            "show": true,
+            "type": "inside",
+            "showDetail": true,
+            "showDataShadow": true,
+            "realtime": true,
+            "start": 20,
+            "end": 80,
+            "orient": "horizontal",
+            "zoomLock": false,
+            "filterMode": "filter",
+            "disabled": false,
+            "zoomOnMouseWheel": true,
+            "moveOnMouseMove": true,
+            "moveOnMouseWheel": true,
+            "preventDefaultMouseMove": true
+        }
+    ]
+};
+        chart_477d48d213bd468cac65b6e3e99c9ffe.setOption(option_477d48d213bd468cac65b6e3e99c9ffe);
+            window.addEventListener('resize', function(){
+                chart_477d48d213bd468cac65b6e3e99c9ffe.resize();
+            })
+    </script>
+<br/>                <div id="d6b417486f3f4faeaa6e73a72eefca4c" class="chart-container" style="width:100%; height:650px; "></div>
+    <script>
+        var chart_d6b417486f3f4faeaa6e73a72eefca4c = echarts.init(
+            document.getElementById('d6b417486f3f4faeaa6e73a72eefca4c'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_d6b417486f3f4faeaa6e73a72eefca4c = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "aria": {
+        "enabled": false
+    },
+    "series": [
+        {
+            "type": "bar",
+            "name": "AmazonCloudFront",
+            "legendHoverLink": true,
+            "data": [
+                11519.68,
+                11173.21,
+                11671.15,
+                11039.3,
+                11274.34,
+                10188.6
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#91cc75"
+            }
+        },
+        {
+            "type": "bar",
+            "name": "AmazonEC2",
+            "legendHoverLink": true,
+            "data": [
+                100416.11,
+                102356.24,
+                117989.0,
+                118436.99,
+                138776.29,
+                140311.88
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#5470c6"
+            }
+        },
+        {
+            "type": "bar",
+            "name": "AmazonEKS",
+            "legendHoverLink": true,
+            "data": [
+                54359.13,
+                52567.94,
+                69032.43,
+                64429.6,
+                76916.7,
+                76993.11
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#fac858"
+            }
+        },
+        {
+            "type": "bar",
+            "name": "AmazonRDS",
+            "legendHoverLink": true,
+            "data": [
+                63809.24,
+                68018.82,
+                75217.72,
+                80400.73,
+                92377.15,
+                96382.04
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#ee6666"
+            }
+        },
+        {
+            "type": "bar",
+            "name": "AmazonS3",
+            "legendHoverLink": true,
+            "data": [
+                15299.01,
+                16346.89,
+                17050.78,
+                18034.11,
+                19087.16,
+                19866.44
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#73c0de"
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                "AmazonCloudFront",
+                "AmazonEC2",
+                "AmazonEKS",
+                "AmazonRDS",
+                "AmazonS3"
+            ],
+            "selected": {},
+            "type": "scroll",
+            "selectedMode": "multiple",
+            "show": true,
+            "top": "10%",
+            "orient": "horizontal",
+            "padding": 5,
+            "itemGap": 10,
+            "itemWidth": 25,
+            "itemHeight": 14,
+            "backgroundColor": "transparent",
+            "borderColor": "#ccc",
+            "borderRadius": 0,
+            "pageButtonItemGap": 5,
+            "pageButtonPosition": "end",
+            "pageFormatter": "{current}/{total}",
+            "pageIconColor": "#2f4554",
+            "pageIconInactiveColor": "#aaa",
+            "pageIconSize": 15,
+            "animationDurationUpdate": 800,
+            "selector": false,
+            "selectorPosition": "auto",
+            "selectorItemGap": 7,
+            "selectorButtonGap": 10
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "axis",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "shadow"
+        },
+        "showContent": true,
+        "alwaysShowContent": false,
+        "showDelay": 0,
+        "hideDelay": 100,
+        "enterable": false,
+        "confine": true,
+        "appendToBody": false,
+        "transitionDuration": 0.4,
+        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 2px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">' + item.seriesName + ':</span> ';                            result += '<strong style=\"color: #91cc75;\">$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
+        "textStyle": {
+            "color": "#ffffff"
+        },
+        "backgroundColor": "transparent",
+        "borderColor": "transparent",
+        "borderWidth": 0,
+        "padding": 5,
+        "extraCssText": "box-shadow: none;",
+        "order": "seriesAsc"
+    },
+    "xAxis": [
+        {
+            "type": "category",
+            "name": "Month",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "axisLabel": {
+                "show": true,
+                "rotate": 45,
+                "margin": 8,
+                "interval": "auto",
+                "valueAnimation": false
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": true,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "animation": true,
+            "animationThreshold": 2000,
+            "animationDuration": 1000,
+            "animationEasing": "cubicOut",
+            "animationDelay": 0,
+            "animationDurationUpdate": 300,
+            "animationEasingUpdate": "cubicOut",
+            "animationDelayUpdate": 0,
+            "data": [
+                "2024-01",
+                "2024-02",
+                "2024-03",
+                "2024-04",
+                "2024-05",
+                "2024-06"
+            ]
+        }
+    ],
+    "yAxis": [
+        {
+            "name": "Discount Amount (USD)",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "axisLabel": {
+                "show": true,
+                "margin": 8,
+                "formatter": function(value) { return '$' + value.toLocaleString(); },
+                "valueAnimation": false
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": true,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "animation": true,
+            "animationThreshold": 2000,
+            "animationDuration": 1000,
+            "animationEasing": "cubicOut",
+            "animationDelay": 0,
+            "animationDurationUpdate": 300,
+            "animationEasingUpdate": "cubicOut",
+            "animationDelayUpdate": 0
+        }
+    ],
+    "title": [
+        {
+            "show": true,
+            "text": "Monthly Discounts by Service",
+            "target": "blank",
+            "subtarget": "blank",
+            "top": "1%",
+            "padding": 5,
+            "itemGap": 10,
+            "textAlign": "auto",
+            "textVerticalAlign": "auto",
+            "triggerEvent": false,
+            "textStyle": {
+                "fontWeight": "bold",
+                "fontSize": 18
+            }
+        }
+    ],
+    "toolbox": {
+        "show": true,
+        "orient": "horizontal",
+        "itemSize": 15,
+        "itemGap": 10,
+        "left": "80%",
+        "feature": {
+            "saveAsImage": {
+                "type": "png",
+                "backgroundColor": "auto",
+                "connectedBackgroundColor": "#fff",
+                "show": true,
+                "title": "Save as Image",
+                "pixelRatio": 1
+            },
+            "restore": {
+                "show": true,
+                "title": "Restore"
+            },
+            "dataView": {
+                "show": true,
+                "title": "Data View",
+                "readOnly": false,
+                "backgroundColor": "#fff",
+                "textareaColor": "#fff",
+                "textareaBorderColor": "#333",
+                "textColor": "#000",
+                "buttonColor": "#c23531",
+                "buttonTextColor": "#fff"
+            },
+            "dataZoom": {
+                "show": true,
+                "title": {},
+                "icon": {},
+                "filterMode": "filter"
+            },
+            "magicType": {
+                "show": true,
+                "type": [
+                    "line",
+                    "bar",
+                    "stack",
+                    "tiled"
+                ],
+                "title": {},
+                "icon": {}
+            }
+        }
+    },
+    "dataZoom": [
+        {
+            "show": true,
+            "type": "slider",
+            "showDetail": true,
+            "showDataShadow": true,
+            "realtime": true,
+            "start": 0,
+            "end": 100,
+            "orient": "horizontal",
+            "zoomLock": false,
+            "filterMode": "filter"
+        },
+        {
+            "show": true,
+            "type": "inside",
+            "showDetail": true,
+            "showDataShadow": true,
+            "realtime": true,
+            "start": 20,
+            "end": 80,
+            "orient": "horizontal",
+            "zoomLock": false,
+            "filterMode": "filter",
+            "disabled": false,
+            "zoomOnMouseWheel": true,
+            "moveOnMouseMove": true,
+            "moveOnMouseWheel": true,
+            "preventDefaultMouseMove": true
+        }
+    ]
+};
+        chart_d6b417486f3f4faeaa6e73a72eefca4c.setOption(option_d6b417486f3f4faeaa6e73a72eefca4c);
+            window.addEventListener('resize', function(){
+                chart_d6b417486f3f4faeaa6e73a72eefca4c.resize();
+            })
+    </script>
+<br/>                <div id="30e76f993bc7430cad9e6900fdc8fbca" class="chart-container" style="width:100%; height:600px; "></div>
+    <script>
+        var chart_30e76f993bc7430cad9e6900fdc8fbca = echarts.init(
+            document.getElementById('30e76f993bc7430cad9e6900fdc8fbca'), 'macarons', {renderer: 'canvas', locale: 'EN'});
+        var option_30e76f993bc7430cad9e6900fdc8fbca = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "aria": {
+        "enabled": false
+    },
+    "series": [
+        {
+            "type": "bar",
+            "name": "On-Demand Equivalent",
+            "legendHoverLink": true,
+            "data": [
+                437168.96,
+                445886.01,
+                524478.31,
+                526534.66,
+                616140.29,
+                627374.03
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+                "show": false,
+                "margin": 8,
+                "valueAnimation": false
+            },
+            "itemStyle": {
+                "color": "#ee6666",
+                "opacity": 0.7
+            }
+        },
+        {
+            "type": "bar",
             "name": "Savings",
             "legendHoverLink": true,
             "data": [
-                718286.51,
-                476205.7,
-                394298.91
+                218584.48,
+                222943.0,
+                262239.15,
+                263267.32,
+                308070.14,
+                313687.03
             ],
             "realtimeSort": false,
             "showBackground": false,
@@ -3914,17 +3269,81 @@
             "itemStyle": {
                 "color": "#91cc75"
             }
+        },
+        {
+            "type": "line",
+            "name": "Savings %",
+            "connectNulls": false,
+            "xAxisIndex": 0,
+            "yAxisIndex": 1,
+            "symbolSize": 10,
+            "showSymbol": true,
+            "smooth": true,
+            "clip": true,
+            "step": false,
+            "stackStrategy": "samesign",
+            "data": [
+                [
+                    "2024-01",
+                    50.0
+                ],
+                [
+                    "2024-02",
+                    50.0
+                ],
+                [
+                    "2024-03",
+                    50.0
+                ],
+                [
+                    "2024-04",
+                    50.0
+                ],
+                [
+                    "2024-05",
+                    50.0
+                ],
+                [
+                    "2024-06",
+                    50.0
+                ]
+            ],
+            "hoverAnimation": true,
+            "label": {
+                "show": true,
+                "margin": 8,
+                "formatter": function(params) { return params.value + '%'; },
+                "valueAnimation": false
+            },
+            "logBase": 10,
+            "seriesLayoutBy": "column",
+            "lineStyle": {
+                "show": true,
+                "width": 3,
+                "opacity": 1,
+                "curveness": 0,
+                "type": "dashed"
+            },
+            "areaStyle": {
+                "opacity": 0
+            },
+            "itemStyle": {
+                "color": "#fac858"
+            },
+            "zlevel": 0,
+            "z": 0
         }
     ],
     "legend": [
         {
             "data": [
                 "On-Demand Equivalent",
-                "Savings"
+                "Savings",
+                "Savings %"
             ],
             "selected": {},
             "show": true,
-            "top": "10%",
+            "top": "12%",
             "padding": 5,
             "itemGap": 10,
             "itemWidth": 25,
@@ -3960,7 +3379,7 @@
         "confine": true,
         "appendToBody": false,
         "transitionDuration": 0.4,
-        "formatter": function(params) {                            var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        `;                            var onDemand = params[0] ? params[0].value : 0;                            var savings = params[1] ? params[1].value : 0;                            var pct = onDemand > 0 ? ((savings / onDemand) * 100).toFixed(1) : 0;                            var result = '<div style=\"' + style + '\">';                            result += '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/><br/>';                            result += '<div style=\"margin: 2px 0;\">';                            result += params[0].marker + ' <span style=\"opacity: 0.9;\">On-Demand:</span> ';                            result += '<strong style=\"color: #ee6666;\">$' + onDemand.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</strong></div>';                            result += '<div style=\"margin: 2px 0;\">';                            result += params[1].marker + ' <span style=\"opacity: 0.9;\">Savings:</span> ';                            result += '<strong style=\"color: #91cc75;\">$' + savings.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</strong></div>';                            result += '<div style=\"margin: 4px 0 0 0; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.3);\">';                            result += '<span style=\"opacity: 0.9;\">Savings Rate:</span> <strong>' + pct + '%</strong></div>';                            result += '</div>';                            return result;                        },
+        "formatter": function(params) {                        var style = `            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            border: none;            border-radius: 4px;            padding: 6px 10px;            box-shadow: none;            color: #ffffff;            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            font-size: 12px;            line-height: 1.4;            max-width: 200px;            white-space: normal;        `;                        var result = '<div style=\"' + style + '\">';                        result += '<strong style=\"font-size: 12px;\">' + params[0].name + '</strong><br/><br/>';                        params.forEach(function(item) {                            result += '<div style=\"margin: 2px 0;\">';                            result += item.marker + ' ';                            result += '<span style=\"opacity: 0.9;\">' + item.seriesName + ':</span> ';                            if (item.seriesName === 'Savings %') {                                result += '<strong style=\"color: #fac858;\">' + item.value + '%</strong>';                            } else {                                result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';                            }                            result += '</div>';                        });                        result += '</div>';                        return result;                    },
         "textStyle": {
             "color": "#ffffff"
         },
@@ -3973,7 +3392,7 @@
     },
     "xAxis": [
         {
-            "name": "Service",
+            "name": "Month",
             "show": true,
             "scale": false,
             "nameLocation": "end",
@@ -3982,7 +3401,6 @@
                 "show": true,
                 "rotate": 45,
                 "margin": 8,
-                "interval": 0,
                 "valueAnimation": false
             },
             "inverse": false,
@@ -4008,9 +3426,12 @@
             "animationEasingUpdate": "cubicOut",
             "animationDelayUpdate": 0,
             "data": [
-                "AmazonEC2",
-                "AmazonRDS",
-                "AmazonEKS"
+                "2024-01",
+                "2024-02",
+                "2024-03",
+                "2024-04",
+                "2024-05",
+                "2024-06"
             ]
         }
     ],
@@ -4049,14 +3470,52 @@
             "animationDurationUpdate": 300,
             "animationEasingUpdate": "cubicOut",
             "animationDelayUpdate": 0
+        },
+        {
+            "name": "Savings %",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "axisLabel": {
+                "show": true,
+                "margin": 8,
+                "formatter": "{value}%",
+                "valueAnimation": false
+            },
+            "inverse": false,
+            "position": "right",
+            "offset": 0,
+            "splitNumber": 5,
+            "min": 0,
+            "max": 100,
+            "minInterval": 0,
+            "splitLine": {
+                "show": true,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "animation": true,
+            "animationThreshold": 2000,
+            "animationDuration": 1000,
+            "animationEasing": "cubicOut",
+            "animationDelay": 0,
+            "animationDurationUpdate": 300,
+            "animationEasingUpdate": "cubicOut",
+            "animationDelayUpdate": 0
         }
     ],
     "title": [
         {
             "show": true,
-            "text": "Savings Plan Effectiveness",
+            "text": "Monthly Savings Plan Effectiveness",
             "target": "blank",
-            "subtext": "How much Savings Plans save you vs On-Demand pricing",
+            "subtext": "Monthly Savings Plan savings compared to on-demand pricing",
             "subtarget": "blank",
             "top": "1%",
             "padding": 5,
@@ -4120,9 +3579,9 @@
         }
     }
 };
-        chart_bf54696d4cb84f76a1f89fc0ec16045f.setOption(option_bf54696d4cb84f76a1f89fc0ec16045f);
+        chart_30e76f993bc7430cad9e6900fdc8fbca.setOption(option_30e76f993bc7430cad9e6900fdc8fbca);
             window.addEventListener('resize', function(){
-                chart_bf54696d4cb84f76a1f89fc0ec16045f.resize();
+                chart_30e76f993bc7430cad9e6900fdc8fbca.resize();
             })
     </script>
 <br/>    </div>
@@ -4134,7 +3593,7 @@
                     </div>
                 </div>
                 <div class="footer">
-                    <strong>Report generated on 2025-12-03 12:34:59</strong><br>
+                    <strong>Report generated on 2025-12-03 14:44:16</strong><br>
                     Powered by Apache ECharts | AWS Cost and Usage Report Generator
                 </div>
             </div>

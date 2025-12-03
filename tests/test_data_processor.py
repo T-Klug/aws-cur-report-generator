@@ -297,3 +297,97 @@ class TestCURDataProcessor:
 
         # Should not crash
         assert processor.df.is_empty()
+
+    def test_get_cost_trend_by_region(self, sample_cur_data):
+        """Test monthly cost trends over time for regions."""
+        processor = CURDataProcessor(sample_cur_data)
+        region_trend = processor.get_cost_trend_by_region(top_regions=3)
+
+        assert isinstance(region_trend, pd.DataFrame)
+        assert "month" in region_trend.columns
+        assert "region" in region_trend.columns
+        assert "total_cost" in region_trend.columns
+        assert len(region_trend) > 0
+
+    def test_get_discounts_trend(self, sample_cur_data):
+        """Test monthly discounts trend by type."""
+        processor = CURDataProcessor(sample_cur_data)
+        discounts_trend = processor.get_discounts_trend()
+
+        assert isinstance(discounts_trend, pd.DataFrame)
+        # Sample data has discounts, so we should have results
+        if not discounts_trend.empty:
+            assert "month" in discounts_trend.columns
+            assert "discount_type" in discounts_trend.columns
+            assert "total_discount" in discounts_trend.columns
+            # Discounts should be positive (converted from negative)
+            assert (discounts_trend["total_discount"] >= 0).all()
+
+    def test_get_discounts_by_service_trend(self, sample_cur_data):
+        """Test monthly discounts trend by service."""
+        processor = CURDataProcessor(sample_cur_data)
+        discounts_service_trend = processor.get_discounts_by_service_trend(top_n=3)
+
+        assert isinstance(discounts_service_trend, pd.DataFrame)
+        # Sample data has discounts for services, so we should have results
+        if not discounts_service_trend.empty:
+            assert "month" in discounts_service_trend.columns
+            assert "service" in discounts_service_trend.columns
+            assert "total_discount" in discounts_service_trend.columns
+
+    def test_get_savings_plan_trend(self, sample_cur_data):
+        """Test monthly Savings Plan effectiveness trend."""
+        processor = CURDataProcessor(sample_cur_data)
+        sp_trend = processor.get_savings_plan_trend()
+
+        assert isinstance(sp_trend, pd.DataFrame)
+        # Sample data has Savings Plan data, so we should have results
+        if not sp_trend.empty:
+            assert "month" in sp_trend.columns
+            assert "on_demand_equivalent" in sp_trend.columns
+            assert "savings" in sp_trend.columns
+            assert "savings_percentage" in sp_trend.columns
+
+    def test_discounts_trend_empty_when_no_discounts(self):
+        """Test discounts trend returns empty when no discounts in data."""
+        # Create data with no discount line items
+        df = pl.DataFrame(
+            {
+                "line_item_usage_start_date": ["2024-01-01"] * 5,
+                "line_item_usage_account_id": ["123456789012"] * 5,
+                "line_item_product_code": ["AmazonEC2"] * 5,
+                "line_item_unblended_cost": [100.0] * 5,
+                "line_item_usage_type": ["BoxUsage"] * 5,
+                "line_item_operation": ["RunInstances"] * 5,
+                "product_region": ["us-east-1"] * 5,
+                "line_item_line_item_type": ["Usage"] * 5,
+            }
+        )
+
+        processor = CURDataProcessor(df)
+        discounts_trend = processor.get_discounts_trend()
+
+        # Should return empty DataFrame when no discounts
+        assert discounts_trend.empty
+
+    def test_savings_plan_trend_empty_when_no_sp(self):
+        """Test savings plan trend returns empty when no SP data."""
+        # Create data with no Savings Plan line items
+        df = pl.DataFrame(
+            {
+                "line_item_usage_start_date": ["2024-01-01"] * 5,
+                "line_item_usage_account_id": ["123456789012"] * 5,
+                "line_item_product_code": ["AmazonEC2"] * 5,
+                "line_item_unblended_cost": [100.0] * 5,
+                "line_item_usage_type": ["BoxUsage"] * 5,
+                "line_item_operation": ["RunInstances"] * 5,
+                "product_region": ["us-east-1"] * 5,
+                "line_item_line_item_type": ["Usage"] * 5,
+            }
+        )
+
+        processor = CURDataProcessor(df)
+        sp_trend = processor.get_savings_plan_trend()
+
+        # Should return empty DataFrame when no SP data
+        assert sp_trend.empty

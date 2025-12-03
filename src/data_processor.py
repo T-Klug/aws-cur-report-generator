@@ -771,6 +771,208 @@ class CURDataProcessor:
 
         return result.to_pandas()
 
+    def get_cost_trend_by_region(self, top_regions: int = 5) -> pd.DataFrame:
+        """
+        Get monthly cost trends over time for top regions.
+
+        Args:
+            top_regions: Number of top regions to include
+
+        Returns:
+            Pandas DataFrame with region cost trends by month
+        """
+        if not hasattr(self, "prepared_df"):
+            self.prepare_data()
+
+        if "region" not in self.prepared_df.columns:
+            logger.warning("Region data not available")
+            return pd.DataFrame(columns=["month", "region", "total_cost"])
+
+        logger.info(f"Calculating monthly cost trends for top {top_regions} regions...")
+
+        # Get top regions
+        top_region_df = self.get_cost_by_region(top_regions)
+        if top_region_df.empty:
+            return pd.DataFrame(columns=["month", "region", "total_cost"])
+
+        top_regions_list = top_region_df["region"].tolist()
+
+        # Filter to usage charges only and aggregate
+        usage_df = self._get_usage_df()
+        result = (
+            usage_df.filter(pl.col("region").is_in(top_regions_list))
+            .group_by(["year_month", "region"])
+            .agg(pl.col("cost").sum().alias("total_cost"))
+            .sort(["region", "year_month"])
+            .with_columns(pl.col("year_month").cast(pl.String).alias("month"))
+        )
+
+        return result.to_pandas()
+
+    def get_discounts_trend(self) -> pd.DataFrame:
+        """
+        Get monthly trend of discounts by type.
+
+        Returns:
+            Pandas DataFrame with discount trends by month and type
+        """
+        if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
+            self.prepare_data()
+
+        if "line_item_type" not in self.prepared_df.columns:
+            logger.warning("No line_item_type column - cannot analyze discounts trend")
+            return pd.DataFrame(columns=["month", "discount_type", "total_discount"])
+
+        logger.info("Calculating monthly discounts trend...")
+
+        # Discount-related line item types
+        discount_types = [
+            "SavingsPlanNegation",
+            "EdpDiscount",
+            "PrivateRateDiscount",
+            "BundledDiscount",
+            "Credit",
+        ]
+
+        # Filter to discount rows only
+        discount_df = self.prepared_df.filter(pl.col("line_item_type").is_in(discount_types))
+
+        if discount_df.is_empty():
+            logger.info("No discounts found in the data")
+            return pd.DataFrame(columns=["month", "discount_type", "total_discount"])
+
+        # Aggregate by month and discount type
+        result = (
+            discount_df.group_by(["year_month", "line_item_type"])
+            .agg(pl.col("cost").sum().alias("total_discount"))
+            .sort(["line_item_type", "year_month"])
+            .with_columns(pl.col("year_month").cast(pl.String).alias("month"))
+            .rename({"line_item_type": "discount_type"})
+        )
+
+        result_df = result.to_pandas()
+        # Convert to positive values for display
+        result_df["total_discount"] = result_df["total_discount"].abs()
+        return result_df
+
+    def get_discounts_by_service_trend(self, top_n: int = 5) -> pd.DataFrame:
+        """
+        Get monthly trend of discounts by service.
+
+        Args:
+            top_n: Number of top services by discount to include
+
+        Returns:
+            Pandas DataFrame with discount trends by month and service
+        """
+        if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
+            self.prepare_data()
+
+        if "line_item_type" not in self.prepared_df.columns:
+            logger.warning("No line_item_type column - cannot analyze discounts by service trend")
+            return pd.DataFrame(columns=["month", "service", "total_discount"])
+
+        logger.info(f"Calculating monthly discounts trend for top {top_n} services...")
+
+        # Get top services by discount
+        top_service_df = self.get_discounts_by_service(top_n)
+        if top_service_df.empty:
+            return pd.DataFrame(columns=["month", "service", "total_discount"])
+
+        top_services_list = top_service_df["service"].tolist()
+
+        # Discount-related line item types
+        discount_types = [
+            "SavingsPlanNegation",
+            "EdpDiscount",
+            "PrivateRateDiscount",
+            "BundledDiscount",
+            "Credit",
+        ]
+
+        # Filter to discount rows and top services
+        discount_df = self.prepared_df.filter(
+            pl.col("line_item_type").is_in(discount_types)
+            & pl.col("service").is_in(top_services_list)
+        )
+
+        if discount_df.is_empty():
+            return pd.DataFrame(columns=["month", "service", "total_discount"])
+
+        # Aggregate by month and service
+        result = (
+            discount_df.group_by(["year_month", "service"])
+            .agg(pl.col("cost").sum().alias("total_discount"))
+            .sort(["service", "year_month"])
+            .with_columns(pl.col("year_month").cast(pl.String).alias("month"))
+        )
+
+        result_df = result.to_pandas()
+        # Convert to positive values for display
+        result_df["total_discount"] = result_df["total_discount"].abs()
+        return result_df
+
+    def get_savings_plan_trend(self) -> pd.DataFrame:
+        """
+        Get monthly trend of Savings Plan effectiveness.
+
+        Returns:
+            Pandas DataFrame with columns:
+            - month: The billing month
+            - on_demand_equivalent: What on-demand would have cost
+            - savings: Amount saved that month
+            - savings_percentage: Percentage saved vs on-demand
+        """
+        if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
+            self.prepare_data()
+
+        if "line_item_type" not in self.prepared_df.columns:
+            logger.warning("No line_item_type column - cannot analyze Savings Plan trend")
+            return pd.DataFrame(
+                columns=["month", "on_demand_equivalent", "savings", "savings_percentage"]
+            )
+
+        logger.info("Calculating monthly Savings Plan trend...")
+
+        # Get SavingsPlanCoveredUsage by month (on-demand equivalent)
+        covered_usage = (
+            self.prepared_df.filter(pl.col("line_item_type") == "SavingsPlanCoveredUsage")
+            .group_by("year_month")
+            .agg(pl.col("cost").sum().alias("on_demand_equivalent"))
+        )
+
+        # Get SavingsPlanNegation by month (the savings amount - negative values)
+        negation = (
+            self.prepared_df.filter(pl.col("line_item_type") == "SavingsPlanNegation")
+            .group_by("year_month")
+            .agg(pl.col("cost").sum().alias("negation"))
+        )
+
+        if covered_usage.is_empty():
+            logger.info("No Savings Plan covered usage found in data")
+            return pd.DataFrame(
+                columns=["month", "on_demand_equivalent", "savings", "savings_percentage"]
+            )
+
+        # Join the data
+        result = (
+            covered_usage.join(negation, on="year_month", how="left")
+            .with_columns(pl.col("negation").fill_null(0.0))
+            .with_columns(pl.col("negation").abs().alias("savings"))
+            .drop("negation")
+            # Avoid division by zero - use 0% if on_demand_equivalent is negligible
+            .with_columns(
+                pl.when(pl.col("on_demand_equivalent") > 0.01)
+                .then((pl.col("savings") / pl.col("on_demand_equivalent") * 100))
+                .otherwise(0.0)
+                .alias("savings_percentage")
+            )
+            .sort("year_month")
+            .with_columns(pl.col("year_month").cast(pl.String).alias("month"))
+        )
+
+        return result.to_pandas()
+
     def get_summary_statistics(self) -> Dict[str, Any]:
         """
         Get overall summary statistics.

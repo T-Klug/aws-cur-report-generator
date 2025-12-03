@@ -6,21 +6,20 @@ This directory contains example reports generated with mock AWS Cost and Usage R
 
 ### 📊 HTML Report
 
-**`example_report.html`** - Interactive HTML report with 11 visualizations
+**`example_report.html`** - Interactive HTML report with 9 visualizations
 - **File size**: ~95 KB (self-contained, no external dependencies)
 - **View**: Open in any web browser
 - **Features**:
   - Summary dashboard with key metrics
-  - Top 10 AWS services by cost (bar chart)
-  - Cost by AWS account (bar chart)
-  - Daily cost trends with 7-day and 30-day moving averages
-  - Service cost trends over time (line chart)
-  - Account cost trends over time (line chart)
+  - Service cost trends by month (grouped bar chart)
+  - Account cost trends by month (grouped bar chart)
   - Account vs Service cost heatmap
-  - Service and account cost distribution (pie charts)
-  - Monthly cost summary
+  - Monthly cost summary (bar chart)
   - Cost anomaly detection (scatter plot)
-  - Cost by AWS region (bar chart)
+  - Region cost trends by month (grouped bar chart)
+  - Discounts by type trend (stacked bar chart)
+  - Discounts by service trend (grouped bar chart)
+  - Savings plan effectiveness trend (bar chart)
 
 All charts are fully interactive:
 - Hover for details

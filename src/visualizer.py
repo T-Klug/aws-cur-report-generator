@@ -6,11 +6,11 @@ import math
 import os
 import re
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List
 
 import pandas as pd
 from pyecharts import options as opts
-from pyecharts.charts import Bar, HeatMap, Line, Page, Pie, Scatter
+from pyecharts.charts import Bar, HeatMap, Line, Page, Scatter
 from pyecharts.commons.utils import JsCode
 from pyecharts.globals import ThemeType
 
@@ -103,225 +103,18 @@ class CURVisualizer:
             white-space: normal;
         """
 
-    def create_cost_by_service_chart(
-        self, df: pd.DataFrame, top_n: int = 10, title: str = "Cost by Service"
-    ) -> Bar:
-        """
-        Create a bar chart of costs by service.
-
-        Args:
-            df: DataFrame with service and total_cost columns
-            top_n: Number of services to show (must be > 0)
-            title: Chart title
-
-        Returns:
-            pyecharts Bar chart
-        """
-        logger.info(f"Creating cost by service chart (top {top_n})...")
-
-        # Validate inputs
-        if top_n <= 0:
-            logger.warning(f"Invalid top_n value: {top_n}, using default 10")
-            top_n = 10
-
-        # Validate DataFrame
-        if not _validate_dataframe(df, ["service", "total_cost"], "create_cost_by_service_chart"):
-            # Return empty chart with message
-            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
-            bar.set_global_opts(
-                title_opts=opts.TitleOpts(title=title, subtitle="No data available")
-            )
-            self.charts.append(("cost_by_service", bar))
-            return bar
-
-        # Take top N - head() returns a new DataFrame, no copy needed
-        plot_df = df.head(top_n)
-
-        bar = (
-            Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
-            .add_xaxis(plot_df["service"].tolist())
-            .add_yaxis(
-                "Total Cost (USD)",
-                _safe_round_list(plot_df["total_cost"].tolist()),
-                label_opts=opts.LabelOpts(
-                    is_show=True,
-                    position="top",
-                    formatter=JsCode(
-                        "function(params) { return '$' + params.value.toLocaleString(); }"
-                    ),
-                ),
-                itemstyle_opts=opts.ItemStyleOpts(
-                    color="#5470c6",
-                    border_radius=8,
-                ),
-            )
-            .set_global_opts(
-                title_opts=opts.TitleOpts(
-                    title=title,
-                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
-                    pos_top="1%",
-                ),
-                xaxis_opts=opts.AxisOpts(
-                    name="Service",
-                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0),
-                ),
-                yaxis_opts=opts.AxisOpts(
-                    name="Total Cost (USD)",
-                    axislabel_opts=opts.LabelOpts(
-                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
-                    ),
-                ),
-                tooltip_opts=opts.TooltipOpts(
-                    trigger="axis",
-                    is_confine=True,
-                    background_color="transparent",
-                    border_color="transparent",
-                    border_width=0,
-                    extra_css_text="box-shadow: none;",
-                    formatter=JsCode(
-                        """function(params) {
-                            return '<div style="' + `"""
-                        + self._get_tooltip_style()
-                        + """` + '">' +
-                                '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/>' +
-                                '<span style="opacity: 0.9;">Total Cost: </span>' +
-                                '<strong style="font-size: 13px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
-                                '</div>';
-                        }"""
-                    ),
-                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
-                ),
-                toolbox_opts=opts.ToolboxOpts(
-                    is_show=True,
-                    feature=opts.ToolBoxFeatureOpts(
-                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
-                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                    ),
-                ),
-            )
-        )
-
-        self.charts.append(("cost_by_service", bar))
-        return bar
-
-    def create_cost_by_account_chart(
-        self, df: pd.DataFrame, top_n: int = 10, title: str = "Cost by Account"
-    ) -> Bar:
-        """
-        Create a bar chart of costs by account.
-
-        Args:
-            df: DataFrame with account_id and total_cost columns
-            top_n: Number of accounts to show (must be > 0)
-            title: Chart title
-
-        Returns:
-            pyecharts Bar chart
-        """
-        logger.info(f"Creating cost by account chart (top {top_n})...")
-
-        # Validate inputs
-        if top_n <= 0:
-            logger.warning(f"Invalid top_n value: {top_n}, using default 10")
-            top_n = 10
-
-        # Validate DataFrame
-        if not _validate_dataframe(
-            df, ["account_id", "total_cost"], "create_cost_by_account_chart"
-        ):
-            # Return empty chart with message
-            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
-            bar.set_global_opts(
-                title_opts=opts.TitleOpts(title=title, subtitle="No data available")
-            )
-            self.charts.append(("cost_by_account", bar))
-            return bar
-
-        # Take top N - head() returns a new DataFrame, no copy needed
-        plot_df = df.head(top_n)
-
-        bar = (
-            Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
-            .add_xaxis(plot_df["account_id"].astype(str).tolist())
-            .add_yaxis(
-                "Total Cost (USD)",
-                _safe_round_list(plot_df["total_cost"].tolist()),
-                label_opts=opts.LabelOpts(
-                    is_show=True,
-                    position="top",
-                    formatter=JsCode(
-                        "function(params) { return '$' + params.value.toLocaleString(); }"
-                    ),
-                ),
-                itemstyle_opts=opts.ItemStyleOpts(
-                    color="#91cc75",
-                    border_radius=8,
-                ),
-            )
-            .set_global_opts(
-                title_opts=opts.TitleOpts(
-                    title=title,
-                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
-                    pos_top="1%",
-                ),
-                xaxis_opts=opts.AxisOpts(
-                    name="Account ID",
-                    axislabel_opts=opts.LabelOpts(rotate=0),
-                ),
-                yaxis_opts=opts.AxisOpts(
-                    name="Total Cost (USD)",
-                    axislabel_opts=opts.LabelOpts(
-                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
-                    ),
-                ),
-                tooltip_opts=opts.TooltipOpts(
-                    trigger="axis",
-                    is_confine=True,
-                    background_color="transparent",
-                    border_color="transparent",
-                    border_width=0,
-                    extra_css_text="box-shadow: none;",
-                    formatter=JsCode(
-                        """function(params) {
-                                return '<div style="' + `"""
-                        + self._get_tooltip_style()
-                        + """` + '">' +
-                                    '<strong style="font-size: 12px;">Account ID</strong><br/>' +
-                                    '<span style="font-size: 11px; opacity: 0.9;">' + params[0].name + '</span><br/><br/>' +
-                                    '<span style="opacity: 0.9;">Total Cost: </span>' +
-                                    '<strong style="font-size: 13px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
-                                    '</div>';
-                            }"""
-                    ),
-                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
-                ),
-                toolbox_opts=opts.ToolboxOpts(
-                    is_show=True,
-                    feature=opts.ToolBoxFeatureOpts(
-                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
-                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                    ),
-                ),
-            )
-        )
-
-        self.charts.append(("cost_by_account", bar))
-        return bar
-
     def create_service_trend_chart(
-        self, df: pd.DataFrame, title: str = "Monthly Cost Trends by Service"
-    ) -> Line:
+        self, df: pd.DataFrame, title: str = "Monthly Cost by Service"
+    ) -> Bar:
         """
-        Create a line chart showing monthly cost trends for top services.
+        Create a grouped bar chart showing monthly cost trends for top services.
 
         Args:
             df: DataFrame with month, service, and total_cost columns
             title: Chart title
 
         Returns:
-            pyecharts Line chart
+            pyecharts Bar chart
         """
         logger.info("Creating service trend chart...")
 
@@ -332,8 +125,8 @@ class CURVisualizer:
         # Month strings for x-axis
         month_strs = [str(m) for m in months]
 
-        line = Line(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
-        line.add_xaxis(month_strs)
+        bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
+        bar.add_xaxis(month_strs)
 
         # Color palette for better distinction
         colors = [
@@ -354,17 +147,14 @@ class CURVisualizer:
             # Ensure we have values for all months
             values = [round(cost_by_month.get(str(m), 0), 2) for m in months]
 
-            line.add_yaxis(
+            bar.add_yaxis(
                 series_name=service,
                 y_axis=values,
-                is_smooth=True,
-                symbol_size=8,
-                linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.8),
                 label_opts=opts.LabelOpts(is_show=False),
                 itemstyle_opts=opts.ItemStyleOpts(color=colors[i % len(colors)]),
             )
 
-        line.set_global_opts(
+        bar.set_global_opts(
             title_opts=opts.TitleOpts(
                 title=title,
                 title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
@@ -373,7 +163,6 @@ class CURVisualizer:
             xaxis_opts=opts.AxisOpts(
                 name="Month",
                 type_="category",
-                boundary_gap=False,
                 axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
             ),
             yaxis_opts=opts.AxisOpts(
@@ -384,6 +173,7 @@ class CURVisualizer:
             ),
             tooltip_opts=opts.TooltipOpts(
                 trigger="axis",
+                axis_pointer_type="shadow",
                 is_confine=True,
                 background_color="transparent",
                 border_color="transparent",
@@ -435,21 +225,21 @@ class CURVisualizer:
             ),
         )
 
-        self.charts.append(("service_trend", line))
-        return line
+        self.charts.append(("service_trend", bar))
+        return bar
 
     def create_account_trend_chart(
-        self, df: pd.DataFrame, title: str = "Monthly Cost Trends by Account"
-    ) -> Line:
+        self, df: pd.DataFrame, title: str = "Monthly Cost by Account"
+    ) -> Bar:
         """
-        Create a line chart showing monthly cost trends for top accounts.
+        Create a grouped bar chart showing monthly cost trends for top accounts.
 
         Args:
             df: DataFrame with month, account_id, and total_cost columns
             title: Chart title
 
         Returns:
-            pyecharts Line chart
+            pyecharts Bar chart
         """
         logger.info("Creating account trend chart...")
 
@@ -460,8 +250,8 @@ class CURVisualizer:
         # Month strings for x-axis
         month_strs = [str(m) for m in months]
 
-        line = Line(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
-        line.add_xaxis(month_strs)
+        bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
+        bar.add_xaxis(month_strs)
 
         # Color palette
         colors = [
@@ -482,17 +272,14 @@ class CURVisualizer:
             # Ensure we have values for all months
             values = [round(cost_by_month.get(str(m), 0), 2) for m in months]
 
-            line.add_yaxis(
+            bar.add_yaxis(
                 series_name=str(account),
                 y_axis=values,
-                is_smooth=True,
-                symbol_size=8,
-                linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.8),
                 label_opts=opts.LabelOpts(is_show=False),
                 itemstyle_opts=opts.ItemStyleOpts(color=colors[i % len(colors)]),
             )
 
-        line.set_global_opts(
+        bar.set_global_opts(
             title_opts=opts.TitleOpts(
                 title=title,
                 title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
@@ -501,7 +288,6 @@ class CURVisualizer:
             xaxis_opts=opts.AxisOpts(
                 name="Month",
                 type_="category",
-                boundary_gap=False,
                 axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
             ),
             yaxis_opts=opts.AxisOpts(
@@ -512,6 +298,7 @@ class CURVisualizer:
             ),
             tooltip_opts=opts.TooltipOpts(
                 trigger="axis",
+                axis_pointer_type="shadow",
                 is_confine=True,
                 background_color="transparent",
                 border_color="transparent",
@@ -563,8 +350,8 @@ class CURVisualizer:
             ),
         )
 
-        self.charts.append(("account_trend", line))
-        return line
+        self.charts.append(("account_trend", bar))
+        return bar
 
     def create_account_service_heatmap(
         self, df: pd.DataFrame, title: str = "Cost Heatmap: Account vs Service"
@@ -672,102 +459,6 @@ class CURVisualizer:
 
         self.charts.append(("account_service_heatmap", heatmap))
         return heatmap
-
-    def create_cost_distribution_pie(
-        self, df: pd.DataFrame, category: str, top_n: int = 10, title: Optional[str] = None
-    ) -> Pie:
-        """
-        Create a pie chart showing cost distribution.
-
-        Args:
-            df: DataFrame with category and total_cost columns
-            category: Name of the category (for labeling)
-            top_n: Number of items to show (rest grouped as "Other")
-            title: Chart title
-
-        Returns:
-            pyecharts Pie chart
-        """
-        logger.info(f"Creating cost distribution pie chart for {category}...")
-
-        if title is None:
-            title = f"Cost Distribution by {category.replace('_', ' ').title()}"
-
-        # Take top N and group the rest
-        plot_df = df.copy()
-        if len(plot_df) > top_n:
-            top_items = plot_df.head(top_n)
-            other_cost = plot_df.iloc[top_n:]["total_cost"].sum()
-            first_col = str(plot_df.columns[0])
-            other_row = pd.DataFrame([{first_col: "Other", "total_cost": other_cost}])
-            plot_df = pd.concat([top_items, other_row], ignore_index=True)
-
-        # Prepare data
-        data = [
-            [str(row[0]), round(row[1], 2)]
-            for row in zip(plot_df.iloc[:, 0], plot_df["total_cost"])
-        ]
-
-        pie = (
-            Pie(init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%"))
-            .add(
-                series_name="Cost",
-                data_pair=data,
-                radius=["30%", "70%"],
-                label_opts=opts.LabelOpts(
-                    formatter="{b}: ${c} ({d}%)",
-                    font_size=12,
-                ),
-                itemstyle_opts=opts.ItemStyleOpts(
-                    border_width=2,
-                    border_color="#fff",
-                ),
-            )
-            .set_global_opts(
-                title_opts=opts.TitleOpts(
-                    title=title,
-                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
-                    pos_left="center",
-                ),
-                legend_opts=opts.LegendOpts(
-                    type_="scroll",
-                    orient="vertical",
-                    pos_right="5%",
-                    pos_top="15%",
-                ),
-                tooltip_opts=opts.TooltipOpts(
-                    trigger="item",
-                    is_confine=True,
-                    background_color="transparent",
-                    border_color="transparent",
-                    border_width=0,
-                    extra_css_text="box-shadow: none;",
-                    formatter=JsCode(
-                        """function(params) {
-                            return '<div style="' + `"""
-                        + self._get_tooltip_style()
-                        + """` + '">' +
-                                '<strong style="font-size: 12px;">' + params.name + '</strong><br/><br/>' +
-                                '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +
-                                '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +
-                                '</div>';
-                        }"""
-                    ),
-                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
-                ),
-                toolbox_opts=opts.ToolboxOpts(
-                    is_show=True,
-                    feature=opts.ToolBoxFeatureOpts(
-                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
-                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                    ),
-                ),
-            )
-        )
-
-        self.charts.append((f"{category}_pie", pie))
-        return pie
 
     def create_monthly_summary_chart(
         self, df: pd.DataFrame, title: str = "Monthly Cost Summary"
@@ -1034,118 +725,161 @@ class CURVisualizer:
         self.charts.append(("anomalies", scatter))
         return scatter
 
-    def create_region_chart(
-        self, df: pd.DataFrame, top_n: int = 10, title: str = "Cost by Region"
+    def create_region_trend_chart(
+        self, df: pd.DataFrame, title: str = "Monthly Cost by Region"
     ) -> Bar:
         """
-        Create a bar chart of costs by region.
+        Create a grouped bar chart showing monthly cost trends for top regions.
 
         Args:
-            df: DataFrame with region and total_cost columns
-            top_n: Number of regions to show
+            df: DataFrame with month, region, and total_cost columns
             title: Chart title
 
         Returns:
             pyecharts Bar chart
         """
-        logger.info(f"Creating cost by region chart (top {top_n})...")
+        logger.info("Creating region trend chart...")
 
-        plot_df = df.head(top_n).copy()
+        if not _validate_dataframe(df, ["month", "region", "total_cost"], "Region trend chart"):
+            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
+            bar.set_global_opts(
+                title_opts=opts.TitleOpts(title=title, subtitle="No data available")
+            )
+            self.charts.append(("region_trend", bar))
+            return bar
 
-        bar = (
-            Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
-            .add_xaxis(plot_df["region"].tolist())
-            .add_yaxis(
-                "Total Cost (USD)",
-                [round(x, 2) for x in plot_df["total_cost"].tolist()],
-                label_opts=opts.LabelOpts(
-                    is_show=True,
-                    position="top",
-                    formatter=JsCode(
-                        "function(params) { return '$' + params.value.toLocaleString(); }"
-                    ),
-                ),
-                itemstyle_opts=opts.ItemStyleOpts(
-                    color="#fac858",
-                    border_radius=8,
-                ),
+        # Get unique months and regions
+        months = sorted(df["month"].unique())
+        regions = df["region"].unique()
+
+        # Month strings for x-axis
+        month_strs = [str(m) for m in months]
+
+        bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
+        bar.add_xaxis(month_strs)
+
+        # Color palette
+        colors = [
+            "#5470c6",
+            "#91cc75",
+            "#fac858",
+            "#ee6666",
+            "#73c0de",
+            "#3ba272",
+            "#fc8452",
+            "#9a60b4",
+        ]
+
+        for i, region in enumerate(regions):
+            region_data = df[df["region"] == region]
+            cost_by_month = dict(zip(region_data["month"].astype(str), region_data["total_cost"]))
+            values = [round(cost_by_month.get(str(m), 0), 2) for m in months]
+
+            bar.add_yaxis(
+                series_name=str(region),
+                y_axis=values,
+                label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=colors[i % len(colors)]),
             )
-            .set_global_opts(
-                title_opts=opts.TitleOpts(
-                    title=title,
-                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
-                    pos_top="1%",
+
+        bar.set_global_opts(
+            title_opts=opts.TitleOpts(
+                title=title,
+                title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                pos_top="1%",
+            ),
+            xaxis_opts=opts.AxisOpts(
+                name="Month",
+                type_="category",
+                axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
+            ),
+            yaxis_opts=opts.AxisOpts(
+                name="Total Cost (USD)",
+                axislabel_opts=opts.LabelOpts(
+                    formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
                 ),
-                xaxis_opts=opts.AxisOpts(
-                    name="Region",
-                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0),
+            ),
+            tooltip_opts=opts.TooltipOpts(
+                trigger="axis",
+                axis_pointer_type="shadow",
+                is_confine=True,
+                background_color="transparent",
+                border_color="transparent",
+                border_width=0,
+                extra_css_text="box-shadow: none;",
+                formatter=JsCode(
+                    """function(params) {
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
+                        var result = '<div style="' + style + '">';
+                        result += '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/><br/>';
+                        params.forEach(function(item) {
+                            result += '<div style="margin: 2px 0;">';
+                            result += item.marker + ' ';
+                            result += '<span style="opacity: 0.9;">' + item.seriesName + ':</span> ';
+                            result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';
+                            result += '</div>';
+                        });
+                        result += '</div>';
+                        return result;
+                    }"""
                 ),
-                yaxis_opts=opts.AxisOpts(
-                    name="Total Cost (USD)",
-                    axislabel_opts=opts.LabelOpts(
-                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
+            ),
+            legend_opts=opts.LegendOpts(
+                type_="scroll",
+                orient="horizontal",
+                pos_top="10%",
+                selected_mode="multiple",
+            ),
+            datazoom_opts=[
+                opts.DataZoomOpts(type_="slider", range_start=0, range_end=100),
+                opts.DataZoomOpts(type_="inside"),
+            ],
+            toolbox_opts=opts.ToolboxOpts(
+                is_show=True,
+                feature=opts.ToolBoxFeatureOpts(
+                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                    data_zoom=opts.ToolBoxFeatureDataZoomOpts(
+                        zoom_title="Zoom", back_title="Reset Zoom"
+                    ),
+                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    magic_type=opts.ToolBoxFeatureMagicTypeOpts(
+                        line_title="Line", bar_title="Bar", stack_title="Stack"
                     ),
                 ),
-                tooltip_opts=opts.TooltipOpts(
-                    trigger="axis",
-                    is_confine=True,
-                    background_color="transparent",
-                    border_color="transparent",
-                    border_width=0,
-                    extra_css_text="box-shadow: none;",
-                    formatter=JsCode(
-                        """function(params) {
-                            return '<div style="' + `"""
-                        + self._get_tooltip_style()
-                        + """` + '">' +
-                                '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/>' +
-                                '<span style="opacity: 0.9;">Total Cost: </span>' +
-                                '<strong style="font-size: 13px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
-                                '</div>';
-                        }"""
-                    ),
-                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
-                ),
-                toolbox_opts=opts.ToolboxOpts(
-                    is_show=True,
-                    feature=opts.ToolBoxFeatureOpts(
-                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
-                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                    ),
-                ),
-            )
+            ),
         )
 
-        self.charts.append(("cost_by_region", bar))
+        self.charts.append(("region_trend", bar))
         return bar
 
-    def create_discounts_chart(
-        self, df: pd.DataFrame, title: str = "Discounts & Rate Reductions by Type"
+    def create_discounts_trend_chart(
+        self, df: pd.DataFrame, title: str = "Monthly Discounts by Type"
     ) -> Bar:
         """
-        Create a horizontal bar chart showing discounts by type.
+        Create a stacked bar chart showing monthly discount trends by type.
 
         Args:
-            df: DataFrame with discount_type and total_discount columns
+            df: DataFrame with month, discount_type, and total_discount columns
             title: Chart title
 
         Returns:
             pyecharts Bar chart
         """
-        logger.info("Creating discounts by type chart...")
+        logger.info("Creating discounts trend chart...")
 
-        if not _validate_dataframe(df, ["discount_type", "total_discount"], "Discounts chart"):
-            # Return empty chart
-            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="400px", width="100%"))
+        if not _validate_dataframe(
+            df, ["month", "discount_type", "total_discount"], "Discounts trend chart"
+        ):
+            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
             bar.set_global_opts(
                 title_opts=opts.TitleOpts(title=title, subtitle="No discount data available")
             )
-            self.charts.append(("discounts_by_type", bar))
+            self.charts.append(("discounts_trend", bar))
             return bar
-
-        # Sort by discount amount descending and use friendly names
-        plot_df = df.sort_values("total_discount", ascending=True).copy()
 
         # Map to friendly names
         friendly_names = {
@@ -1155,225 +889,275 @@ class CURVisualizer:
             "BundledDiscount": "Bundled Discount",
             "Credit": "Credits",
         }
-        plot_df["display_name"] = plot_df["discount_type"].map(
+        df = df.copy()
+        df["display_name"] = df["discount_type"].map(
             lambda x: friendly_names.get(x, x) if pd.notna(x) else "Unknown"
         )
 
-        bar = (
-            Bar(init_opts=opts.InitOpts(theme=self.theme, height="400px", width="100%"))
-            .add_xaxis(plot_df["display_name"].tolist())
-            .add_yaxis(
-                "Discount Amount (USD)",
-                _safe_round_list(plot_df["total_discount"].tolist()),
-                label_opts=opts.LabelOpts(
-                    is_show=True,
-                    position="right",
-                    formatter=JsCode(
-                        "function(params) { return '$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }"
-                    ),
-                ),
-                itemstyle_opts=opts.ItemStyleOpts(
-                    color=JsCode(
-                        """function(params) {
-                            var colors = {
-                                'Savings Plans': '#91cc75',
-                                'Enterprise Discount (EDP)': '#5470c6',
-                                'Private Rate Discount': '#ee6666',
-                                'Bundled Discount': '#fac858',
-                                'Credits': '#73c0de'
-                            };
-                            return colors[params.name] || '#91cc75';
-                        }"""
-                    ),
-                    border_radius=8,
-                ),
+        months = sorted(df["month"].unique())
+        discount_types = df["display_name"].unique()
+        month_strs = [str(m) for m in months]
+
+        bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
+        bar.add_xaxis(month_strs)
+
+        colors = ["#91cc75", "#5470c6", "#ee6666", "#fac858", "#73c0de"]
+
+        for i, dtype in enumerate(discount_types):
+            type_data = df[df["display_name"] == dtype]
+            discount_by_month = dict(
+                zip(type_data["month"].astype(str), type_data["total_discount"])
             )
-            .reversal_axis()
-            .set_global_opts(
-                title_opts=opts.TitleOpts(
-                    title=title,
-                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
-                    pos_top="1%",
-                ),
-                xaxis_opts=opts.AxisOpts(
-                    name="Discount Amount (USD)",
-                    axislabel_opts=opts.LabelOpts(
-                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
-                    ),
-                ),
-                yaxis_opts=opts.AxisOpts(
-                    name="",
-                    axislabel_opts=opts.LabelOpts(interval=0),
-                ),
-                tooltip_opts=opts.TooltipOpts(
-                    trigger="axis",
-                    is_confine=True,
-                    background_color="transparent",
-                    border_color="transparent",
-                    border_width=0,
-                    extra_css_text="box-shadow: none;",
-                    formatter=JsCode(
-                        """function(params) {
-                            return '<div style="' + `"""
-                        + self._get_tooltip_style()
-                        + """` + '">' +
-                                '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/>' +
-                                '<span style="opacity: 0.9;">Discount: </span>' +
-                                '<strong style="font-size: 13px; color: #91cc75;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
-                                '</div>';
-                        }"""
-                    ),
-                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
-                ),
-                toolbox_opts=opts.ToolboxOpts(
-                    is_show=True,
-                    feature=opts.ToolBoxFeatureOpts(
-                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
-                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                    ),
-                ),
+            values = [round(discount_by_month.get(str(m), 0), 2) for m in months]
+
+            bar.add_yaxis(
+                series_name=str(dtype),
+                y_axis=values,
+                stack="discounts",
+                label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=colors[i % len(colors)]),
             )
+
+        bar.set_global_opts(
+            title_opts=opts.TitleOpts(
+                title=title,
+                subtitle="How your discounts and credits trend over time",
+                title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                pos_top="1%",
+            ),
+            xaxis_opts=opts.AxisOpts(
+                name="Month",
+                type_="category",
+                axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
+            ),
+            yaxis_opts=opts.AxisOpts(
+                name="Discount Amount (USD)",
+                axislabel_opts=opts.LabelOpts(
+                    formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                ),
+            ),
+            tooltip_opts=opts.TooltipOpts(
+                trigger="axis",
+                axis_pointer_type="shadow",
+                is_confine=True,
+                background_color="transparent",
+                border_color="transparent",
+                border_width=0,
+                extra_css_text="box-shadow: none;",
+                formatter=JsCode(
+                    """function(params) {
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
+                        var result = '<div style="' + style + '">';
+                        result += '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/><br/>';
+                        var total = 0;
+                        params.forEach(function(item) {
+                            total += item.value;
+                            result += '<div style="margin: 2px 0;">';
+                            result += item.marker + ' ';
+                            result += '<span style="opacity: 0.9;">' + item.seriesName + ':</span> ';
+                            result += '<strong style="color: #91cc75;">$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';
+                            result += '</div>';
+                        });
+                        result += '<hr style="margin: 4px 0; border-color: rgba(255,255,255,0.2);"/>';
+                        result += '<div><strong>Total: $' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';
+                        result += '</div>';
+                        return result;
+                    }"""
+                ),
+                textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
+            ),
+            legend_opts=opts.LegendOpts(
+                type_="scroll",
+                orient="horizontal",
+                pos_top="12%",
+                selected_mode="multiple",
+            ),
+            datazoom_opts=[
+                opts.DataZoomOpts(type_="slider", range_start=0, range_end=100),
+                opts.DataZoomOpts(type_="inside"),
+            ],
+            toolbox_opts=opts.ToolboxOpts(
+                is_show=True,
+                feature=opts.ToolBoxFeatureOpts(
+                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                ),
+            ),
         )
 
-        self.charts.append(("discounts_by_type", bar))
+        self.charts.append(("discounts_trend", bar))
         return bar
 
-    def create_discounts_by_service_chart(
-        self, df: pd.DataFrame, top_n: int = 10, title: str = "Discounts by Service"
+    def create_discounts_by_service_trend_chart(
+        self, df: pd.DataFrame, title: str = "Monthly Discounts by Service"
     ) -> Bar:
         """
-        Create a bar chart showing discounts by service.
+        Create a grouped bar chart showing monthly discount trends by service.
 
         Args:
-            df: DataFrame with service and total_discount columns
-            top_n: Number of services to show
+            df: DataFrame with month, service, and total_discount columns
             title: Chart title
 
         Returns:
             pyecharts Bar chart
         """
-        logger.info(f"Creating discounts by service chart (top {top_n})...")
+        logger.info("Creating discounts by service trend chart...")
 
-        if not _validate_dataframe(df, ["service", "total_discount"], "Discounts by service chart"):
-            # Return empty chart
-            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+        if not _validate_dataframe(
+            df, ["month", "service", "total_discount"], "Discounts by service trend chart"
+        ):
+            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
             bar.set_global_opts(
                 title_opts=opts.TitleOpts(title=title, subtitle="No discount data available")
             )
-            self.charts.append(("discounts_by_service", bar))
+            self.charts.append(("discounts_by_service_trend", bar))
             return bar
 
-        plot_df = df.head(top_n).copy()
+        months = sorted(df["month"].unique())
+        services = df["service"].unique()
+        month_strs = [str(m) for m in months]
 
-        bar = (
-            Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
-            .add_xaxis(plot_df["service"].tolist())
-            .add_yaxis(
-                "Discount Amount (USD)",
-                _safe_round_list(plot_df["total_discount"].tolist()),
-                label_opts=opts.LabelOpts(
-                    is_show=True,
-                    position="top",
-                    formatter=JsCode(
-                        "function(params) { return '$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }"
-                    ),
-                ),
-                itemstyle_opts=opts.ItemStyleOpts(
-                    color="#91cc75",
-                    border_radius=8,
-                ),
+        bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="650px", width="100%"))
+        bar.add_xaxis(month_strs)
+
+        colors = [
+            "#91cc75",
+            "#5470c6",
+            "#fac858",
+            "#ee6666",
+            "#73c0de",
+            "#3ba272",
+            "#fc8452",
+            "#9a60b4",
+        ]
+
+        for i, service in enumerate(services):
+            service_data = df[df["service"] == service]
+            discount_by_month = dict(
+                zip(service_data["month"].astype(str), service_data["total_discount"])
             )
-            .set_global_opts(
-                title_opts=opts.TitleOpts(
-                    title=title,
-                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
-                    pos_top="1%",
-                ),
-                xaxis_opts=opts.AxisOpts(
-                    name="Service",
-                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0),
-                ),
-                yaxis_opts=opts.AxisOpts(
-                    name="Discount Amount (USD)",
-                    axislabel_opts=opts.LabelOpts(
-                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
-                    ),
-                ),
-                tooltip_opts=opts.TooltipOpts(
-                    trigger="axis",
-                    is_confine=True,
-                    background_color="transparent",
-                    border_color="transparent",
-                    border_width=0,
-                    extra_css_text="box-shadow: none;",
-                    formatter=JsCode(
-                        """function(params) {
-                            return '<div style="' + `"""
-                        + self._get_tooltip_style()
-                        + """` + '">' +
-                                '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/>' +
-                                '<span style="opacity: 0.9;">Discount: </span>' +
-                                '<strong style="font-size: 13px; color: #91cc75;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
-                                '</div>';
-                        }"""
-                    ),
-                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
-                ),
-                toolbox_opts=opts.ToolboxOpts(
-                    is_show=True,
-                    feature=opts.ToolBoxFeatureOpts(
-                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
-                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                    ),
-                ),
+            values = [round(discount_by_month.get(str(m), 0), 2) for m in months]
+
+            bar.add_yaxis(
+                series_name=str(service),
+                y_axis=values,
+                label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color=colors[i % len(colors)]),
             )
+
+        bar.set_global_opts(
+            title_opts=opts.TitleOpts(
+                title=title,
+                title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                pos_top="1%",
+            ),
+            xaxis_opts=opts.AxisOpts(
+                name="Month",
+                type_="category",
+                axislabel_opts=opts.LabelOpts(rotate=45, interval="auto"),
+            ),
+            yaxis_opts=opts.AxisOpts(
+                name="Discount Amount (USD)",
+                axislabel_opts=opts.LabelOpts(
+                    formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                ),
+            ),
+            tooltip_opts=opts.TooltipOpts(
+                trigger="axis",
+                axis_pointer_type="shadow",
+                is_confine=True,
+                background_color="transparent",
+                border_color="transparent",
+                border_width=0,
+                extra_css_text="box-shadow: none;",
+                formatter=JsCode(
+                    """function(params) {
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
+                        var result = '<div style="' + style + '">';
+                        result += '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/><br/>';
+                        params.forEach(function(item) {
+                            result += '<div style="margin: 2px 0;">';
+                            result += item.marker + ' ';
+                            result += '<span style="opacity: 0.9;">' + item.seriesName + ':</span> ';
+                            result += '<strong style="color: #91cc75;">$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';
+                            result += '</div>';
+                        });
+                        result += '</div>';
+                        return result;
+                    }"""
+                ),
+                textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
+            ),
+            legend_opts=opts.LegendOpts(
+                type_="scroll",
+                orient="horizontal",
+                pos_top="10%",
+                selected_mode="multiple",
+            ),
+            datazoom_opts=[
+                opts.DataZoomOpts(type_="slider", range_start=0, range_end=100),
+                opts.DataZoomOpts(type_="inside"),
+            ],
+            toolbox_opts=opts.ToolboxOpts(
+                is_show=True,
+                feature=opts.ToolBoxFeatureOpts(
+                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                ),
+            ),
         )
 
-        self.charts.append(("discounts_by_service", bar))
+        self.charts.append(("discounts_by_service_trend", bar))
         return bar
 
-    def create_savings_plan_chart(
-        self, df: pd.DataFrame, title: str = "Savings Plan Effectiveness by Service"
+    def create_savings_plan_trend_chart(
+        self, df: pd.DataFrame, title: str = "Savings Plan Effectiveness Over Time"
     ) -> Bar:
         """
-        Create a grouped bar chart showing Savings Plan effectiveness.
+        Create a bar chart showing monthly Savings Plan effectiveness.
 
         Args:
-            df: DataFrame with service, on_demand_equivalent, and savings columns
+            df: DataFrame with month, on_demand_equivalent, savings, savings_percentage columns
             title: Chart title
 
         Returns:
-            pyecharts Bar chart
+            pyecharts Bar chart with line overlay for savings percentage
         """
-        logger.info("Creating Savings Plan effectiveness chart...")
+        logger.info("Creating Savings Plan trend chart...")
 
         if not _validate_dataframe(
-            df, ["service", "on_demand_equivalent", "savings"], "Savings Plan chart"
+            df, ["month", "on_demand_equivalent", "savings"], "Savings Plan trend chart"
         ):
-            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%"))
             bar.set_global_opts(
                 title_opts=opts.TitleOpts(title=title, subtitle="No Savings Plan data available")
             )
-            self.charts.append(("savings_plan", bar))
+            self.charts.append(("savings_plan_trend", bar))
             return bar
 
-        # Take top 10 by on-demand equivalent
-        plot_df = df.head(10).copy()
+        months = df["month"].tolist()
+        on_demand = _safe_round_list(df["on_demand_equivalent"].tolist())
+        savings = _safe_round_list(df["savings"].tolist())
+        savings_pct = _safe_round_list(df["savings_percentage"].tolist(), 1)
 
         bar = (
-            Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
-            .add_xaxis(plot_df["service"].tolist())
+            Bar(init_opts=opts.InitOpts(theme=self.theme, height="600px", width="100%"))
+            .add_xaxis(months)
             .add_yaxis(
                 "On-Demand Equivalent",
-                _safe_round_list(plot_df["on_demand_equivalent"].tolist()),
+                on_demand,
                 label_opts=opts.LabelOpts(is_show=False),
-                itemstyle_opts=opts.ItemStyleOpts(color="#ee6666"),
+                itemstyle_opts=opts.ItemStyleOpts(color="#ee6666", opacity=0.7),
             )
             .add_yaxis(
                 "Savings",
-                _safe_round_list(plot_df["savings"].tolist()),
+                savings,
                 label_opts=opts.LabelOpts(
                     is_show=True,
                     position="top",
@@ -1383,67 +1167,97 @@ class CURVisualizer:
                 ),
                 itemstyle_opts=opts.ItemStyleOpts(color="#91cc75"),
             )
-            .set_global_opts(
-                title_opts=opts.TitleOpts(
-                    title=title,
-                    subtitle="How much Savings Plans save you vs On-Demand pricing",
-                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
-                    pos_top="1%",
-                ),
-                xaxis_opts=opts.AxisOpts(
-                    name="Service",
-                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0),
-                ),
-                yaxis_opts=opts.AxisOpts(
-                    name="Cost (USD)",
-                    axislabel_opts=opts.LabelOpts(
-                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
-                    ),
-                ),
-                tooltip_opts=opts.TooltipOpts(
-                    trigger="axis",
-                    is_confine=True,
-                    background_color="transparent",
-                    border_color="transparent",
-                    border_width=0,
-                    extra_css_text="box-shadow: none;",
-                    formatter=JsCode(
-                        """function(params) {
-                            var style = `"""
-                        + self._get_tooltip_style()
-                        + """`;
-                            var onDemand = params[0] ? params[0].value : 0;
-                            var savings = params[1] ? params[1].value : 0;
-                            var pct = onDemand > 0 ? ((savings / onDemand) * 100).toFixed(1) : 0;
-                            var result = '<div style="' + style + '">';
-                            result += '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/><br/>';
-                            result += '<div style="margin: 2px 0;">';
-                            result += params[0].marker + ' <span style="opacity: 0.9;">On-Demand:</span> ';
-                            result += '<strong style="color: #ee6666;">$' + onDemand.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</strong></div>';
-                            result += '<div style="margin: 2px 0;">';
-                            result += params[1].marker + ' <span style="opacity: 0.9;">Savings:</span> ';
-                            result += '<strong style="color: #91cc75;">$' + savings.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</strong></div>';
-                            result += '<div style="margin: 4px 0 0 0; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.3);">';
-                            result += '<span style="opacity: 0.9;">Savings Rate:</span> <strong>' + pct + '%</strong></div>';
-                            result += '</div>';
-                            return result;
-                        }"""
-                    ),
-                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
-                ),
-                legend_opts=opts.LegendOpts(pos_top="10%"),
-                toolbox_opts=opts.ToolboxOpts(
-                    is_show=True,
-                    feature=opts.ToolBoxFeatureOpts(
-                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
-                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
-                    ),
-                ),
+            .extend_axis(
+                yaxis=opts.AxisOpts(
+                    name="Savings %",
+                    position="right",
+                    axislabel_opts=opts.LabelOpts(formatter="{value}%"),
+                    min_=0,
+                    max_=100,
+                )
             )
         )
 
-        self.charts.append(("savings_plan", bar))
+        # Add savings percentage line
+        line = (
+            Line()
+            .add_xaxis(months)
+            .add_yaxis(
+                "Savings %",
+                savings_pct,
+                yaxis_index=1,
+                is_smooth=True,
+                symbol_size=10,
+                linestyle_opts=opts.LineStyleOpts(width=3, type_="dashed"),
+                itemstyle_opts=opts.ItemStyleOpts(color="#fac858"),
+                label_opts=opts.LabelOpts(
+                    is_show=True,
+                    formatter=JsCode("function(params) { return params.value + '%'; }"),
+                ),
+            )
+        )
+        bar.overlap(line)
+
+        bar.set_global_opts(
+            title_opts=opts.TitleOpts(
+                title=title,
+                subtitle="Monthly Savings Plan savings compared to on-demand pricing",
+                title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                pos_top="1%",
+            ),
+            xaxis_opts=opts.AxisOpts(
+                name="Month",
+                axislabel_opts=opts.LabelOpts(rotate=45),
+            ),
+            yaxis_opts=opts.AxisOpts(
+                name="Cost (USD)",
+                axislabel_opts=opts.LabelOpts(
+                    formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                ),
+            ),
+            tooltip_opts=opts.TooltipOpts(
+                trigger="axis",
+                is_confine=True,
+                background_color="transparent",
+                border_color="transparent",
+                border_width=0,
+                extra_css_text="box-shadow: none;",
+                formatter=JsCode(
+                    """function(params) {
+                        var style = `"""
+                    + self._get_tooltip_style()
+                    + """`;
+                        var result = '<div style="' + style + '">';
+                        result += '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/><br/>';
+                        params.forEach(function(item) {
+                            result += '<div style="margin: 2px 0;">';
+                            result += item.marker + ' ';
+                            result += '<span style="opacity: 0.9;">' + item.seriesName + ':</span> ';
+                            if (item.seriesName === 'Savings %') {
+                                result += '<strong style="color: #fac858;">' + item.value + '%</strong>';
+                            } else {
+                                result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';
+                            }
+                            result += '</div>';
+                        });
+                        result += '</div>';
+                        return result;
+                    }"""
+                ),
+                textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
+            ),
+            legend_opts=opts.LegendOpts(pos_top="12%"),
+            toolbox_opts=opts.ToolboxOpts(
+                is_show=True,
+                feature=opts.ToolBoxFeatureOpts(
+                    save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                    restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                    data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                ),
+            ),
+        )
+
+        self.charts.append(("savings_plan_trend", bar))
         return bar
 
     def generate_html_report(

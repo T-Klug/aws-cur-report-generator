@@ -11,14 +11,13 @@ A powerful, easy-to-use tool for generating comprehensive visual analytics from 
 
 **Easy to Use** - Simple CLI interface with environment-based configuration
 
-**Rich Visualizations** - 13 interactive chart types powered by Apache ECharts (via pyecharts)
-- Cost trends over time with 7-day and 30-day moving averages
-- Cost breakdown by AWS account and service
+**Rich Visualizations** - 11 interactive chart types powered by Apache ECharts (via pyecharts)
+- Monthly cost trends by service, account, and region
 - Multi-dimensional analysis (account x service heatmap)
-- Regional cost distribution
 - Statistical anomaly detection with z-scores
-- Monthly aggregations with trend lines
-- Discount and savings plan analysis
+- Monthly discount trends by type and service
+- Savings plan effectiveness tracking over time
+- Distribution views for quick cost overview
 
 **Deep Analysis** - Goes beyond basic billing reports:
 - Statistical anomaly detection for unusual spending patterns
@@ -44,10 +43,10 @@ A powerful, easy-to-use tool for generating comprehensive visual analytics from 
 Check out the **[example report](examples/example_report.html)** generated with mock data to see what the output looks like!
 
 The example includes:
-- 13 interactive visualizations
+- 11 interactive visualizations with monthly trends
 - 6 months of sample data across 2 accounts
 - All chart types (bar, line, pie, heatmap, scatter)
-- Self-contained HTML file (~138KB)
+- Self-contained HTML file
 
 You can also explore the [example CSV exports](examples/) for data analysis.
 
@@ -240,20 +239,16 @@ The tool generates a comprehensive, self-contained HTML report with:
   - Date range covered
   - Total records analyzed
 
-- **Interactive Visualizations** (13 chart types)
-  1. Cost by Service (bar chart)
-  2. Cost by Account (bar chart)
-  3. Daily Cost Trends with Moving Averages (line chart)
-  4. Service Cost Trends (multi-line time series)
-  5. Account Cost Trends (multi-line time series)
-  6. Account vs Service Heatmap (detailed breakdown)
-  7. Service Cost Distribution (pie chart)
-  8. Account Cost Distribution (pie chart)
-  9. Monthly Summary (bar chart with trend line)
-  10. Cost Anomalies (scatter plot with z-scores)
-  11. Cost by Region (bar chart)
-  12. Discounts and Credits Analysis (bar chart)
-  13. Savings Plan Effectiveness (bar chart)
+- **Interactive Visualizations** (9 chart types, all with monthly context as bar charts)
+  1. Service Cost Trends (grouped bar chart by service)
+  2. Account Cost Trends (grouped bar chart by account)
+  3. Account vs Service Heatmap (cross-dimensional breakdown)
+  4. Monthly Summary (bar chart)
+  5. Cost Anomalies (scatter plot with z-scores)
+  6. Region Cost Trends (grouped bar chart by region)
+  7. Discounts Trend by Type (stacked bar chart)
+  8. Discounts Trend by Service (grouped bar chart)
+  9. Savings Plan Effectiveness (bar chart with savings %)
 
 All charts are interactive - hover for details, zoom, pan, and download as PNG.
 

@@ -92,13 +92,15 @@ class CURVisualizer:
         return """
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
-            border-radius: 8px;
-            padding: 12px 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 4px;
+            padding: 6px 10px;
+            box-shadow: none;
             color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 13px;
-            line-height: 1.6;
+            font-size: 12px;
+            line-height: 1.4;
+            max-width: 200px;
+            white-space: normal;
         """
 
     def create_cost_by_service_chart(
@@ -171,15 +173,19 @@ class CURVisualizer:
                 ),
                 tooltip_opts=opts.TooltipOpts(
                     trigger="axis",
-                    axis_pointer_type="shadow",
+                    is_confine=True,
+                    background_color="transparent",
+                    border_color="transparent", 
+                    border_width=0,
+                    extra_css_text="box-shadow: none;",
                     formatter=JsCode(
                         """function(params) {
                             return '<div style="' + `"""
                         + self._get_tooltip_style()
                         + """` + '">' +
-                                '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/>' +
+                                '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/>' +
                                 '<span style="opacity: 0.9;">Total Cost: </span>' +
-                                '<strong style="font-size: 15px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
+                                '<strong style="font-size: 13px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
                                 '</div>';
                         }"""
                     ),
@@ -271,29 +277,33 @@ class CURVisualizer:
                 ),
                 tooltip_opts=opts.TooltipOpts(
                     trigger="axis",
-                    axis_pointer_type="shadow",
+                    is_confine=True,
+                    background_color="transparent",
+                    border_color="transparent", 
+                    border_width=0,
+                    extra_css_text="box-shadow: none;",
                     formatter=JsCode(
-                        """function(params) {
-                            return '<div style="' + `"""
-                        + self._get_tooltip_style()
-                        + """` + '">' +
-                                '<strong style="font-size: 14px;">Account ID</strong><br/>' +
-                                '<span style="font-size: 13px; opacity: 0.9;">' + params[0].name + '</span><br/><br/>' +
-                                '<span style="opacity: 0.9;">Total Cost: </span>' +
-                                '<strong style="font-size: 15px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
-                                '</div>';
-                        }"""
+                            """function(params) {
+                                return '<div style="' + `"""
+                            + self._get_tooltip_style()
+                            + """` + '">' +
+                                    '<strong style="font-size: 12px;">Account ID</strong><br/>' +
+                                    '<span style="font-size: 11px; opacity: 0.9;">' + params[0].name + '</span><br/><br/>' +
+                                    '<span style="opacity: 0.9;">Total Cost: </span>' +
+                                    '<strong style="font-size: 13px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
+                                    '</div>';
+                            }"""
+                        ),
+                        textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
                     ),
-                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
-                ),
-                toolbox_opts=opts.ToolboxOpts(
-                    is_show=True,
-                    feature=opts.ToolBoxFeatureOpts(
-                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
-                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
-                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    toolbox_opts=opts.ToolboxOpts(
+                        is_show=True,
+                        feature=opts.ToolBoxFeatureOpts(
+                            save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                            restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                            data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                        ),
                     ),
-                ),
             )
         )
 
@@ -374,16 +384,20 @@ class CURVisualizer:
             ),
             tooltip_opts=opts.TooltipOpts(
                 trigger="axis",
-                axis_pointer_type="cross",
+                is_confine=True,
+                background_color="transparent",
+                border_color="transparent", 
+                border_width=0,
+                extra_css_text="box-shadow: none;",
                 formatter=JsCode(
                     """function(params) {
                         var style = `"""
                     + self._get_tooltip_style()
                     + """`;
                         var result = '<div style="' + style + '">';
-                        result += '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/><br/>';
+                        result += '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/><br/>';
                         params.forEach(function(item) {
-                            result += '<div style="margin: 4px 0;">';
+                            result += '<div style="margin: 2px 0;">';
                             result += item.marker + ' ';
                             result += '<span style="opacity: 0.9;">' + item.seriesName + ':</span> ';
                             result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';
@@ -498,16 +512,20 @@ class CURVisualizer:
             ),
             tooltip_opts=opts.TooltipOpts(
                 trigger="axis",
-                axis_pointer_type="cross",
+                is_confine=True,
+                background_color="transparent",
+                border_color="transparent", 
+                border_width=0,
+                extra_css_text="box-shadow: none;",
                 formatter=JsCode(
                     """function(params) {
                         var style = `"""
                     + self._get_tooltip_style()
                     + """`;
                         var result = '<div style="' + style + '">';
-                        result += '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/><br/>';
+                        result += '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/><br/>';
                         params.forEach(function(item) {
-                            result += '<div style="margin: 4px 0;">';
+                            result += '<div style="margin: 2px 0;">';
                             result += item.marker + ' ';
                             result += '<span style="opacity: 0.9;">Account ' + item.seriesName + ':</span> ';
                             result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';
@@ -620,16 +638,22 @@ class CURVisualizer:
                     range_color=["#eef5ff", "#5470c6"],
                 ),
                 tooltip_opts=opts.TooltipOpts(
+                    trigger="item",
+                    is_confine=True,
+                    background_color="transparent",
+                    border_color="transparent", 
+                    border_width=0,
+                    extra_css_text="box-shadow: none;",
                     formatter=JsCode(
                         """function(params) {
                             var style = `"""
                         + self._get_tooltip_style()
                         + """`;
                             return '<div style="' + style + '">' +
-                                '<strong style="font-size: 14px;">Cost Breakdown</strong><br/><br/>' +
-                                '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Account: </span><strong>' + params.name + '</strong></div>' +
-                                '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Service: </span><strong>' + params.value[0] + '</strong></div>' +
-                                '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Total Cost: </span><strong>$' + params.value[2].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +
+                                '<strong style="font-size: 12px;">Cost Breakdown</strong><br/><br/>' +
+                                '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Account: </span><strong>' + params.name + '</strong></div>' +
+                                '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Service: </span><strong>' + params.value[0] + '</strong></div>' +
+                                '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Total Cost: </span><strong>$' + params.value[2].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +
                                 '</div>';
                         }"""
                     ),
@@ -713,14 +737,19 @@ class CURVisualizer:
                 ),
                 tooltip_opts=opts.TooltipOpts(
                     trigger="item",
+                    is_confine=True,
+                    background_color="transparent",
+                    border_color="transparent", 
+                    border_width=0,
+                    extra_css_text="box-shadow: none;",
                     formatter=JsCode(
                         """function(params) {
                             return '<div style="' + `"""
                         + self._get_tooltip_style()
                         + """` + '">' +
-                                '<strong style="font-size: 14px;">' + params.name + '</strong><br/><br/>' +
-                                '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +
-                                '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +
+                                '<strong style="font-size: 12px;">' + params.name + '</strong><br/><br/>' +
+                                '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Total Cost: </span><strong>$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>' +
+                                '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Percentage: </span><strong>' + params.percent.toFixed(1) + '%</strong></div>' +
                                 '</div>';
                         }"""
                     ),
@@ -814,16 +843,20 @@ class CURVisualizer:
             ),
             tooltip_opts=opts.TooltipOpts(
                 trigger="axis",
-                axis_pointer_type="shadow",
+                is_confine=True,
+                background_color="transparent",
+                border_color="transparent", 
+                border_width=0,
+                extra_css_text="box-shadow: none;",
                 formatter=JsCode(
                     """function(params) {
                         var style = `"""
                     + self._get_tooltip_style()
                     + """`;
                         var result = '<div style="' + style + '">';
-                        result += '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/><br/>';
+                        result += '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/><br/>';
                         params.forEach(function(item) {
-                            result += '<div style="margin: 4px 0;">';
+                            result += '<div style="margin: 2px 0;">';
                             result += item.marker + ' ';
                             result += '<span style="opacity: 0.9;">' + item.seriesName + ':</span> ';
                             result += '<strong>$' + item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>';
@@ -950,7 +983,12 @@ class CURVisualizer:
                 ),
             ),
             tooltip_opts=opts.TooltipOpts(
-                trigger="item",
+                trigger="axis",
+                is_confine=True,
+                background_color="transparent",
+                border_color="transparent", 
+                border_width=0,
+                extra_css_text="box-shadow: none;",
                 formatter=JsCode(
                     """function(params) {
                         var value = params.value;
@@ -958,12 +996,12 @@ class CURVisualizer:
                     + self._get_tooltip_style()
                     + """`;
                         var result = '<div style="' + style + '">';
-                        result += '<strong style="font-size: 14px;">' + params.seriesName + '</strong><br/><br/>';
-                        result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Month: </span><strong>' + value[0] + '</strong></div>';
-                        result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Cost: </span><strong>$' + value[1].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';
-                        result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Average: </span><strong>$' + value[3].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';
-                        result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Change: </span><strong style="color: ' + (value[4] > 0 ? '#ff6b6b' : '#51cf66') + ';">' + (value[4] > 0 ? '+' : '') + value[4].toFixed(1) + '%</strong></div>';
-                        result += '<div style="margin: 4px 0;"><span style="opacity: 0.9;">Z-Score: </span><strong>' + value[2].toFixed(2) + '</strong></div>';
+                        result += '<strong style="font-size: 12px;">' + params.seriesName + '</strong><br/><br/>';
+                        result += '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Month: </span><strong>' + value[0] + '</strong></div>';
+                        result += '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Cost: </span><strong>$' + value[1].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';
+                        result += '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Average: </span><strong>$' + value[3].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong></div>';
+                        result += '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Change: </span><strong style="color: ' + (value[4] > 0 ? '#ff6b6b' : '#51cf66') + ';">' + (value[4] > 0 ? '+' : '') + value[4].toFixed(1) + '%</strong></div>';
+                        result += '<div style="margin: 2px 0;"><span style="opacity: 0.9;">Z-Score: </span><strong>' + value[2].toFixed(2) + '</strong></div>';
                         result += '</div>';
                         return result;
                     }"""
@@ -1050,15 +1088,19 @@ class CURVisualizer:
                 ),
                 tooltip_opts=opts.TooltipOpts(
                     trigger="axis",
-                    axis_pointer_type="shadow",
+                    is_confine=True,
+                    background_color="transparent",
+                    border_color="transparent", 
+                    border_width=0,
+                    extra_css_text="box-shadow: none;",
                     formatter=JsCode(
                         """function(params) {
                             return '<div style="' + `"""
                         + self._get_tooltip_style()
                         + """` + '">' +
-                                '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/>' +
+                                '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/>' +
                                 '<span style="opacity: 0.9;">Total Cost: </span>' +
-                                '<strong style="font-size: 15px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
+                                '<strong style="font-size: 13px;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
                                 '</div>';
                         }"""
                     ),
@@ -1165,15 +1207,19 @@ class CURVisualizer:
                 ),
                 tooltip_opts=opts.TooltipOpts(
                     trigger="axis",
-                    axis_pointer_type="shadow",
+                    is_confine=True,
+                    background_color="transparent",
+                    border_color="transparent", 
+                    border_width=0,
+                    extra_css_text="box-shadow: none;",
                     formatter=JsCode(
                         """function(params) {
                             return '<div style="' + `"""
                         + self._get_tooltip_style()
                         + """` + '">' +
-                                '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/>' +
+                                '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/>' +
                                 '<span style="opacity: 0.9;">Discount: </span>' +
-                                '<strong style="font-size: 15px; color: #91cc75;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
+                                '<strong style="font-size: 13px; color: #91cc75;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
                                 '</div>';
                         }"""
                     ),
@@ -1256,15 +1302,19 @@ class CURVisualizer:
                 ),
                 tooltip_opts=opts.TooltipOpts(
                     trigger="axis",
-                    axis_pointer_type="shadow",
+                    is_confine=True,
+                    background_color="transparent",
+                    border_color="transparent", 
+                    border_width=0,
+                    extra_css_text="box-shadow: none;",
                     formatter=JsCode(
                         """function(params) {
                             return '<div style="' + `"""
                         + self._get_tooltip_style()
                         + """` + '">' +
-                                '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/>' +
+                                '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/>' +
                                 '<span style="opacity: 0.9;">Discount: </span>' +
-                                '<strong style="font-size: 15px; color: #91cc75;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
+                                '<strong style="font-size: 13px; color: #91cc75;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
                                 '</div>';
                         }"""
                     ),

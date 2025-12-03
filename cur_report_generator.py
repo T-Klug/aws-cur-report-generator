@@ -236,6 +236,8 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         cost_by_region = processor.get_cost_by_region(top_n=top_n)
         discounts_summary = processor.get_discounts_summary()
         discounts_by_service = processor.get_discounts_by_service(top_n=top_n)
+        savings_plan_analysis = processor.get_savings_plan_analysis()
+        savings_plan_summary = processor.get_savings_plan_summary()
         summary_stats = processor.get_summary_statistics()
 
         print(f"{Fore.GREEN}✓ Analysis complete{Style.RESET_ALL}\n")
@@ -244,7 +246,7 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         print(f"{Fore.GREEN}[3/4] Creating visualizations...{Style.RESET_ALL}")
         visualizer = CURVisualizer()
 
-        with tqdm(total=12, desc="Generating charts", bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}') as pbar:
+        with tqdm(total=13, desc="Generating charts", bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}') as pbar:
             visualizer.create_cost_by_service_chart(cost_by_service, top_n=top_n)
             pbar.update(1)
 
@@ -287,6 +289,11 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
 
             if not discounts_by_service.empty:
                 visualizer.create_discounts_by_service_chart(discounts_by_service, top_n=top_n)
+            pbar.update(1)
+
+            # Savings Plan effectiveness chart
+            if not savings_plan_analysis.empty:
+                visualizer.create_savings_plan_chart(savings_plan_analysis)
             pbar.update(1)
 
         print(f"{Fore.GREEN}✓ Visualizations created{Style.RESET_ALL}\n")
@@ -339,6 +346,13 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         print(f"Number of Services: {summary_stats['num_services']}")
         print(f"Date Range: {summary_stats['date_range_start']} to {summary_stats['date_range_end']}")
         print(f"Total Records: {summary_stats['total_records']:,}")
+
+        # Savings Plan summary
+        if savings_plan_summary.get('total_savings', 0) > 0:
+            print(f"\n{Fore.GREEN}Savings Plan Analysis:{Style.RESET_ALL}")
+            print(f"  On-Demand Equivalent: ${savings_plan_summary['on_demand_equivalent']:,.2f}")
+            print(f"  Total Savings: {Fore.GREEN}${savings_plan_summary['total_savings']:,.2f}{Style.RESET_ALL}")
+            print(f"  Savings Rate: {Fore.GREEN}{savings_plan_summary['savings_percentage']:.1f}%{Style.RESET_ALL}")
 
         if anomalies is not None and not anomalies.empty:
             print(f"\n{Fore.YELLOW}⚠ Found {len(anomalies)} days with anomalous costs{Style.RESET_ALL}")

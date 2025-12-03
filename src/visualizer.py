@@ -1334,6 +1334,118 @@ class CURVisualizer:
         self.charts.append(("discounts_by_service", bar))
         return bar
 
+    def create_savings_plan_chart(
+        self, df: pd.DataFrame, title: str = "Savings Plan Effectiveness by Service"
+    ) -> Bar:
+        """
+        Create a grouped bar chart showing Savings Plan effectiveness.
+
+        Args:
+            df: DataFrame with service, on_demand_equivalent, and savings columns
+            title: Chart title
+
+        Returns:
+            pyecharts Bar chart
+        """
+        logger.info("Creating Savings Plan effectiveness chart...")
+
+        if not _validate_dataframe(
+            df, ["service", "on_demand_equivalent", "savings"], "Savings Plan chart"
+        ):
+            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+            bar.set_global_opts(
+                title_opts=opts.TitleOpts(title=title, subtitle="No Savings Plan data available")
+            )
+            self.charts.append(("savings_plan", bar))
+            return bar
+
+        # Take top 10 by on-demand equivalent
+        plot_df = df.head(10).copy()
+
+        bar = (
+            Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+            .add_xaxis(plot_df["service"].tolist())
+            .add_yaxis(
+                "On-Demand Equivalent",
+                _safe_round_list(plot_df["on_demand_equivalent"].tolist()),
+                label_opts=opts.LabelOpts(is_show=False),
+                itemstyle_opts=opts.ItemStyleOpts(color="#ee6666"),
+            )
+            .add_yaxis(
+                "Savings",
+                _safe_round_list(plot_df["savings"].tolist()),
+                label_opts=opts.LabelOpts(
+                    is_show=True,
+                    position="top",
+                    formatter=JsCode(
+                        "function(params) { return '$' + params.value.toLocaleString(); }"
+                    ),
+                ),
+                itemstyle_opts=opts.ItemStyleOpts(color="#91cc75"),
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title=title,
+                    subtitle="How much Savings Plans save you vs On-Demand pricing",
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                    pos_top="1%",
+                ),
+                xaxis_opts=opts.AxisOpts(
+                    name="Service",
+                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    name="Cost (USD)",
+                    axislabel_opts=opts.LabelOpts(
+                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                    ),
+                ),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis",
+                    is_confine=True,
+                    background_color="transparent",
+                    border_color="transparent",
+                    border_width=0,
+                    extra_css_text="box-shadow: none;",
+                    formatter=JsCode(
+                        """function(params) {
+                            var style = `"""
+                        + self._get_tooltip_style()
+                        + """`;
+                            var onDemand = params[0] ? params[0].value : 0;
+                            var savings = params[1] ? params[1].value : 0;
+                            var pct = onDemand > 0 ? ((savings / onDemand) * 100).toFixed(1) : 0;
+                            var result = '<div style="' + style + '">';
+                            result += '<strong style="font-size: 12px;">' + params[0].name + '</strong><br/><br/>';
+                            result += '<div style="margin: 2px 0;">';
+                            result += params[0].marker + ' <span style="opacity: 0.9;">On-Demand:</span> ';
+                            result += '<strong style="color: #ee6666;">$' + onDemand.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</strong></div>';
+                            result += '<div style="margin: 2px 0;">';
+                            result += params[1].marker + ' <span style="opacity: 0.9;">Savings:</span> ';
+                            result += '<strong style="color: #91cc75;">$' + savings.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</strong></div>';
+                            result += '<div style="margin: 4px 0 0 0; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.3);">';
+                            result += '<span style="opacity: 0.9;">Savings Rate:</span> <strong>' + pct + '%</strong></div>';
+                            result += '</div>';
+                            return result;
+                        }"""
+                    ),
+                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
+                ),
+                legend_opts=opts.LegendOpts(pos_top="10%"),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    ),
+                ),
+            )
+        )
+
+        self.charts.append(("savings_plan", bar))
+        return bar
+
     def generate_html_report(
         self, output_path: str, summary_stats: dict, title: str = "AWS Cost and Usage Report"
     ) -> str:

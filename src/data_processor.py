@@ -204,15 +204,23 @@ class CURDataProcessor:
             # No line_item_type column - return all data
             return self.prepared_df
 
-        # Include only positive charge types (Usage, Tax)
-        # Exclude: Credit, SavingsPlanNegation, EdpDiscount, PrivateRateDiscount, BundledDiscount
+        # Include only actual charge types - do NOT include SavingsPlanCoveredUsage
+        # because it shows the on-demand equivalent cost, not the actual cost.
+        # The actual SP cost is in SavingsPlanRecurringFee.
+        #
+        # AWS CUR Savings Plan line items:
+        # - SavingsPlanRecurringFee: The actual hourly cost of your SP commitment
+        # - SavingsPlanCoveredUsage: On-demand equivalent (for tracking what SP covered) - DO NOT SUM
+        # - SavingsPlanNegation: Offsets SavingsPlanCoveredUsage - only needed if including CoveredUsage
+        #
+        # Including both Usage AND SavingsPlanCoveredUsage causes double-counting!
         usage_types = [
             "Usage",
             "Tax",
             "Fee",
             "RIFee",
-            "SavingsPlanCoveredUsage",
             "SavingsPlanRecurringFee",
+            # NOT SavingsPlanCoveredUsage - that would double-count!
         ]
         return self.prepared_df.filter(pl.col("line_item_type").is_in(usage_types))
 
@@ -404,6 +412,125 @@ class CURDataProcessor:
         result_df["total_discount"] = result_df["total_discount"].abs()
         self._cache[cache_key] = result_df
         return result_df
+
+    def get_savings_plan_analysis(self) -> pd.DataFrame:
+        """
+        Analyze Savings Plan effectiveness by comparing on-demand equivalent cost vs actual cost.
+
+        This shows how much you're saving with Savings Plans by comparing:
+        - SavingsPlanCoveredUsage: The on-demand equivalent cost (what you would have paid)
+        - SavingsPlanRecurringFee: The actual Savings Plan cost you paid
+
+        Returns:
+            Pandas DataFrame with columns:
+            - service: The AWS service
+            - on_demand_equivalent: What the on-demand cost would have been
+            - savings_plan_cost: The actual SP recurring fee (may be 0 if aggregated elsewhere)
+            - savings: The amount saved (on_demand_equivalent - actual charges)
+        """
+        if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
+            self.prepare_data()
+
+        cache_key = "savings_plan_analysis"
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        if "line_item_type" not in self.prepared_df.columns:
+            logger.warning("No line_item_type column - cannot analyze Savings Plans")
+            return pd.DataFrame(
+                columns=["service", "on_demand_equivalent", "savings_plan_cost", "savings"]
+            )
+
+        logger.info("Analyzing Savings Plan effectiveness...")
+
+        # Get SavingsPlanCoveredUsage (on-demand equivalent for covered usage)
+        covered_usage = (
+            self.prepared_df.filter(pl.col("line_item_type") == "SavingsPlanCoveredUsage")
+            .group_by("service")
+            .agg(pl.col("cost").sum().alias("on_demand_equivalent"))
+        )
+
+        # Get SavingsPlanRecurringFee (actual SP commitment cost)
+        recurring_fee = (
+            self.prepared_df.filter(pl.col("line_item_type") == "SavingsPlanRecurringFee")
+            .group_by("service")
+            .agg(pl.col("cost").sum().alias("savings_plan_cost"))
+        )
+
+        # Get SavingsPlanNegation (the offset/savings amount - negative values)
+        negation = (
+            self.prepared_df.filter(pl.col("line_item_type") == "SavingsPlanNegation")
+            .group_by("service")
+            .agg(pl.col("cost").sum().alias("negation"))
+        )
+
+        if covered_usage.is_empty():
+            logger.info("No Savings Plan covered usage found in data")
+            return pd.DataFrame(
+                columns=["service", "on_demand_equivalent", "savings_plan_cost", "savings"]
+            )
+
+        # Join the data
+        result = (
+            covered_usage.join(recurring_fee, on="service", how="left")
+            .join(negation, on="service", how="left")
+            .with_columns(
+                [
+                    pl.col("savings_plan_cost").fill_null(0.0),
+                    pl.col("negation").fill_null(0.0),
+                ]
+            )
+            # Savings = negation amount (which is negative, so we take abs)
+            .with_columns(pl.col("negation").abs().alias("savings"))
+            .drop("negation")
+            .sort("on_demand_equivalent", descending=True)
+        )
+
+        result_df = result.to_pandas()
+        self._cache[cache_key] = result_df
+
+        total_on_demand = result_df["on_demand_equivalent"].sum()
+        total_savings = result_df["savings"].sum()
+        if total_on_demand > 0:
+            pct_savings = (total_savings / total_on_demand) * 100
+            logger.info(
+                f"Savings Plan analysis: ${total_savings:,.2f} saved ({pct_savings:.1f}% of on-demand)"
+            )
+
+        return result_df
+
+    def get_savings_plan_summary(self) -> dict:
+        """
+        Get a summary of Savings Plan effectiveness across all services.
+
+        Returns:
+            Dictionary with:
+            - on_demand_equivalent: Total on-demand cost that would have been charged
+            - savings_plan_cost: Total Savings Plan recurring fees
+            - total_savings: Amount saved by using Savings Plans
+            - savings_percentage: Percentage saved vs on-demand
+        """
+        sp_analysis = self.get_savings_plan_analysis()
+
+        if sp_analysis.empty:
+            return {
+                "on_demand_equivalent": 0.0,
+                "savings_plan_cost": 0.0,
+                "total_savings": 0.0,
+                "savings_percentage": 0.0,
+            }
+
+        on_demand = float(sp_analysis["on_demand_equivalent"].sum())
+        sp_cost = float(sp_analysis["savings_plan_cost"].sum())
+        savings = float(sp_analysis["savings"].sum())
+        pct = (savings / on_demand * 100) if on_demand > 0 else 0.0
+
+        return {
+            "on_demand_equivalent": on_demand,
+            "savings_plan_cost": sp_cost,
+            "total_savings": savings,
+            "savings_percentage": pct,
+        }
 
     def get_cost_by_account_and_service(
         self, top_accounts: int = 10, top_services: int = 10

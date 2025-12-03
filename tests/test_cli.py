@@ -59,6 +59,15 @@ class TestCLI:
             )
             mock_processor_instance.detect_cost_anomalies.return_value = pd.DataFrame()
             mock_processor_instance.get_cost_by_region.return_value = pd.DataFrame()
+            mock_processor_instance.get_discounts_summary.return_value = pd.DataFrame()
+            mock_processor_instance.get_discounts_by_service.return_value = pd.DataFrame()
+            mock_processor_instance.get_savings_plan_analysis.return_value = pd.DataFrame()
+            mock_processor_instance.get_savings_plan_summary.return_value = {
+                "on_demand_equivalent": 0.0,
+                "savings_plan_cost": 0.0,
+                "total_savings": 0.0,
+                "savings_percentage": 0.0,
+            }
             mock_processor_instance.get_summary_statistics.return_value = {
                 "total_cost": 10000.0,
                 "num_accounts": 2,

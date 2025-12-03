@@ -278,8 +278,28 @@ def sample_cur_data():
 
                 # Add discount rows for some services (simulating Savings Plans, EDP, etc.)
                 if service_name in ["AmazonEC2", "AmazonRDS", "AmazonEKS"] and usage_cost > 100:
-                    # Add SavingsPlanNegation (offsets some of the usage cost)
-                    discount_amount = -round(usage_cost * 0.15, 2)  # 15% savings
+                    # Calculate the on-demand equivalent (what it would cost without SP)
+                    on_demand_equivalent = round(usage_cost * 0.30, 2)  # 30% of usage covered by SP
+
+                    # Add SavingsPlanCoveredUsage (on-demand equivalent for tracking)
+                    data.append(
+                        {
+                            "line_item_usage_start_date": date,
+                            "line_item_usage_account_id": account_id,
+                            "line_item_product_code": service_name,
+                            "line_item_unblended_cost": on_demand_equivalent,
+                            "line_item_usage_type": f"{region}:{service_name}:SavingsPlanCoveredUsage",
+                            "line_item_operation": "SavingsPlanCoveredUsage",
+                            "product_region": region,
+                            "line_item_resource_id": "",
+                            "line_item_line_item_type": "SavingsPlanCoveredUsage",
+                        }
+                    )
+
+                    # Add SavingsPlanNegation (offsets the on-demand equivalent)
+                    discount_amount = -round(
+                        on_demand_equivalent * 0.50, 2
+                    )  # 50% savings on covered usage
                     data.append(
                         {
                             "line_item_usage_start_date": date,

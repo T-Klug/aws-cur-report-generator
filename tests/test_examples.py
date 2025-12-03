@@ -37,6 +37,7 @@ class TestExampleReports:
         cost_by_region = processor.get_cost_by_region(top_n=5)
         discounts_summary = processor.get_discounts_summary()
         discounts_by_service = processor.get_discounts_by_service(top_n=10)
+        savings_plan_analysis = processor.get_savings_plan_analysis()
         summary_stats = processor.get_summary_statistics()
 
         # Create visualizations
@@ -92,6 +93,11 @@ class TestExampleReports:
         if not discounts_by_service.empty:
             visualizer.create_discounts_by_service_chart(
                 discounts_by_service, top_n=10, title="Discounts by Service"
+            )
+
+        if not savings_plan_analysis.empty:
+            visualizer.create_savings_plan_chart(
+                savings_plan_analysis, title="Savings Plan Effectiveness"
             )
 
         # Generate HTML report

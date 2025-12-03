@@ -43,6 +43,7 @@ class CURDataProcessor:
             "operation": None,
             "region": None,
             "resource_id": None,
+            "line_item_type": None,
         }
 
         # Define possible column names for each standard field
@@ -85,6 +86,11 @@ class CURDataProcessor:
                 "region",
             ],
             "resource_id": ["line_item_resource_id", "lineItem/ResourceId", "resource_id"],
+            "line_item_type": [
+                "lineItem/LineItemType",
+                "line_item_line_item_type",
+                "line_item_type",
+            ],
         }
 
         # Find actual column names
@@ -130,8 +136,9 @@ class CURDataProcessor:
         # Type casting and transformations
         if "cost" in self.normalized_columns and self.normalized_columns["cost"]:
             lf = lf.with_columns(pl.col("cost").cast(pl.Float64, strict=False).fill_null(0.0))
-            # Filter zero/negative costs
-            lf = lf.filter(pl.col("cost") > 0)
+            # Note: Do NOT filter out negative costs - they represent discounts, credits,
+            # and negations (SavingsPlanNegation, EdpDiscount, PrivateRateDiscount, etc.)
+            # that offset positive usage charges. Filtering them causes double-counting.
 
         if "usage_date" in self.normalized_columns and self.normalized_columns["usage_date"]:
             # Check if conversion is needed
@@ -159,7 +166,14 @@ class CURDataProcessor:
             )
 
         # Fill nulls for string columns
-        string_columns = ["account_id", "service", "usage_type", "operation", "region"]
+        string_columns = [
+            "account_id",
+            "service",
+            "usage_type",
+            "operation",
+            "region",
+            "line_item_type",
+        ]
         fill_exprs = []
         for col in string_columns:
             if col in self.normalized_columns and self.normalized_columns[col]:
@@ -179,9 +193,32 @@ class CURDataProcessor:
             self.prepare_data()
         return float(self.prepared_df["cost"].sum())
 
+    def _get_usage_df(self) -> pl.DataFrame:
+        """
+        Get DataFrame filtered to only Usage and Tax line items.
+
+        This excludes Credits, SavingsPlanNegation, EdpDiscount, etc.
+        which are shown separately in discount charts.
+        """
+        if "line_item_type" not in self.prepared_df.columns:
+            # No line_item_type column - return all data
+            return self.prepared_df
+
+        # Include only positive charge types (Usage, Tax)
+        # Exclude: Credit, SavingsPlanNegation, EdpDiscount, PrivateRateDiscount, BundledDiscount
+        usage_types = [
+            "Usage",
+            "Tax",
+            "Fee",
+            "RIFee",
+            "SavingsPlanCoveredUsage",
+            "SavingsPlanRecurringFee",
+        ]
+        return self.prepared_df.filter(pl.col("line_item_type").is_in(usage_types))
+
     def get_cost_by_service(self, top_n: Optional[int] = None) -> pd.DataFrame:
         """
-        Aggregate costs by service.
+        Aggregate costs by service (Usage charges only, excludes credits/discounts).
 
         Args:
             top_n: Return only top N services by cost
@@ -203,8 +240,12 @@ class CURDataProcessor:
             return pd.DataFrame(columns=["service", "total_cost"])
 
         logger.info("Calculating cost by service...")
+
+        # Filter to usage charges only (exclude credits/discounts)
+        usage_df = self._get_usage_df()
+
         result = (
-            self.prepared_df.group_by("service")
+            usage_df.group_by("service")
             .agg(pl.col("cost").sum().alias("total_cost"))
             .sort("total_cost", descending=True)
         )
@@ -218,7 +259,7 @@ class CURDataProcessor:
 
     def get_cost_by_account(self, top_n: Optional[int] = None) -> pd.DataFrame:
         """
-        Aggregate costs by AWS account.
+        Aggregate costs by AWS account (Usage charges only, excludes credits/discounts).
 
         Args:
             top_n: Return only top N accounts by cost
@@ -240,8 +281,12 @@ class CURDataProcessor:
             return pd.DataFrame(columns=["account_id", "total_cost"])
 
         logger.info("Calculating cost by account...")
+
+        # Filter to usage charges only (exclude credits/discounts)
+        usage_df = self._get_usage_df()
+
         result = (
-            self.prepared_df.group_by("account_id")
+            usage_df.group_by("account_id")
             .agg(pl.col("cost").sum().alias("total_cost"))
             .sort("total_cost", descending=True)
         )
@@ -250,6 +295,113 @@ class CURDataProcessor:
             result = result.head(top_n)
 
         result_df = result.to_pandas()
+        self._cache[cache_key] = result_df
+        return result_df
+
+    def get_discounts_summary(self) -> pd.DataFrame:
+        """
+        Get summary of all discounts, credits, and rate reductions.
+
+        Returns:
+            Pandas DataFrame with discount breakdown by type and service
+        """
+        if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
+            self.prepare_data()
+
+        # Check cache first
+        cache_key = "discounts_summary"
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        # Return empty DataFrame if no data or missing columns
+        if self.prepared_df.is_empty() or "line_item_type" not in self.prepared_df.columns:
+            logger.warning("No data available for discounts summary")
+            return pd.DataFrame(columns=["discount_type", "total_discount"])
+
+        logger.info("Calculating discounts summary...")
+
+        # Discount-related line item types
+        discount_types = [
+            "SavingsPlanNegation",
+            "EdpDiscount",
+            "PrivateRateDiscount",
+            "BundledDiscount",
+            "Credit",
+        ]
+
+        # Filter to discount rows only (negative costs)
+        discount_df = self.prepared_df.filter(pl.col("line_item_type").is_in(discount_types))
+
+        if discount_df.is_empty():
+            logger.info("No discounts found in the data")
+            return pd.DataFrame(columns=["discount_type", "total_discount"])
+
+        # Aggregate by discount type
+        result = (
+            discount_df.group_by("line_item_type")
+            .agg(pl.col("cost").sum().alias("total_discount"))
+            .sort("total_discount")  # Most negative (biggest discount) first
+            .rename({"line_item_type": "discount_type"})
+        )
+
+        result_df = result.to_pandas()
+        # Convert to positive values for display (discounts are negative in raw data)
+        result_df["total_discount"] = result_df["total_discount"].abs()
+        self._cache[cache_key] = result_df
+        return result_df
+
+    def get_discounts_by_service(self, top_n: int = 10) -> pd.DataFrame:
+        """
+        Get discount breakdown by service.
+
+        Args:
+            top_n: Number of top services by discount to return
+
+        Returns:
+            Pandas DataFrame with discount amounts by service
+        """
+        if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
+            self.prepare_data()
+
+        # Check cache first
+        cache_key = f"discounts_by_service_{top_n}"
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        # Return empty DataFrame if no data
+        if self.prepared_df.is_empty() or "line_item_type" not in self.prepared_df.columns:
+            logger.warning("No data available for discounts by service")
+            return pd.DataFrame(columns=["service", "total_discount"])
+
+        logger.info("Calculating discounts by service...")
+
+        # Discount-related line item types
+        discount_types = [
+            "SavingsPlanNegation",
+            "EdpDiscount",
+            "PrivateRateDiscount",
+            "BundledDiscount",
+            "Credit",
+        ]
+
+        # Filter to discount rows only
+        discount_df = self.prepared_df.filter(pl.col("line_item_type").is_in(discount_types))
+
+        if discount_df.is_empty():
+            logger.info("No discounts found in the data")
+            return pd.DataFrame(columns=["service", "total_discount"])
+
+        # Aggregate by service
+        result = (
+            discount_df.group_by("service")
+            .agg(pl.col("cost").sum().alias("total_discount"))
+            .sort("total_discount")  # Most negative first
+            .head(top_n)
+        )
+
+        result_df = result.to_pandas()
+        # Convert to positive values for display
+        result_df["total_discount"] = result_df["total_discount"].abs()
         self._cache[cache_key] = result_df
         return result_df
 
@@ -278,9 +430,10 @@ class CURDataProcessor:
         top_accounts_list = top_account_df["account_id"].tolist()
         top_services_list = top_service_df["service"].tolist()
 
-        # Filter and aggregate
+        # Filter to usage charges only and aggregate
+        usage_df = self._get_usage_df()
         result = (
-            self.prepared_df.filter(
+            usage_df.filter(
                 pl.col("account_id").is_in(top_accounts_list)
                 & pl.col("service").is_in(top_services_list)
             )
@@ -310,9 +463,10 @@ class CURDataProcessor:
         top_service_df = self.get_cost_by_service(top_services)
         top_services_list = top_service_df["service"].tolist()
 
-        # Filter and aggregate
+        # Filter to usage charges only and aggregate
+        usage_df = self._get_usage_df()
         result = (
-            self.prepared_df.filter(pl.col("service").is_in(top_services_list))
+            usage_df.filter(pl.col("service").is_in(top_services_list))
             .group_by(["year_month", "service"])
             .agg(pl.col("cost").sum().alias("total_cost"))
             .sort(["service", "year_month"])
@@ -340,9 +494,10 @@ class CURDataProcessor:
         top_account_df = self.get_cost_by_account(top_accounts)
         top_accounts_list = top_account_df["account_id"].tolist()
 
-        # Filter and aggregate
+        # Filter to usage charges only and aggregate
+        usage_df = self._get_usage_df()
         result = (
-            self.prepared_df.filter(pl.col("account_id").is_in(top_accounts_list))
+            usage_df.filter(pl.col("account_id").is_in(top_accounts_list))
             .group_by(["year_month", "account_id"])
             .agg(pl.col("cost").sum().alias("total_cost"))
             .sort(["account_id", "year_month"])
@@ -353,7 +508,7 @@ class CURDataProcessor:
 
     def get_monthly_summary(self) -> pd.DataFrame:
         """
-        Get monthly cost summary.
+        Get monthly cost summary (Usage charges only, excludes credits/discounts).
 
         Returns:
             Pandas DataFrame with monthly aggregated costs
@@ -362,8 +517,12 @@ class CURDataProcessor:
             self.prepare_data()
 
         logger.info("Calculating monthly summary...")
+
+        # Filter to usage charges only
+        usage_df = self._get_usage_df()
+
         result = (
-            self.prepared_df.group_by("year_month")
+            usage_df.group_by("year_month")
             .agg(
                 [
                     pl.col("cost").sum().alias("total_cost"),
@@ -454,7 +613,7 @@ class CURDataProcessor:
 
     def get_cost_by_region(self, top_n: Optional[int] = None) -> pd.DataFrame:
         """
-        Aggregate costs by region.
+        Aggregate costs by region (Usage charges only, excludes credits/discounts).
 
         Args:
             top_n: Return only top N regions by cost
@@ -470,8 +629,12 @@ class CURDataProcessor:
             return pd.DataFrame()
 
         logger.info("Calculating cost by region...")
+
+        # Filter to usage charges only
+        usage_df = self._get_usage_df()
+
         result = (
-            self.prepared_df.group_by("region")
+            usage_df.group_by("region")
             .agg(pl.col("cost").sum().alias("total_cost"))
             .sort("total_cost", descending=True)
         )
@@ -486,7 +649,10 @@ class CURDataProcessor:
         Get overall summary statistics.
 
         Returns:
-            Dictionary with summary statistics
+            Dictionary with summary statistics including:
+            - total_cost: Usage charges only (excludes credits/discounts)
+            - net_cost: Total including credits/discounts
+            - total_discounts: Sum of all discounts/credits (positive value)
         """
         if not hasattr(self, "prepared_df") or self.prepared_df.is_empty():
             self.prepare_data()
@@ -497,6 +663,8 @@ class CURDataProcessor:
         if df.is_empty():
             return {
                 "total_cost": 0.0,
+                "net_cost": 0.0,
+                "total_discounts": 0.0,
                 "num_accounts": 0,
                 "num_services": 0,
                 "date_range_start": "N/A",
@@ -526,8 +694,20 @@ class CURDataProcessor:
                 else:
                     date_end = str(max_date)
 
+        # Calculate usage-only total (for main reporting)
+        usage_df = self._get_usage_df()
+        usage_total = float(usage_df["cost"].sum()) if "cost" in usage_df.columns else 0.0
+
+        # Calculate net total (including discounts)
+        net_total = float(df["cost"].sum()) if "cost" in df.columns else 0.0
+
+        # Calculate total discounts (make it positive for display)
+        total_discounts = usage_total - net_total
+
         summary: Dict[str, Any] = {
-            "total_cost": float(df["cost"].sum()) if "cost" in df.columns else 0.0,
+            "total_cost": usage_total,  # Usage charges only
+            "net_cost": net_total,  # After discounts
+            "total_discounts": total_discounts,  # Positive value for display
             "num_accounts": int(df["account_id"].n_unique()) if "account_id" in df.columns else 0,
             "num_services": int(df["service"].n_unique()) if "service" in df.columns else 0,
             "date_range_start": date_start,

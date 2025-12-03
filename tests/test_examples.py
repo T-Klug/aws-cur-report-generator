@@ -35,6 +35,8 @@ class TestExampleReports:
         monthly_summary = processor.get_monthly_summary()
         anomalies = processor.detect_cost_anomalies(threshold_std=1.5)
         cost_by_region = processor.get_cost_by_region(top_n=5)
+        discounts_summary = processor.get_discounts_summary()
+        discounts_by_service = processor.get_discounts_by_service(top_n=10)
         summary_stats = processor.get_summary_statistics()
 
         # Create visualizations
@@ -81,6 +83,16 @@ class TestExampleReports:
 
         if not cost_by_region.empty:
             visualizer.create_region_chart(cost_by_region, top_n=5, title="Cost by AWS Region")
+
+        if not discounts_summary.empty:
+            visualizer.create_discounts_chart(
+                discounts_summary, title="Discounts & Rate Reductions by Type"
+            )
+
+        if not discounts_by_service.empty:
+            visualizer.create_discounts_by_service_chart(
+                discounts_by_service, top_n=10, title="Discounts by Service"
+            )
 
         # Generate HTML report
         examples_dir = Path(__file__).parent.parent / "examples"

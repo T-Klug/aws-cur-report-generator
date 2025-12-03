@@ -226,7 +226,7 @@ class TestCLI:
 
             assert result.exit_code == 0
             assert "Report Summary" in result.output
-            assert "Total Cost" in result.output
+            assert "Usage Cost" in result.output
 
 
 class TestSetupLogging:

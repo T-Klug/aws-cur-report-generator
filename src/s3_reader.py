@@ -73,6 +73,9 @@ class CURReader:
         # Split Cost Allocation columns (to detect and handle split line items)
         "splitLineItem/ParentResourceId",
         "split_line_item_parent_resource_id",
+        # Line item type (needed for discount analysis)
+        "lineItem/LineItemType",
+        "line_item_line_item_type",
     ]
 
     def __init__(
@@ -706,8 +709,12 @@ class CURReader:
         # Apply deduplication
         df = self._deduplicate(df)
 
-        # Filter split cost allocation duplicates (must happen after combining all files)
-        df = self._filter_split_cost_duplicates(df)
+        # Note: We do NOT filter split cost allocation rows here.
+        # AWS CUR handles this correctly:
+        # - Split children (EKS pods) have UnblendedCost = NULL/0
+        # - Parent rows (EC2 instances) have the full cost in UnblendedCost
+        # - SplitCost column is for ATTRIBUTION (showing cost per pod), not for totals
+        # Summing UnblendedCost gives the correct total without double-counting.
 
         logger.info(f"Successfully loaded {len(df)} records from {len(report_files)} files")
         return df
@@ -961,16 +968,11 @@ class CURReader:
         # after all files are combined. This ensures we can identify parent resources across
         # all files (parent EC2 row might be in a different file than the EKS pod split rows).
 
-        # Filter by cost > 0
-        cost_col = None
-        for col in ["line_item_unblended_cost", "lineItem/UnblendedCost"]:
-            if col in available_cols:
-                cost_col = col
-                break
-
-        if cost_col:
-            # Cast to float and filter
-            lf = lf.filter(pl.col(cost_col).cast(pl.Float64) > 0)
+        # NOTE: We do NOT filter by cost > 0 here because:
+        # 1. Negative costs represent discounts (SavingsPlanNegation, EdpDiscount, Credits, etc.)
+        # 2. Filtering them out would inflate total costs
+        # 3. We need them for discount analysis/reporting
+        # Zero-cost rows are kept for completeness but typically have minimal impact.
 
         # Filter by date
         date_col = None

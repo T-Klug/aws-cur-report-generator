@@ -1078,6 +1078,212 @@ class CURVisualizer:
         self.charts.append(("cost_by_region", bar))
         return bar
 
+    def create_discounts_chart(
+        self, df: pd.DataFrame, title: str = "Discounts & Rate Reductions by Type"
+    ) -> Bar:
+        """
+        Create a horizontal bar chart showing discounts by type.
+
+        Args:
+            df: DataFrame with discount_type and total_discount columns
+            title: Chart title
+
+        Returns:
+            pyecharts Bar chart
+        """
+        logger.info("Creating discounts by type chart...")
+
+        if not _validate_dataframe(df, ["discount_type", "total_discount"], "Discounts chart"):
+            # Return empty chart
+            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="400px", width="100%"))
+            bar.set_global_opts(
+                title_opts=opts.TitleOpts(title=title, subtitle="No discount data available")
+            )
+            self.charts.append(("discounts_by_type", bar))
+            return bar
+
+        # Sort by discount amount descending and use friendly names
+        plot_df = df.sort_values("total_discount", ascending=True).copy()
+
+        # Map to friendly names
+        friendly_names = {
+            "SavingsPlanNegation": "Savings Plans",
+            "EdpDiscount": "Enterprise Discount (EDP)",
+            "PrivateRateDiscount": "Private Rate Discount",
+            "BundledDiscount": "Bundled Discount",
+            "Credit": "Credits",
+        }
+        plot_df["display_name"] = plot_df["discount_type"].map(
+            lambda x: friendly_names.get(x, x) if pd.notna(x) else "Unknown"
+        )
+
+        bar = (
+            Bar(init_opts=opts.InitOpts(theme=self.theme, height="400px", width="100%"))
+            .add_xaxis(plot_df["display_name"].tolist())
+            .add_yaxis(
+                "Discount Amount (USD)",
+                _safe_round_list(plot_df["total_discount"].tolist()),
+                label_opts=opts.LabelOpts(
+                    is_show=True,
+                    position="right",
+                    formatter=JsCode(
+                        "function(params) { return '$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }"
+                    ),
+                ),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    color=JsCode(
+                        """function(params) {
+                            var colors = {
+                                'Savings Plans': '#91cc75',
+                                'Enterprise Discount (EDP)': '#5470c6',
+                                'Private Rate Discount': '#ee6666',
+                                'Bundled Discount': '#fac858',
+                                'Credits': '#73c0de'
+                            };
+                            return colors[params.name] || '#91cc75';
+                        }"""
+                    ),
+                    border_radius=8,
+                ),
+            )
+            .reversal_axis()
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title=title,
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                    pos_top="1%",
+                ),
+                xaxis_opts=opts.AxisOpts(
+                    name="Discount Amount (USD)",
+                    axislabel_opts=opts.LabelOpts(
+                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                    ),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    name="",
+                    axislabel_opts=opts.LabelOpts(interval=0),
+                ),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis",
+                    axis_pointer_type="shadow",
+                    formatter=JsCode(
+                        """function(params) {
+                            return '<div style="' + `"""
+                        + self._get_tooltip_style()
+                        + """` + '">' +
+                                '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/>' +
+                                '<span style="opacity: 0.9;">Discount: </span>' +
+                                '<strong style="font-size: 15px; color: #91cc75;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
+                                '</div>';
+                        }"""
+                    ),
+                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
+                ),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    ),
+                ),
+            )
+        )
+
+        self.charts.append(("discounts_by_type", bar))
+        return bar
+
+    def create_discounts_by_service_chart(
+        self, df: pd.DataFrame, top_n: int = 10, title: str = "Discounts by Service"
+    ) -> Bar:
+        """
+        Create a bar chart showing discounts by service.
+
+        Args:
+            df: DataFrame with service and total_discount columns
+            top_n: Number of services to show
+            title: Chart title
+
+        Returns:
+            pyecharts Bar chart
+        """
+        logger.info(f"Creating discounts by service chart (top {top_n})...")
+
+        if not _validate_dataframe(df, ["service", "total_discount"], "Discounts by service chart"):
+            # Return empty chart
+            bar = Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+            bar.set_global_opts(
+                title_opts=opts.TitleOpts(title=title, subtitle="No discount data available")
+            )
+            self.charts.append(("discounts_by_service", bar))
+            return bar
+
+        plot_df = df.head(top_n).copy()
+
+        bar = (
+            Bar(init_opts=opts.InitOpts(theme=self.theme, height="500px", width="100%"))
+            .add_xaxis(plot_df["service"].tolist())
+            .add_yaxis(
+                "Discount Amount (USD)",
+                _safe_round_list(plot_df["total_discount"].tolist()),
+                label_opts=opts.LabelOpts(
+                    is_show=True,
+                    position="top",
+                    formatter=JsCode(
+                        "function(params) { return '$' + params.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }"
+                    ),
+                ),
+                itemstyle_opts=opts.ItemStyleOpts(
+                    color="#91cc75",
+                    border_radius=8,
+                ),
+            )
+            .set_global_opts(
+                title_opts=opts.TitleOpts(
+                    title=title,
+                    title_textstyle_opts=opts.TextStyleOpts(font_size=18, font_weight="bold"),
+                    pos_top="1%",
+                ),
+                xaxis_opts=opts.AxisOpts(
+                    name="Service",
+                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    name="Discount Amount (USD)",
+                    axislabel_opts=opts.LabelOpts(
+                        formatter=JsCode("function(value) { return '$' + value.toLocaleString(); }")
+                    ),
+                ),
+                tooltip_opts=opts.TooltipOpts(
+                    trigger="axis",
+                    axis_pointer_type="shadow",
+                    formatter=JsCode(
+                        """function(params) {
+                            return '<div style="' + `"""
+                        + self._get_tooltip_style()
+                        + """` + '">' +
+                                '<strong style="font-size: 14px;">' + params[0].name + '</strong><br/>' +
+                                '<span style="opacity: 0.9;">Discount: </span>' +
+                                '<strong style="font-size: 15px; color: #91cc75;">$' + params[0].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>' +
+                                '</div>';
+                        }"""
+                    ),
+                    textstyle_opts=opts.TextStyleOpts(color="#ffffff"),
+                ),
+                toolbox_opts=opts.ToolboxOpts(
+                    is_show=True,
+                    feature=opts.ToolBoxFeatureOpts(
+                        save_as_image=opts.ToolBoxFeatureSaveAsImageOpts(title="Save as Image"),
+                        restore=opts.ToolBoxFeatureRestoreOpts(title="Restore"),
+                        data_view=opts.ToolBoxFeatureDataViewOpts(title="Data View"),
+                    ),
+                ),
+            )
+        )
+
+        self.charts.append(("discounts_by_service", bar))
+        return bar
+
     def generate_html_report(
         self, output_path: str, summary_stats: dict, title: str = "AWS Cost and Usage Report"
     ) -> str:

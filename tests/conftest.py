@@ -257,12 +257,13 @@ def sample_cur_data():
                 else:
                     region = primary_region
 
+                usage_cost = round(max(10.0, cost), 2)
                 data.append(
                     {
                         "line_item_usage_start_date": date,
                         "line_item_usage_account_id": account_id,
                         "line_item_product_code": service_name,
-                        "line_item_unblended_cost": round(max(10.0, cost), 2),
+                        "line_item_unblended_cost": usage_cost,
                         "line_item_usage_type": f"{region}:{service_name}:Usage",
                         "line_item_operation": (
                             "RunInstances"
@@ -271,8 +272,44 @@ def sample_cur_data():
                         ),
                         "product_region": region,
                         "line_item_resource_id": f'{service_name[6:9].lower()}-{hash(f"{date}{service_name}{account_id}") % 1000000:06d}',
+                        "line_item_line_item_type": "Usage",
                     }
                 )
+
+                # Add discount rows for some services (simulating Savings Plans, EDP, etc.)
+                if service_name in ["AmazonEC2", "AmazonRDS", "AmazonEKS"] and usage_cost > 100:
+                    # Add SavingsPlanNegation (offsets some of the usage cost)
+                    discount_amount = -round(usage_cost * 0.15, 2)  # 15% savings
+                    data.append(
+                        {
+                            "line_item_usage_start_date": date,
+                            "line_item_usage_account_id": account_id,
+                            "line_item_product_code": service_name,
+                            "line_item_unblended_cost": discount_amount,
+                            "line_item_usage_type": f"{region}:{service_name}:SavingsPlanNegation",
+                            "line_item_operation": "SavingsPlanNegation",
+                            "product_region": region,
+                            "line_item_resource_id": "",
+                            "line_item_line_item_type": "SavingsPlanNegation",
+                        }
+                    )
+
+                # Add EdpDiscount for larger services
+                if service_name in ["AmazonS3", "AmazonCloudFront"] and usage_cost > 50:
+                    edp_discount = -round(usage_cost * 0.05, 2)  # 5% EDP discount
+                    data.append(
+                        {
+                            "line_item_usage_start_date": date,
+                            "line_item_usage_account_id": account_id,
+                            "line_item_product_code": service_name,
+                            "line_item_unblended_cost": edp_discount,
+                            "line_item_usage_type": f"{region}:{service_name}:EdpDiscount",
+                            "line_item_operation": "EdpDiscount",
+                            "product_region": region,
+                            "line_item_resource_id": "",
+                            "line_item_line_item_type": "EdpDiscount",
+                        }
+                    )
 
     return pl.DataFrame(data)
 

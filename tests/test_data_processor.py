@@ -49,11 +49,15 @@ class TestCURDataProcessor:
         # Check that costs are numeric
         assert prepared_df["cost"].dtype == pl.Float64
 
-        # Check that no costs are negative
-        assert (prepared_df["cost"] > 0).all()
+        # Note: We allow negative costs (discounts) and zero costs
+        # This sample data only has positive costs, but real CUR data includes negatives
 
-    def test_prepare_data_removes_zero_costs(self):
-        """Test that zero and negative costs are removed."""
+    def test_prepare_data_keeps_all_costs(self):
+        """Test that all costs including zero and negative are kept.
+
+        Negative costs represent discounts (SavingsPlanNegation, EdpDiscount, etc.)
+        and must be included for accurate total cost calculation.
+        """
         df = pl.DataFrame(
             {
                 "line_item_usage_start_date": ["2024-01-01"] * 5,
@@ -69,8 +73,12 @@ class TestCURDataProcessor:
         processor = CURDataProcessor(df)
         prepared_df = processor.prepare_data()
 
-        # Only 3 rows should remain (positive costs)
-        assert len(prepared_df) == 3
+        # All 5 rows should remain (including zero and negative costs)
+        assert len(prepared_df) == 5
+
+        # Verify the total cost includes discounts
+        total = prepared_df["cost"].sum()
+        assert total == 250.5  # 100 + 0 + (-50) + 200 + 0.5
 
     def test_get_total_cost(self, sample_cur_data):
         """Test total cost calculation."""

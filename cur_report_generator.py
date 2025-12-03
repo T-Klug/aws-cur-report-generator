@@ -234,6 +234,8 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         monthly_summary = processor.get_monthly_summary()
         anomalies = processor.detect_cost_anomalies()
         cost_by_region = processor.get_cost_by_region(top_n=top_n)
+        discounts_summary = processor.get_discounts_summary()
+        discounts_by_service = processor.get_discounts_by_service(top_n=top_n)
         summary_stats = processor.get_summary_statistics()
 
         print(f"{Fore.GREEN}✓ Analysis complete{Style.RESET_ALL}\n")
@@ -242,7 +244,7 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         print(f"{Fore.GREEN}[3/4] Creating visualizations...{Style.RESET_ALL}")
         visualizer = CURVisualizer()
 
-        with tqdm(total=10, desc="Generating charts", bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}') as pbar:
+        with tqdm(total=12, desc="Generating charts", bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}') as pbar:
             visualizer.create_cost_by_service_chart(cost_by_service, top_n=top_n)
             pbar.update(1)
 
@@ -276,6 +278,15 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
 
             if not cost_by_region.empty:
                 visualizer.create_region_chart(cost_by_region, top_n=top_n)
+            pbar.update(1)
+
+            # Discounts charts
+            if not discounts_summary.empty:
+                visualizer.create_discounts_chart(discounts_summary)
+            pbar.update(1)
+
+            if not discounts_by_service.empty:
+                visualizer.create_discounts_by_service_chart(discounts_by_service, top_n=top_n)
             pbar.update(1)
 
         print(f"{Fore.GREEN}✓ Visualizations created{Style.RESET_ALL}\n")
@@ -320,7 +331,10 @@ def generate_report(start_date, end_date, output_dir, top_n, generate_html,
         print(f"\n{Fore.CYAN}{'='*60}{Style.RESET_ALL}")
         print(f"{Fore.CYAN}Report Summary:{Style.RESET_ALL}")
         print(f"{Fore.CYAN}{'='*60}{Style.RESET_ALL}")
-        print(f"Total Cost: {Fore.YELLOW}${summary_stats['total_cost']:,.2f}{Style.RESET_ALL}")
+        print(f"Usage Cost: {Fore.YELLOW}${summary_stats['total_cost']:,.2f}{Style.RESET_ALL}")
+        if summary_stats.get('total_discounts', 0) > 0:
+            print(f"Discounts/Credits: {Fore.GREEN}-${summary_stats['total_discounts']:,.2f}{Style.RESET_ALL}")
+            print(f"Net Cost: {Fore.YELLOW}${summary_stats['net_cost']:,.2f}{Style.RESET_ALL}")
         print(f"Number of Accounts: {summary_stats['num_accounts']}")
         print(f"Number of Services: {summary_stats['num_services']}")
         print(f"Date Range: {summary_stats['date_range_start']} to {summary_stats['date_range_end']}")

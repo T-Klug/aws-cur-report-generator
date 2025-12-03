@@ -4,6 +4,7 @@ import hashlib
 import logging
 import os
 import re
+import sys
 import tempfile
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -672,11 +673,15 @@ class CURReader:
                     logger.warning("No CSV files could be downloaded")
                 else:
                     logger.info(f"Reading {len(local_paths)} CSV files from cache...")
-                    csv_dataframes = self._read_local_csv_files_parallel(
-                        local_paths, start_date, end_date
-                    )
-                    dataframes.extend(csv_dataframes)
-                    logger.info(f"CSV files read from cache: {len(csv_dataframes)} successful")
+                    try:
+                        csv_dataframes = self._read_local_csv_files_parallel(
+                            local_paths, start_date, end_date
+                        )
+                        dataframes.extend(csv_dataframes)
+                        logger.info(f"CSV files read from cache: {len(csv_dataframes)} successful")
+                    except Exception as e:
+                        logger.error(f"Error reading local CSV files: {e}")
+                        raise
             else:
                 # No caching - read directly from S3
                 csv_files = [f"s3://{self.bucket}/{f}" for f in csv_keys]
@@ -810,13 +815,25 @@ class CURReader:
                 errors.append((file_path, str(e)))
                 return None
 
-        num_workers = min(self.max_workers, len(local_paths))
+        # Limit workers for CSV reading to avoid memory exhaustion
+        # Each Polars read uses multiple threads internally, so fewer workers is safer
+        num_workers = min(self.max_workers, len(local_paths), 8)
+        total_files = len(local_paths)
+        completed = 0
+        logger.info(f"Using {num_workers} workers for CSV reading")
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             futures = {executor.submit(read_single_csv, fp): fp for fp in local_paths}
             for future in as_completed(futures):
                 result = future.result()
+                completed += 1
                 if result is not None:
                     dataframes.append(result)
+                # Log progress every 10 files or at the end
+                if completed % 10 == 0 or completed == total_files:
+                    logger.info(f"CSV read progress: {completed}/{total_files} files processed")
+                    # Flush to ensure progress is visible
+                    sys.stdout.flush()
+                    sys.stderr.flush()
 
         if errors:
             logger.warning(f"Failed to read {len(errors)} local CSV files")

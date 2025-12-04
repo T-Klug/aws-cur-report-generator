@@ -1,6 +1,7 @@
 """S3 CUR Data Reader - Handles downloading and reading AWS Cost and Usage Reports from S3."""
 
 import hashlib
+import json
 import logging
 import os
 import re
@@ -482,13 +483,103 @@ class CURReader:
 
         return filtered
 
+    def _find_latest_manifests(self) -> Dict[str, str]:
+        """
+        Find the latest manifest file for each billing period.
+
+        AWS CUR creates multiple manifest snapshots during a month as data is finalized.
+        We only want the latest manifest for each billing period to avoid duplicate data.
+
+        Returns:
+            Dictionary mapping billing period (YYYYMMDD-YYYYMMDD) to latest manifest S3 key
+        """
+        try:
+            logger.info(f"Finding CUR manifests in s3://{self.bucket}/{self.prefix}")
+
+            paginator = self.s3_client.get_paginator("list_objects_v2")
+            pages = paginator.paginate(Bucket=self.bucket, Prefix=self.prefix)
+
+            # Collect all manifest files with their last modified dates
+            manifests: List[Tuple[str, datetime]] = []
+            for page in pages:
+                if "Contents" not in page:
+                    continue
+                for obj in page["Contents"]:
+                    key = obj["Key"]
+                    if key.endswith("-Manifest.json") or key.endswith("/Manifest.json"):
+                        manifests.append((key, obj["LastModified"]))
+
+            if not manifests:
+                logger.warning("No manifest files found - falling back to listing all files")
+                return {}
+
+            logger.info(f"Found {len(manifests)} manifest files")
+
+            # Group manifests by billing period and find the latest for each
+            # Path pattern: prefix/report-name/YYYYMMDD-YYYYMMDD/[timestamp/]manifest.json
+            period_manifests: Dict[str, List[Tuple[str, datetime]]] = {}
+            for key, last_modified in manifests:
+                # Extract billing period from path
+                date_range = self._parse_cur_date_range(key)
+                if date_range:
+                    period_key = f"{date_range[0].strftime('%Y%m%d')}-{date_range[1].strftime('%Y%m%d')}"
+                    if period_key not in period_manifests:
+                        period_manifests[period_key] = []
+                    period_manifests[period_key].append((key, last_modified))
+
+            # Select the latest manifest for each period
+            latest_manifests: Dict[str, str] = {}
+            for period, manifest_list in period_manifests.items():
+                # Sort by last modified date descending
+                manifest_list.sort(key=lambda x: x[1], reverse=True)
+                latest_key = manifest_list[0][0]
+                latest_manifests[period] = latest_key
+                logger.info(f"Using latest manifest for {period}: {latest_key}")
+
+            return latest_manifests
+
+        except ClientError as e:
+            logger.error(f"Error finding manifests: {e}")
+            return {}
+
+    def _get_files_from_manifest(self, manifest_key: str) -> List[str]:
+        """
+        Parse a manifest file to get the list of data files.
+
+        Args:
+            manifest_key: S3 key of the manifest file
+
+        Returns:
+            List of S3 keys for data files referenced in the manifest
+        """
+        try:
+            response = self.s3_client.get_object(Bucket=self.bucket, Key=manifest_key)
+            manifest_content = response["Body"].read().decode("utf-8")
+            manifest = json.loads(manifest_content)
+
+            # Extract report keys from manifest
+            report_keys = manifest.get("reportKeys", [])
+            if not report_keys:
+                logger.warning(f"No reportKeys found in manifest: {manifest_key}")
+                return []
+
+            logger.debug(f"Manifest {manifest_key} contains {len(report_keys)} files")
+            return report_keys
+
+        except ClientError as e:
+            logger.error(f"Error reading manifest {manifest_key}: {e}")
+            return []
+        except json.JSONDecodeError as e:
+            logger.error(f"Error parsing manifest JSON {manifest_key}: {e}")
+            return []
+
     def list_report_files(self) -> List[str]:
         """
         List available CUR report files in S3.
 
-        Note: Date filtering is not done here because S3 LastModified represents
-        when files were uploaded, not the billing period. Date filtering is applied
-        later when reading the actual data in _optimize_lazyframe.
+        Uses manifest-based file selection to avoid loading duplicate data.
+        AWS CUR creates multiple manifest snapshots during a month - we only
+        use the latest manifest for each billing period.
 
         Returns:
             List of S3 keys for CUR report files
@@ -496,6 +587,24 @@ class CURReader:
         try:
             logger.info(f"Listing CUR files in s3://{self.bucket}/{self.prefix}")
 
+            # Try manifest-based selection first
+            latest_manifests = self._find_latest_manifests()
+
+            if latest_manifests:
+                # Get files from each latest manifest
+                report_files: List[str] = []
+                for _, manifest_key in latest_manifests.items():
+                    files = self._get_files_from_manifest(manifest_key)
+                    report_files.extend(files)
+
+                if report_files:
+                    logger.info(
+                        f"Found {len(report_files)} files from {len(latest_manifests)} manifests"
+                    )
+                    return sorted(report_files)
+
+            # Fallback: list all files if no manifests found
+            logger.info("Falling back to listing all CUR files")
             paginator = self.s3_client.get_paginator("list_objects_v2")
             pages = paginator.paginate(Bucket=self.bucket, Prefix=self.prefix)
 
@@ -507,9 +616,6 @@ class CURReader:
                 for obj in page["Contents"]:
                     key = obj["Key"]
                     # CUR files are typically .csv.gz or .parquet
-                    # Note: We don't filter by S3 LastModified here because it represents
-                    # when the file was uploaded, not the billing period it contains.
-                    # Date filtering is done later in _optimize_lazyframe based on actual data.
                     if key.endswith((".csv.gz", ".parquet", ".csv")):
                         report_files.append(key)
 

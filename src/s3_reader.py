@@ -522,7 +522,9 @@ class CURReader:
                 # Extract billing period from path
                 date_range = self._parse_cur_date_range(key)
                 if date_range:
-                    period_key = f"{date_range[0].strftime('%Y%m%d')}-{date_range[1].strftime('%Y%m%d')}"
+                    period_key = (
+                        f"{date_range[0].strftime('%Y%m%d')}-{date_range[1].strftime('%Y%m%d')}"
+                    )
                     if period_key not in period_manifests:
                         period_manifests[period_key] = []
                     period_manifests[period_key].append((key, last_modified))
